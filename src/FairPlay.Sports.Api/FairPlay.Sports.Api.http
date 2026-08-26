@@ -1,0 +1,37 @@
+@FairPlay.Sports.Api_HostAddress = http://localhost:5228
+
+### Get all dummy products
+GET {{FairPlay.Sports.Api_HostAddress}}/api/products
+Accept: application/json
+
+### Get a dummy product by id (replace {{id}} with a real id from the list above)
+@id = 00000000-0000-0000-0000-000000000000
+GET {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
+Accept: application/json
+
+### Create a dummy product
+POST {{FairPlay.Sports.Api_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Casco de ciclismo",
+  "description": "Casco ligero con ventilación",
+  "price": 59.99,
+  "stock": 25
+}
+
+### Update a dummy product (replace {{id}} with a real id)
+PUT {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Casco de ciclismo Pro",
+  "description": "Casco ligero reforzado",
+  "price": 69.99,
+  "stock": 20
+}
+
+### Delete a dummy product (replace {{id}} with a real id)
+DELETE {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
+
+###

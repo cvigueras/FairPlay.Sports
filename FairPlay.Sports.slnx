@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/frontend/">
+    <Project Path="frontend/fairplay-sports-web/fairplay-sports-web.esproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/FairPlay.Sports.Api/FairPlay.Sports.Api.csproj" />
+    <Project Path="src/FairPlay.Sports.Application/FairPlay.Sports.Application.csproj" />
+    <Project Path="src/FairPlay.Sports.Domain/FairPlay.Sports.Domain.csproj" />
+    <Project Path="src/FairPlay.Sports.Infrastructure/FairPlay.Sports.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FairPlay.Sports.Api.Tests/FairPlay.Sports.Api.Tests.csproj" />
+    <Project Path="tests/FairPlay.Sports.Application.Tests/FairPlay.Sports.Application.Tests.csproj" />
+    <Project Path="tests/FairPlay.Sports.Domain.Tests/FairPlay.Sports.Domain.Tests.csproj" />
+    <Project Path="tests/FairPlay.Sports.Infrastructure.Tests/FairPlay.Sports.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
