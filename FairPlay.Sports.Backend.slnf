@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "FairPlay.Sports.slnx",
+    "projects": [
+      "src/FairPlay.Sports.Domain/FairPlay.Sports.Domain.csproj",
+      "src/FairPlay.Sports.Application/FairPlay.Sports.Application.csproj",
+      "src/FairPlay.Sports.Infrastructure/FairPlay.Sports.Infrastructure.csproj",
+      "src/FairPlay.Sports.Api/FairPlay.Sports.Api.csproj",
+      "tests/FairPlay.Sports.Domain.Tests/FairPlay.Sports.Domain.Tests.csproj",
+      "tests/FairPlay.Sports.Application.Tests/FairPlay.Sports.Application.Tests.csproj",
+      "tests/FairPlay.Sports.Infrastructure.Tests/FairPlay.Sports.Infrastructure.Tests.csproj",
+      "tests/FairPlay.Sports.Api.Tests/FairPlay.Sports.Api.Tests.csproj"
+    ]
+  }
+}

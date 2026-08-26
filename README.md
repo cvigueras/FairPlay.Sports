@@ -1,5 +1,7 @@
 # FairPlay Sports
 
+[![CI](https://github.com/cvigueras/FairPlay.Sports/actions/workflows/ci.yml/badge.svg)](https://github.com/cvigueras/FairPlay.Sports/actions/workflows/ci.yml)
+
 Sample project demonstrating a **hexagonal architecture** combined with **vertical slicing** in
 .NET 10, with a dummy RESTful CRUD (in-memory data) and a Vue 3 frontend with dummy login and
 register screens.
