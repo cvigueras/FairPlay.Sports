@@ -63,9 +63,10 @@ The API will be available at:
 - `http://localhost:5228`
 - `https://localhost:7090`
 
-In the `Development` environment, the OpenAPI document is available at `/openapi/v1.json`. You can
-also use `src/FairPlay.Sports.Api/FairPlay.Sports.Api.http` (compatible with the Visual Studio /
-VS Code HTTP client) to try out the `api/products` CRUD without Swagger UI.
+In the `Development` environment, interactive API documentation is available via **Swagger UI** at
+`/swagger`, backed by the OpenAPI document generated at `/openapi/v1.json`. You can also use
+`src/FairPlay.Sports.Api/FairPlay.Sports.Api.http` (compatible with the Visual Studio / VS Code
+HTTP client) to try out the `api/products` CRUD without a browser.
 
 ## Frontend (Vue 3 + TypeScript + Vite)
 
