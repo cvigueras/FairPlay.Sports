@@ -7,7 +7,17 @@ public enum ResultErrorType
     NotFound
 }
 
-public sealed class Result
+/// <summary>
+/// Common shape of both <see cref="Result"/> and <see cref="Result{T}"/>, so pipeline
+/// behaviors can inspect the outcome without knowing the concrete response type.
+/// </summary>
+public interface IResult
+{
+    bool IsSuccess { get; }
+    ResultErrorType ErrorType { get; }
+}
+
+public sealed class Result : IResult
 {
     public bool IsSuccess { get; }
     public string? Error { get; }
@@ -28,7 +38,7 @@ public sealed class Result
     public static Result NotFound(string error) => new(false, error, ResultErrorType.NotFound);
 }
 
-public sealed class Result<T>
+public sealed class Result<T> : IResult
 {
     public bool IsSuccess { get; }
     public T? Value { get; }

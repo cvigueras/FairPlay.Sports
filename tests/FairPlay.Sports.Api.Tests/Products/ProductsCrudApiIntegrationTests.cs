@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FairPlay.Sports.Application.Products;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 
 namespace FairPlay.Sports.Api.Tests.Products;
@@ -25,7 +27,10 @@ public class ProductsCrudApiIntegrationTests
     [SetUp]
     public void SetUp()
     {
-        _factory = new WebApplicationFactory<Program>();
+        // "Testing" (not the default "Development") so startup skips the dev-only
+        // database auto-migration - this suite only exercises the in-memory Products slice.
+        _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder => builder.UseEnvironment("Testing"));
         _client = _factory.CreateClient();
     }
 

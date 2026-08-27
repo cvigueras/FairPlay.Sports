@@ -1,0 +1,57 @@
+using FairPlay.Sports.Api.Common;
+using FairPlay.Sports.Application.Users;
+using FairPlay.Sports.Application.Users.GetAll;
+using FairPlay.Sports.Application.Users.GetById;
+using FairPlay.Sports.Application.Users.Register;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FairPlay.Sports.Api.Users;
+
+[ApiController]
+[Route("api/[controller]")]
+public sealed class UsersController : ControllerBase
+{
+    private readonly ISender _sender;
+
+    public UsersController(ISender sender)
+    {
+        _sender = sender;
+    }
+
+    /// <summary>Returns every registered user (without password data).</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<UserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<UserDto>>> GetAll(CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new GetAllUsersQuery(), cancellationToken);
+        return Ok(result.Value);
+    }
+
+    /// <summary>Returns a single user by id.</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new GetUserByIdQuery(id), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Registers a new user and persists it to SQL Server.</summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UserDto>> Register(RegisterUserRequest request, CancellationToken cancellationToken)
+    {
+        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password, request.Team);
+        var result = await _sender.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return result.ToActionResult(this);
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+}

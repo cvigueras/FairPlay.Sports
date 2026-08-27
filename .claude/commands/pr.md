@@ -10,7 +10,7 @@ allowed-tools: Bash(git branch:*), Bash(git status:*), Bash(git log:*), Bash(git
 - Estado: !`git status --short`
 - Commits de esta rama respecto a main: !`git log --pretty=format:'%h %s%n%b' origin/main..HEAD`
 - Diff frente a main: !`git diff --stat origin/main...HEAD`
-- PR abierta ya existente para esta rama: !`gh pr list --head "$(git branch --show-current)" --state open`
+- PRs abiertas en el repo (localiza la de la rama actual por el nombre de rama de arriba): !`gh pr list --state open`
 
 ## Tarea
 
@@ -73,7 +73,7 @@ Si $ARGUMENTS no está vacío, úsalo como indicación sobre en qué centrar la 
 ### Ejecución
 
 ```
-gh pr create --base main --head "$(git branch --show-current)" \
+gh pr create --base main \
   --title "<título>" \
   --body "$(cat <<'EOF'
 <cuerpo>
