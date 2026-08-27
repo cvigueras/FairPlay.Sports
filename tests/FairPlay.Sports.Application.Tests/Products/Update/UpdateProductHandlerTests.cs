@@ -2,25 +2,27 @@ using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Products;
 using FairPlay.Sports.Application.Products.Update;
 using FairPlay.Sports.Domain.Products;
-using FluentValidation;
 using NSubstitute;
 using NUnit.Framework;
 
 namespace FairPlay.Sports.Application.Tests.Products.Update;
 
+/// <summary>
+/// The handler no longer validates: FluentValidation now runs in the MediatR
+/// <c>ValidationBehavior</c> pipeline step (see <c>ValidationBehaviorTests</c>).
+/// These tests cover only the handler's own job - look up, mutate and persist.
+/// </summary>
 [TestFixture]
 public class UpdateProductHandlerTests
 {
     private IProductRepository _repository = null!;
-    private IValidator<UpdateProductCommand> _validator = null!;
     private UpdateProductHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repository = Substitute.For<IProductRepository>();
-        _validator = new UpdateProductValidator();
-        _handler = new UpdateProductHandler(_repository, _validator);
+        _handler = new UpdateProductHandler(_repository);
     }
 
     [Test]
@@ -59,17 +61,5 @@ public class UpdateProductHandlerTests
             Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.NotFound));
         });
         await _repository.DidNotReceive().UpdateAsync(Arg.Any<Product>(), Arg.Any<CancellationToken>());
-    }
-
-    [Test]
-    public async Task Handle_WithInvalidCommand_ReturnsValidationFailureWithoutTouchingRepository()
-    {
-        var command = new UpdateProductCommand(Guid.Empty, "", "desc", -1m, -1);
-
-        var result = await _handler.Handle(command);
-
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.Validation));
-        await _repository.DidNotReceive().GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 }

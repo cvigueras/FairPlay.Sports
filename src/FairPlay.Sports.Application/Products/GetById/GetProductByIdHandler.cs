@@ -1,9 +1,9 @@
-using FairPlay.Sports.Application.Abstractions;
 using FairPlay.Sports.Application.Common;
+using MediatR;
 
 namespace FairPlay.Sports.Application.Products.GetById;
 
-public sealed class GetProductByIdHandler : IQueryHandler<GetProductByIdQuery, ProductDto>
+public sealed class GetProductByIdHandler : IRequestHandler<GetProductByIdQuery, Result<ProductDto>>
 {
     private readonly IProductRepository _repository;
 
@@ -12,12 +12,12 @@ public sealed class GetProductByIdHandler : IQueryHandler<GetProductByIdQuery, P
         _repository = repository;
     }
 
-    public async Task<Result<ProductDto>> Handle(GetProductByIdQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken = default)
     {
-        var product = await _repository.GetByIdAsync(query.Id, cancellationToken);
+        var product = await _repository.GetByIdAsync(request.Id, cancellationToken);
 
         return product is null
-            ? Result<ProductDto>.NotFound($"Product '{query.Id}' was not found.")
+            ? Result<ProductDto>.NotFound($"Product '{request.Id}' was not found.")
             : Result<ProductDto>.Success(ProductDto.FromDomain(product));
     }
 }

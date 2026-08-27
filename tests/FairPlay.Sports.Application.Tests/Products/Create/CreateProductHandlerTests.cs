@@ -1,26 +1,27 @@
-using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Products;
 using FairPlay.Sports.Application.Products.Create;
 using FairPlay.Sports.Domain.Products;
-using FluentValidation;
 using NSubstitute;
 using NUnit.Framework;
 
 namespace FairPlay.Sports.Application.Tests.Products.Create;
 
+/// <summary>
+/// The handler no longer validates: FluentValidation now runs in the MediatR
+/// <c>ValidationBehavior</c> pipeline step (see <c>ValidationBehaviorTests</c>).
+/// These tests cover only the handler's own job - create and persist.
+/// </summary>
 [TestFixture]
 public class CreateProductHandlerTests
 {
     private IProductRepository _repository = null!;
-    private IValidator<CreateProductCommand> _validator = null!;
     private CreateProductHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repository = Substitute.For<IProductRepository>();
-        _validator = new CreateProductValidator();
-        _handler = new CreateProductHandler(_repository, _validator);
+        _handler = new CreateProductHandler(_repository);
     }
 
     [Test]
@@ -50,43 +51,5 @@ public class CreateProductHandlerTests
         await _repository.Received(1).AddAsync(
             Arg.Is<Product>(p => p.Name == "Balón" && p.Price == 29.99m),
             Arg.Any<CancellationToken>());
-    }
-
-    [Test]
-    public async Task Handle_WithEmptyName_ReturnsValidationFailureAndDoesNotCallRepository()
-    {
-        var command = new CreateProductCommand("", "desc", 29.99m, 10);
-
-        var result = await _handler.Handle(command);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.Validation));
-            Assert.That(result.Error, Is.Not.Null.And.Not.Empty);
-        });
-        await _repository.DidNotReceive().AddAsync(Arg.Any<Product>(), Arg.Any<CancellationToken>());
-    }
-
-    [Test]
-    public async Task Handle_WithNegativePrice_ReturnsValidationFailure()
-    {
-        var command = new CreateProductCommand("Balón", "desc", -1m, 10);
-
-        var result = await _handler.Handle(command);
-
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.Validation));
-    }
-
-    [Test]
-    public async Task Handle_WithNegativeStock_ReturnsValidationFailure()
-    {
-        var command = new CreateProductCommand("Balón", "desc", 1m, -1);
-
-        var result = await _handler.Handle(command);
-
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.Validation));
     }
 }

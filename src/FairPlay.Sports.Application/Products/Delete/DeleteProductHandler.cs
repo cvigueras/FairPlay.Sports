@@ -1,9 +1,9 @@
-using FairPlay.Sports.Application.Abstractions;
 using FairPlay.Sports.Application.Common;
+using MediatR;
 
 namespace FairPlay.Sports.Application.Products.Delete;
 
-public sealed class DeleteProductHandler : ICommandHandler<DeleteProductCommand>
+public sealed class DeleteProductHandler : IRequestHandler<DeleteProductCommand, Result>
 {
     private readonly IProductRepository _repository;
 
@@ -12,12 +12,12 @@ public sealed class DeleteProductHandler : ICommandHandler<DeleteProductCommand>
         _repository = repository;
     }
 
-    public async Task<Result> Handle(DeleteProductCommand command, CancellationToken cancellationToken = default)
+    public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken = default)
     {
-        var deleted = await _repository.DeleteAsync(command.Id, cancellationToken);
+        var deleted = await _repository.DeleteAsync(request.Id, cancellationToken);
 
         return deleted
             ? Result.Success()
-            : Result.NotFound($"Product '{command.Id}' was not found.");
+            : Result.NotFound($"Product '{request.Id}' was not found.");
     }
 }

@@ -1,5 +1,4 @@
 using FairPlay.Sports.Api.Products;
-using FairPlay.Sports.Application.Abstractions;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Products;
 using FairPlay.Sports.Application.Products.Create;
@@ -7,6 +6,7 @@ using FairPlay.Sports.Application.Products.Delete;
 using FairPlay.Sports.Application.Products.GetAll;
 using FairPlay.Sports.Application.Products.GetById;
 using FairPlay.Sports.Application.Products.Update;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using NUnit.Framework;
@@ -14,18 +14,14 @@ using NUnit.Framework;
 namespace FairPlay.Sports.Api.Tests.Products;
 
 /// <summary>
-/// Unit tests for ProductsController in isolation: every application handler is mocked,
-/// so these tests verify only the controller's own responsibility - translating
-/// Result/Result&lt;T&gt; outcomes into the correct HTTP responses.
+/// Unit tests for ProductsController in isolation: MediatR's <see cref="ISender"/> is mocked,
+/// so these tests verify only the controller's own responsibility - dispatching the right
+/// request and translating Result/Result&lt;T&gt; outcomes into the correct HTTP responses.
 /// </summary>
 [TestFixture]
 public class ProductsControllerTests
 {
-    private IQueryHandler<GetAllProductsQuery, IReadOnlyList<ProductDto>> _getAllHandler = null!;
-    private IQueryHandler<GetProductByIdQuery, ProductDto> _getByIdHandler = null!;
-    private ICommandHandler<CreateProductCommand, ProductDto> _createHandler = null!;
-    private ICommandHandler<UpdateProductCommand, ProductDto> _updateHandler = null!;
-    private ICommandHandler<DeleteProductCommand> _deleteHandler = null!;
+    private ISender _sender = null!;
     private ProductsController _controller = null!;
 
     private static ProductDto SampleDto(Guid? id = null) =>
@@ -34,21 +30,15 @@ public class ProductsControllerTests
     [SetUp]
     public void SetUp()
     {
-        _getAllHandler = Substitute.For<IQueryHandler<GetAllProductsQuery, IReadOnlyList<ProductDto>>>();
-        _getByIdHandler = Substitute.For<IQueryHandler<GetProductByIdQuery, ProductDto>>();
-        _createHandler = Substitute.For<ICommandHandler<CreateProductCommand, ProductDto>>();
-        _updateHandler = Substitute.For<ICommandHandler<UpdateProductCommand, ProductDto>>();
-        _deleteHandler = Substitute.For<ICommandHandler<DeleteProductCommand>>();
-
-        _controller = new ProductsController(
-            _getAllHandler, _getByIdHandler, _createHandler, _updateHandler, _deleteHandler);
+        _sender = Substitute.For<ISender>();
+        _controller = new ProductsController(_sender);
     }
 
     [Test]
     public async Task GetAll_ReturnsOkWithHandlerValue()
     {
         IReadOnlyList<ProductDto> dtos = new List<ProductDto> { SampleDto() };
-        _getAllHandler.Handle(Arg.Any<GetAllProductsQuery>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<GetAllProductsQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<IReadOnlyList<ProductDto>>.Success(dtos));
 
         var response = await _controller.GetAll(CancellationToken.None);
@@ -62,7 +52,7 @@ public class ProductsControllerTests
     public async Task GetById_WhenHandlerSucceeds_ReturnsOkWithDto()
     {
         var dto = SampleDto();
-        _getByIdHandler.Handle(Arg.Any<GetProductByIdQuery>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<GetProductByIdQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.Success(dto));
 
         var response = await _controller.GetById(dto.Id, CancellationToken.None);
@@ -76,7 +66,7 @@ public class ProductsControllerTests
     public async Task GetById_WhenHandlerReturnsNotFound_Returns404()
     {
         var id = Guid.NewGuid();
-        _getByIdHandler.Handle(Arg.Any<GetProductByIdQuery>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<GetProductByIdQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.NotFound($"Product '{id}' was not found."));
 
         var response = await _controller.GetById(id, CancellationToken.None);
@@ -88,7 +78,7 @@ public class ProductsControllerTests
     public async Task Create_WhenHandlerSucceeds_ReturnsCreatedAtActionPointingToGetById()
     {
         var dto = SampleDto();
-        _createHandler.Handle(Arg.Any<CreateProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<CreateProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.Success(dto));
         var request = new CreateProductRequest(dto.Name, dto.Description, dto.Price, dto.Stock);
 
@@ -107,7 +97,7 @@ public class ProductsControllerTests
     [Test]
     public async Task Create_WhenHandlerFailsValidation_ReturnsBadRequest()
     {
-        _createHandler.Handle(Arg.Any<CreateProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<CreateProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.Failure("Name is required"));
         var request = new CreateProductRequest("", "desc", 1m, 1);
 
@@ -120,7 +110,7 @@ public class ProductsControllerTests
     public async Task Update_WhenHandlerSucceeds_ReturnsOkWithUpdatedDto()
     {
         var dto = SampleDto();
-        _updateHandler.Handle(Arg.Any<UpdateProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<UpdateProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.Success(dto));
         var request = new UpdateProductRequest(dto.Name, dto.Description, dto.Price, dto.Stock);
 
@@ -135,7 +125,7 @@ public class ProductsControllerTests
     public async Task Update_WhenHandlerReturnsNotFound_Returns404()
     {
         var id = Guid.NewGuid();
-        _updateHandler.Handle(Arg.Any<UpdateProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<UpdateProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ProductDto>.NotFound($"Product '{id}' was not found."));
         var request = new UpdateProductRequest("Name", "desc", 1m, 1);
 
@@ -147,7 +137,7 @@ public class ProductsControllerTests
     [Test]
     public async Task Delete_WhenHandlerSucceeds_ReturnsNoContent()
     {
-        _deleteHandler.Handle(Arg.Any<DeleteProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<DeleteProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result.Success());
 
         var response = await _controller.Delete(Guid.NewGuid(), CancellationToken.None);
@@ -159,7 +149,7 @@ public class ProductsControllerTests
     public async Task Delete_WhenHandlerReturnsNotFound_Returns404()
     {
         var id = Guid.NewGuid();
-        _deleteHandler.Handle(Arg.Any<DeleteProductCommand>(), Arg.Any<CancellationToken>())
+        _sender.Send(Arg.Any<DeleteProductCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result.NotFound($"Product '{id}' was not found."));
 
         var response = await _controller.Delete(id, CancellationToken.None);

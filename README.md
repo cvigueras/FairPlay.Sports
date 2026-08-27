@@ -19,6 +19,11 @@ register screens.
   root.
 - **Vertical slicing:** inside `Application`, each CRUD operation (`Create`, `Update`, `Delete`,
   `GetById`, `GetAll`) is an independent folder with its own Command/Query, Handler and Validator.
+- **CQRS with MediatR:** commands and queries are `IRequest<T>` messages dispatched through
+  `ISender`; each slice provides an `IRequestHandler<,>`. Handlers return a `Result`/`Result<T>`
+  (never throw for expected outcomes), and the `Api` layer maps that to the HTTP status code.
+  FluentValidation runs as a single `ValidationBehavior<,>` MediatR pipeline step, so validation
+  is a cross-cutting concern instead of being repeated in every handler.
 
 ## Repository structure
 

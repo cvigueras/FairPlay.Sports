@@ -1,36 +1,26 @@
-using FairPlay.Sports.Application.Abstractions;
 using FairPlay.Sports.Application.Common;
-using FluentValidation;
+using MediatR;
 
 namespace FairPlay.Sports.Application.Products.Update;
 
-public sealed class UpdateProductHandler : ICommandHandler<UpdateProductCommand, ProductDto>
+public sealed class UpdateProductHandler : IRequestHandler<UpdateProductCommand, Result<ProductDto>>
 {
     private readonly IProductRepository _repository;
-    private readonly IValidator<UpdateProductCommand> _validator;
 
-    public UpdateProductHandler(IProductRepository repository, IValidator<UpdateProductCommand> validator)
+    public UpdateProductHandler(IProductRepository repository)
     {
         _repository = repository;
-        _validator = validator;
     }
 
-    public async Task<Result<ProductDto>> Handle(UpdateProductCommand command, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductDto>> Handle(UpdateProductCommand request, CancellationToken cancellationToken = default)
     {
-        var validation = await _validator.ValidateAsync(command, cancellationToken);
-        if (!validation.IsValid)
-        {
-            var error = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
-            return Result<ProductDto>.Failure(error);
-        }
-
-        var product = await _repository.GetByIdAsync(command.Id, cancellationToken);
+        var product = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (product is null)
         {
-            return Result<ProductDto>.NotFound($"Product '{command.Id}' was not found.");
+            return Result<ProductDto>.NotFound($"Product '{request.Id}' was not found.");
         }
 
-        product.UpdateDetails(command.Name, command.Description, command.Price, command.Stock);
+        product.UpdateDetails(request.Name, request.Description, request.Price, request.Stock);
         await _repository.UpdateAsync(product, cancellationToken);
 
         return Result<ProductDto>.Success(ProductDto.FromDomain(product));

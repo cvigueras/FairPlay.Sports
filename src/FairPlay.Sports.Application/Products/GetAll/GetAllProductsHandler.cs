@@ -1,9 +1,9 @@
-using FairPlay.Sports.Application.Abstractions;
 using FairPlay.Sports.Application.Common;
+using MediatR;
 
 namespace FairPlay.Sports.Application.Products.GetAll;
 
-public sealed class GetAllProductsHandler : IQueryHandler<GetAllProductsQuery, IReadOnlyList<ProductDto>>
+public sealed class GetAllProductsHandler : IRequestHandler<GetAllProductsQuery, Result<IReadOnlyList<ProductDto>>>
 {
     private readonly IProductRepository _repository;
 
@@ -12,7 +12,7 @@ public sealed class GetAllProductsHandler : IQueryHandler<GetAllProductsQuery, I
         _repository = repository;
     }
 
-    public async Task<Result<IReadOnlyList<ProductDto>>> Handle(GetAllProductsQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<IReadOnlyList<ProductDto>>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken = default)
     {
         var products = await _repository.GetAllAsync(cancellationToken);
         IReadOnlyList<ProductDto> dtos = products.Select(ProductDto.FromDomain).ToList();
