@@ -1,5 +1,6 @@
 using FairPlay.Sports.Application;
 using FairPlay.Sports.Infrastructure;
+using FairPlay.Sports.Infrastructure.Persistence;
 
 const string FrontendCorsPolicy = "FrontendCorsPolicy";
 
@@ -13,7 +14,7 @@ builder.Services.AddOpenApi();
 // Hexagonal wiring: the Api (driving adapter) composes Application (use cases)
 // and Infrastructure (driven adapters), never the other way around.
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
@@ -30,6 +31,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Local convenience: bring the database up to the latest migration on startup.
+    // Production applies migrations as an explicit deploy step, never here.
+    await app.Services.MigrateAsync();
+
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {

@@ -1,0 +1,24 @@
+using FairPlay.Sports.Domain.Users;
+using Microsoft.EntityFrameworkCore;
+
+namespace FairPlay.Sports.Infrastructure.Persistence;
+
+/// <summary>
+/// EF Core context for the SQL Server database. It is also the unit of work:
+/// <see cref="Persistence.UnitOfWork"/> delegates its commit to
+/// <see cref="DbContext.SaveChangesAsync(CancellationToken)"/>.
+/// </summary>
+public sealed class FairPlaySportsDbContext : DbContext
+{
+    public FairPlaySportsDbContext(DbContextOptions<FairPlaySportsDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<User> Users => Set<User>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(FairPlaySportsDbContext).Assembly);
+    }
+}

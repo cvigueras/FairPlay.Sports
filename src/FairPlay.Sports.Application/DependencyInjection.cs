@@ -14,7 +14,10 @@ public static class DependencyInjection
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssemblyContaining<CreateProductHandler>();
+            // Order matters: validation runs first, then the unit of work commits a
+            // successful command inside it.
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            configuration.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
         });
 
         services.AddValidatorsFromAssemblyContaining<CreateProductValidator>();
