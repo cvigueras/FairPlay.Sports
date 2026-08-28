@@ -1,0 +1,25 @@
+using FairPlay.Sports.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace FairPlay.Sports.Infrastructure.Tests;
+
+/// <summary>
+/// Base for tests that hit the real SQL Server container. Tests build fresh
+/// <see cref="FairPlaySportsDbContext"/> instances through <see cref="NewContext"/> (a separate
+/// one for arrange, act and assert avoids false positives from the change tracker); the
+/// <c>Users</c> table is emptied after every test so cases stay isolated.
+/// </summary>
+public abstract class RepositoryTestBase
+{
+    protected static FairPlaySportsDbContext NewContext() =>
+        new(new DbContextOptionsBuilder<FairPlaySportsDbContext>()
+            .UseSqlServer(SqlServerContainerFixture.ConnectionString)
+            .Options);
+
+    [TearDown]
+    public async Task EmptyUsersTable()
+    {
+        await using var context = NewContext();
+        await context.Users.ExecuteDeleteAsync();
+    }
+}
