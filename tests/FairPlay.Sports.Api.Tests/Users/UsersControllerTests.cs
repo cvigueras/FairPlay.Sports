@@ -1,5 +1,5 @@
-using FairPlay.Sports.Api.Tests.TestSupport;
 using FairPlay.Sports.Api.Users;
+using FairPlay.Sports.TestSupport.Users;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.GetAll;
@@ -79,7 +79,7 @@ public class UsersControllerTests
     [Test]
     public async Task Register_MapsRequestFieldsOntoCommand()
     {
-        var request = UserMother.RegisterRequest();
+        var request = UserRequestMother.RegisterRequest();
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<UserDto>.Success(UserMother.Dto()));
 
@@ -101,7 +101,7 @@ public class UsersControllerTests
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<UserDto>.Success(dto));
 
-        var response = await _controller.Register(UserMother.RegisterRequest(), CancellationToken.None);
+        var response = await _controller.Register(UserRequestMother.RegisterRequest(), CancellationToken.None);
 
         var createdResult = response.Result as CreatedAtActionResult;
         Assert.That(createdResult, Is.Not.Null);
@@ -119,7 +119,7 @@ public class UsersControllerTests
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<UserDto>.Failure(UserMother.EmailAlreadyRegistered));
 
-        var response = await _controller.Register(UserMother.RegisterRequest(), CancellationToken.None);
+        var response = await _controller.Register(UserRequestMother.RegisterRequest(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
     }

@@ -9,7 +9,8 @@
       "tests/FairPlay.Sports.Domain.Tests/FairPlay.Sports.Domain.Tests.csproj",
       "tests/FairPlay.Sports.Application.Tests/FairPlay.Sports.Application.Tests.csproj",
       "tests/FairPlay.Sports.Infrastructure.Tests/FairPlay.Sports.Infrastructure.Tests.csproj",
-      "tests/FairPlay.Sports.Api.Tests/FairPlay.Sports.Api.Tests.csproj"
+      "tests/FairPlay.Sports.Api.Tests/FairPlay.Sports.Api.Tests.csproj",
+      "tests/FairPlay.Sports.TestSupport/FairPlay.Sports.TestSupport.csproj"
     ]
   }
 }

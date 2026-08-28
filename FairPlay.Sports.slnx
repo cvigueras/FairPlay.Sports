@@ -16,5 +16,6 @@
     <Project Path="tests/FairPlay.Sports.Application.Tests/FairPlay.Sports.Application.Tests.csproj" />
     <Project Path="tests/FairPlay.Sports.Domain.Tests/FairPlay.Sports.Domain.Tests.csproj" />
     <Project Path="tests/FairPlay.Sports.Infrastructure.Tests/FairPlay.Sports.Infrastructure.Tests.csproj" />
+    <Project Path="tests/FairPlay.Sports.TestSupport/FairPlay.Sports.TestSupport.csproj" />
   </Folder>
 </Solution>
