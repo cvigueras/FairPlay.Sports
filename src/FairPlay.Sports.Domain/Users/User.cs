@@ -14,47 +14,37 @@ public sealed class User
     public string Team { get; private set; }
     public DateTime CreatedAt { get; }
     public bool Active { get; private set; }
-    public DateTime? LastLoginAt { get; private set; }
 
-    /// <summary>
-    /// Full constructor. Also used by EF Core constructor binding when materializing
-    /// rows (every parameter name matches a mapped property).
-    /// </summary>
-    public User(
+    private User(
         Guid id,
         string userName,
         string email,
         string passwordHash,
         string team,
         DateTime createdAt,
-        bool active,
-        DateTime? lastLoginAt)
+        bool active)
     {
-        if (id == Guid.Empty)
-            throw new ArgumentException("User id cannot be empty.", nameof(id));
-
         Id = id;
-        UserName = ValidateUserName(userName);
-        Email = ValidateEmail(email);
-        PasswordHash = ValidatePasswordHash(passwordHash);
-        Team = ValidateTeam(team);
+        UserName = userName;
+        Email = email;
+        PasswordHash = passwordHash;
+        Team = team;
         CreatedAt = createdAt;
         Active = active;
-        LastLoginAt = lastLoginAt;
     }
 
-    /// <summary>Registers a brand new, active user. <paramref name="createdAtUtc"/> must be UTC.</summary>
-    public static User Register(
+    public static User Create(
         Guid id,
         string userName,
         string email,
         string passwordHash,
         string team,
-        DateTime createdAtUtc) =>
-        new(id, userName, email, passwordHash, team, createdAtUtc, active: true, lastLoginAt: null);
-
-    /// <summary>Records a successful sign-in. <paramref name="whenUtc"/> must be UTC.</summary>
-    public void RecordLogin(DateTime whenUtc) => LastLoginAt = whenUtc;
+        DateTime createdAtUtc)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException("User id cannot be empty.", nameof(id));
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), createdAtUtc, active: true);
+    }
 
     public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);
 

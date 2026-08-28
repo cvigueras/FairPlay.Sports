@@ -3,18 +3,13 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Users.GetById;
 
-public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, Result<UserDto>>
+public sealed class GetUserByIdHandler(IUserRepository repository) : IRequestHandler<GetUserByIdQuery, Result<UserDto>>
 {
-    private readonly IUserRepository _users;
+    private readonly IUserRepository _repository = repository;
 
-    public GetUserByIdHandler(IUserRepository users)
+    public async Task<Result<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        _users = users;
-    }
-
-    public async Task<Result<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken = default)
-    {
-        var user = await _users.GetByIdAsync(request.Id, cancellationToken);
+        var user = await _repository.GetByIdAsync(request.Id, cancellationToken);
 
         return user is null
             ? Result<UserDto>.NotFound($"User '{request.Id}' was not found.")

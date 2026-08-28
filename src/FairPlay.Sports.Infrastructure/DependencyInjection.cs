@@ -1,8 +1,6 @@
 using FairPlay.Sports.Application.Common;
-using FairPlay.Sports.Application.Products;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Infrastructure.Persistence;
-using FairPlay.Sports.Infrastructure.Products;
 using FairPlay.Sports.Infrastructure.Security;
 using FairPlay.Sports.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +13,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Products slice: kept on the seeded in-memory adapter (demo only, no database).
-        // Singleton so create/update/delete survive for the lifetime of the process.
-        services.AddSingleton<IProductRepository, InMemoryProductRepository>();
-
         // Users slice: real SQL Server persistence via EF Core.
         var connectionString = configuration.GetConnectionString("FairPlaySports")
             ?? throw new InvalidOperationException(

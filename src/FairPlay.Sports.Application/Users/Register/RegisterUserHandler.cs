@@ -4,26 +4,20 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Users.Register;
 
-public sealed class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Result<UserDto>>
+public sealed class RegisterUserHandler(IUserRepository respository, IPasswordHasher passwordHasher) : IRequestHandler<RegisterUserCommand, Result<UserDto>>
 {
-    private readonly IUserRepository _users;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUserRepository _repository = respository;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
-    public RegisterUserHandler(IUserRepository users, IPasswordHasher passwordHasher)
+    public async Task<Result<UserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        _users = users;
-        _passwordHasher = passwordHasher;
-    }
-
-    public async Task<Result<UserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken = default)
-    {
-        if (await _users.ExistsByEmailAsync(request.Email, cancellationToken))
+        if (await _repository.ExistsByEmailAsync(request.Email, cancellationToken))
             return Result<UserDto>.Failure($"Email '{request.Email}' is already registered.");
 
-        if (await _users.ExistsByUserNameAsync(request.UserName, cancellationToken))
+        if (await _repository.ExistsByUserNameAsync(request.UserName, cancellationToken))
             return Result<UserDto>.Failure($"User name '{request.UserName}' is already taken.");
 
-        var user = User.Register(
+        var user = User.Create(
             Guid.NewGuid(),
             request.UserName,
             request.Email,
@@ -31,9 +25,8 @@ public sealed class RegisterUserHandler : IRequestHandler<RegisterUserCommand, R
             request.Team,
             DateTime.UtcNow);
 
-        await _users.AddAsync(user, cancellationToken);
+        await _repository.AddAsync(user, cancellationToken);
 
-        // The UnitOfWorkBehavior commits once this handler returns success.
         return Result<UserDto>.Success(UserDto.FromDomain(user));
     }
 }
