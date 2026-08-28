@@ -1,10 +1,5 @@
 namespace FairPlay.Sports.Domain.Users;
 
-/// <summary>
-/// Aggregate root for an application user. The model is persistence-ignorant:
-/// invariants are enforced here, mapping lives in the Infrastructure layer.
-/// The password is never held in clear text - only its hash.
-/// </summary>
 public sealed class User
 {
     public Guid Id { get; }
