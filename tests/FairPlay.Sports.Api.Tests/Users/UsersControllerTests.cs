@@ -7,22 +7,15 @@ using FairPlay.Sports.Application.Users.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-using NUnit.Framework;
 
 namespace FairPlay.Sports.Api.Tests.Users;
 
-/// <summary>
-/// Unit tests for UsersController in isolation: MediatR's <see cref="ISender"/> is mocked,
-/// so these tests verify only the controller's own responsibility - dispatching the right
-/// request (correct type, route id and request-to-command mapping) and translating
-/// Result/Result&lt;T&gt; outcomes into the correct HTTP responses. Validation, routing,
-/// model binding and persistence are out of scope here.
-/// </summary>
 [TestFixture]
 public class UsersControllerTests
 {
     private ISender _sender = null!;
     private UsersController _controller = null!;
+    private CancellationTokenSource cancellationTokenSource = null!;
 
     private static UserDto SampleDto(Guid? id = null) =>
         new(id ?? Guid.NewGuid(), "carlos", "carlos@example.com", "FairPlay FC", DateTime.UtcNow, Active: true);
@@ -32,22 +25,28 @@ public class UsersControllerTests
     {
         _sender = Substitute.For<ISender>();
         _controller = new UsersController(_sender);
+        cancellationTokenSource = new CancellationTokenSource();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        cancellationTokenSource.Dispose();
     }
 
     [Test]
     public async Task GetAll_DispatchesQuery_AndReturnsOkWithHandlerValue()
     {
-        using var cts = new CancellationTokenSource();
-        IReadOnlyList<UserDto> dtos = new List<UserDto> { SampleDto() };
+        var dtos = new List<UserDto> { SampleDto() };
         _sender.Send(Arg.Any<GetAllUsersQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<IReadOnlyList<UserDto>>.Success(dtos));
 
-        var response = await _controller.GetAll(cts.Token);
+        var response = await _controller.GetAll(cancellationTokenSource.Token);
 
         var okResult = response.Result as OkObjectResult;
         Assert.That(okResult, Is.Not.Null);
         Assert.That(okResult!.Value, Is.SameAs(dtos));
-        await _sender.Received(1).Send(Arg.Any<GetAllUsersQuery>(), cts.Token);
+        await _sender.Received(1).Send(Arg.Any<GetAllUsersQuery>(), cancellationTokenSource.Token);
     }
 
     [Test]
