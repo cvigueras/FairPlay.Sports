@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FairPlay.Sports.Application\FairPlay.Sports.Application.csproj" />
+    <ProjectReference Include="..\FairPlay.Sports.TestSupport\FairPlay.Sports.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>
