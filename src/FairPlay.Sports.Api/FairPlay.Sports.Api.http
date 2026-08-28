@@ -1,37 +1,23 @@
 @FairPlay.Sports.Api_HostAddress = http://localhost:5228
 
-### Get all dummy products
-GET {{FairPlay.Sports.Api_HostAddress}}/api/products
+### Get all users
+GET {{FairPlay.Sports.Api_HostAddress}}/api/users
 Accept: application/json
 
-### Get a dummy product by id (replace {{id}} with a real id from the list above)
+### Get a user by id (replace {{id}} with a real id from the list above)
 @id = 00000000-0000-0000-0000-000000000000
-GET {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
+GET {{FairPlay.Sports.Api_HostAddress}}/api/users/{{id}}
 Accept: application/json
 
-### Create a dummy product
-POST {{FairPlay.Sports.Api_HostAddress}}/api/products
+### Register a new user
+POST {{FairPlay.Sports.Api_HostAddress}}/api/users
 Content-Type: application/json
 
 {
-  "name": "Casco de ciclismo",
-  "description": "Casco ligero con ventilación",
-  "price": 59.99,
-  "stock": 25
+  "userName": "carlos",
+  "email": "carlos@example.com",
+  "password": "Sup3rSecret!",
+  "team": "FairPlay FC"
 }
-
-### Update a dummy product (replace {{id}} with a real id)
-PUT {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
-Content-Type: application/json
-
-{
-  "name": "Casco de ciclismo Pro",
-  "description": "Casco ligero reforzado",
-  "price": 69.99,
-  "stock": 20
-}
-
-### Delete a dummy product (replace {{id}} with a real id)
-DELETE {{FairPlay.Sports.Api_HostAddress}}/api/products/{{id}}
 
 ###

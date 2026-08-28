@@ -32,8 +32,8 @@ Asunto: `<type>(<scope>): <descripción>`
   - `perf` — mejoras de rendimiento
   - `style` — formato, sin cambio de lógica
 - **scope** (opcional pero preferible): área tocada. En este repo suele ser:
-  `api`, `application`, `infrastructure`, `domain`, `products`, `frontend`, `ci`, `deps`.
-  Si el cambio cruza varias capas, usa el scope funcional (`products`) o omítelo.
+  `api`, `application`, `infrastructure`, `domain`, `users`, `frontend`, `ci`, `deps`.
+  Si el cambio cruza varias capas, usa el scope funcional (`users`) o omítelo.
 - **descripción**: imperativo, en inglés, minúscula inicial, sin punto final, <= 72 caracteres.
 - **Breaking change**: añade `!` antes de los dos puntos (`feat(api)!: ...`) y un bloque
   `BREAKING CHANGE: <explicación>` al final del cuerpo.
@@ -49,8 +49,8 @@ Si hay varios tipos de cambio, prioriza el de mayor impacto (feat > fix > refact
 
 ### Ejemplos válidos para este repo
 
-- `feat(products): add stock-adjustment command and endpoint`
-- `refactor(application): dispatch product use cases through MediatR`
+- `feat(users): add password-reset command and endpoint`
+- `refactor(application): dispatch user use cases through MediatR`
 - `test(application): cover ValidationBehavior short-circuit path`
 - `build(deps): pin MediatR to 12.4.1`
 - `ci: bump GitHub Actions to v5`

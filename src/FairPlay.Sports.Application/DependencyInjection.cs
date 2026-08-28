@@ -1,5 +1,5 @@
 using FairPlay.Sports.Application.Common.Behaviors;
-using FairPlay.Sports.Application.Products.Create;
+using FairPlay.Sports.Application.Users.Register;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,14 +13,14 @@ public static class DependencyInjection
         // and wires the ValidationBehavior into every request pipeline.
         services.AddMediatR(configuration =>
         {
-            configuration.RegisterServicesFromAssemblyContaining<CreateProductHandler>();
+            configuration.RegisterServicesFromAssemblyContaining<RegisterUserHandler>();
             // Order matters: validation runs first, then the unit of work commits a
             // successful command inside it.
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
             configuration.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
         });
 
-        services.AddValidatorsFromAssemblyContaining<CreateProductValidator>();
+        services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
 
         return services;
     }

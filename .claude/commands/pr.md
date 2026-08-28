@@ -63,7 +63,7 @@ Si $ARGUMENTS no está vacío, úsalo como indicación sobre en qué centrar la 
 
 - Mismos `type`/`scope` que `/commit` (`feat`, `fix`, `refactor`, `test`,
   `docs`, `build`, `ci`, `chore`, `perf`, `style`; scopes `api`,
-  `application`, `infrastructure`, `domain`, `products`, `frontend`, `ci`,
+  `application`, `infrastructure`, `domain`, `users`, `frontend`, `ci`,
   `deps`).
 - Si la rama tiene un solo commit, reutiliza su asunto.
 - Si tiene varios, resume el conjunto con el `type` de mayor impacto
