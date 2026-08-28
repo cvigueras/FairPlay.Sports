@@ -12,22 +12,16 @@ namespace FairPlay.Sports.Api.Products;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class ProductsController : ControllerBase
+public sealed class ProductsController(ISender sender) : ControllerBase
 {
-    private readonly ISender _sender;
-
-    public ProductsController(ISender sender)
-    {
-        _sender = sender;
-    }
+    private readonly ISender _sender = sender;
 
     /// <summary>Returns the full dummy product catalog.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<ProductDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new GetAllProductsQuery(), cancellationToken);
-        return Ok(result.Value);
+        return Ok((await _sender.Send(new GetAllProductsQuery(), cancellationToken)).Value);
     }
 
     /// <summary>Returns a single dummy product by id.</summary>
@@ -36,8 +30,7 @@ public sealed class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new GetProductByIdQuery(id), cancellationToken);
-        return result.ToActionResult(this);
+        return (await _sender.Send(new GetProductByIdQuery(id), cancellationToken)).ToActionResult(this);
     }
 
     /// <summary>Creates a new dummy product in the in-memory catalog.</summary>
@@ -49,12 +42,9 @@ public sealed class ProductsController : ControllerBase
         var command = new CreateProductCommand(request.Name, request.Description, request.Price, request.Stock);
         var result = await _sender.Send(command, cancellationToken);
 
-        if (!result.IsSuccess)
-        {
-            return result.ToActionResult(this);
-        }
-
-        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+        return !result.IsSuccess
+            ? result.ToActionResult(this)
+            : (ActionResult<ProductDto>)CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>Updates an existing dummy product.</summary>
@@ -64,9 +54,7 @@ public sealed class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductDto>> Update(Guid id, UpdateProductRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.Stock);
-        var result = await _sender.Send(command, cancellationToken);
-        return result.ToActionResult(this);
+        return (await _sender.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.Stock), cancellationToken)).ToActionResult(this);
     }
 
     /// <summary>Deletes a dummy product.</summary>
@@ -75,7 +63,6 @@ public sealed class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new DeleteProductCommand(id), cancellationToken);
-        return result.ToActionResult(this);
+        return (await _sender.Send(new DeleteProductCommand(id), cancellationToken)).ToActionResult(this);
     }
 }

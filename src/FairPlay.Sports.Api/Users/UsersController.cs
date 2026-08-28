@@ -10,14 +10,9 @@ namespace FairPlay.Sports.Api.Users;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class UsersController : ControllerBase
+public sealed class UsersController(ISender sender) : ControllerBase
 {
-    private readonly ISender _sender;
-
-    public UsersController(ISender sender)
-    {
-        _sender = sender;
-    }
+    private readonly ISender _sender = sender;
 
     /// <summary>Returns every registered user (without password data).</summary>
     [HttpGet]

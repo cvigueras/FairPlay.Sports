@@ -3,20 +3,13 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Users.GetAll;
 
-public sealed class GetAllUsersHandler : IRequestHandler<GetAllUsersQuery, Result<IReadOnlyList<UserDto>>>
+public sealed class GetAllUsersHandler(IUserRepository repository) : IRequestHandler<GetAllUsersQuery, Result<IReadOnlyList<UserDto>>>
 {
-    private readonly IUserRepository _users;
+    private readonly IUserRepository _repository = repository;
 
-    public GetAllUsersHandler(IUserRepository users)
+    public async Task<Result<IReadOnlyList<UserDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        _users = users;
-    }
-
-    public async Task<Result<IReadOnlyList<UserDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken = default)
-    {
-        var users = await _users.GetAllAsync(cancellationToken);
-        IReadOnlyList<UserDto> dtos = users.Select(UserDto.FromDomain).ToList();
-
-        return Result<IReadOnlyList<UserDto>>.Success(dtos);
+        var result = (await _repository.GetAllAsync(cancellationToken)).Select(UserDto.FromDomain).ToList();
+        return Result<IReadOnlyList<UserDto>>.Success(result);
     }
 }
