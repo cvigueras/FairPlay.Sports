@@ -1,3 +1,4 @@
+using FairPlay.Sports.Api.Tests.TestSupport;
 using FairPlay.Sports.Api.Users;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
@@ -10,15 +11,13 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Api.Tests.Users;
 
+
 [TestFixture]
 public class UsersControllerTests
 {
     private ISender _sender = null!;
     private UsersController _controller = null!;
     private CancellationTokenSource cancellationTokenSource = null!;
-
-    private static UserDto SampleDto(Guid? id = null) =>
-        new(id ?? Guid.NewGuid(), "carlos", "carlos@example.com", "FairPlay FC", DateTime.UtcNow, Active: true);
 
     [SetUp]
     public void SetUp()
@@ -37,7 +36,7 @@ public class UsersControllerTests
     [Test]
     public async Task GetAll_DispatchesQuery_AndReturnsOkWithHandlerValue()
     {
-        var dtos = new List<UserDto> { SampleDto() };
+        var dtos = new List<UserDto> { UserMother.Dto() };
         _sender.Send(Arg.Any<GetAllUsersQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<IReadOnlyList<UserDto>>.Success(dtos));
 
@@ -52,7 +51,7 @@ public class UsersControllerTests
     [Test]
     public async Task GetById_DispatchesQueryWithRouteId_AndReturnsOkWithDto()
     {
-        var dto = SampleDto();
+        var dto = UserMother.Dto();
         _sender.Send(Arg.Any<GetUserByIdQuery>(), Arg.Any<CancellationToken>())
             .Returns(Result<UserDto>.Success(dto));
 
@@ -80,9 +79,9 @@ public class UsersControllerTests
     [Test]
     public async Task Register_MapsRequestFieldsOntoCommand()
     {
-        var request = new RegisterUserRequest("carlos", "carlos@example.com", "Sup3rSecret!", "FairPlay FC");
+        var request = UserMother.RegisterRequest();
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<UserDto>.Success(SampleDto()));
+            .Returns(Result<UserDto>.Success(UserMother.Dto()));
 
         await _controller.Register(request, CancellationToken.None);
 
@@ -98,12 +97,11 @@ public class UsersControllerTests
     [Test]
     public async Task Register_WhenHandlerSucceeds_ReturnsCreatedAtActionPointingToGetById()
     {
-        var dto = SampleDto();
+        var dto = UserMother.Dto();
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<UserDto>.Success(dto));
-        var request = new RegisterUserRequest(dto.UserName, dto.Email, "Sup3rSecret!", dto.Team);
 
-        var response = await _controller.Register(request, CancellationToken.None);
+        var response = await _controller.Register(UserMother.RegisterRequest(), CancellationToken.None);
 
         var createdResult = response.Result as CreatedAtActionResult;
         Assert.That(createdResult, Is.Not.Null);
@@ -119,10 +117,9 @@ public class UsersControllerTests
     public async Task Register_WhenHandlerFails_ReturnsBadRequest()
     {
         _sender.Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<UserDto>.Failure("Email 'carlos@example.com' is already registered."));
-        var request = new RegisterUserRequest("carlos", "carlos@example.com", "Sup3rSecret!", "FairPlay FC");
+            .Returns(Result<UserDto>.Failure(UserMother.EmailAlreadyRegistered));
 
-        var response = await _controller.Register(request, CancellationToken.None);
+        var response = await _controller.Register(UserMother.RegisterRequest(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
     }
