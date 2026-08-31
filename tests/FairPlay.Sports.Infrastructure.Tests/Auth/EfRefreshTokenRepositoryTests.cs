@@ -16,7 +16,9 @@ public class EfRefreshTokenRepositoryTests : RepositoryTestBase
 
     private static async Task<User> SeedUserAsync(Guid? id = null)
     {
-        var user = UserMother.DomainUser(id: id ?? Guid.NewGuid());
+        var userId = id ?? Guid.NewGuid();
+        var suffix = userId.ToString("N")[..8];
+        var user = UserMother.DomainUser(id: userId, userName: $"user-{suffix}", email: $"user-{suffix}@example.com");
         await using var context = NewContext();
         context.Users.Add(user);
         await context.SaveChangesAsync();
