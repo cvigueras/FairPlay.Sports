@@ -7,6 +7,7 @@ public sealed class User
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
     public string Team { get; private set; }
+    public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; }
     public bool Active { get; private set; }
 
@@ -16,6 +17,7 @@ public sealed class User
         string email,
         string passwordHash,
         string team,
+        UserRole role,
         DateTime createdAt,
         bool active)
     {
@@ -24,6 +26,7 @@ public sealed class User
         Email = email;
         PasswordHash = passwordHash;
         Team = team;
+        Role = role;
         CreatedAt = createdAt;
         Active = active;
     }
@@ -34,16 +37,21 @@ public sealed class User
         string email,
         string passwordHash,
         string team,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        UserRole role = UserRole.Member)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), createdAtUtc, active: true);
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), role, createdAtUtc, active: true);
     }
 
     public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);
 
     public void MoveToTeam(string team) => Team = ValidateTeam(team);
+
+    public void PromoteToAdmin() => Role = UserRole.Admin;
+
+    public void DemoteToMember() => Role = UserRole.Member;
 
     public void Deactivate() => Active = false;
 

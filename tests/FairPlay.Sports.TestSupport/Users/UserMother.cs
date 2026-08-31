@@ -18,17 +18,19 @@ public static class UserMother
         Guid? id = null,
         string? userName = null,
         string? email = null,
-        string? team = null) =>
+        string? team = null,
+        UserRole role = UserRole.Member) =>
         User.Create(
             id ?? Guid.NewGuid(),
             userName ?? UserName,
             email ?? Email,
             PasswordHash,
             team ?? Team,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            role);
 
     public static UserDto Dto(Guid? id = null) =>
-        new(id ?? Guid.NewGuid(), UserName, Email, Team, DateTime.UtcNow, Active: true);
+        new(id ?? Guid.NewGuid(), UserName, Email, Team, UserRole.Member, DateTime.UtcNow, Active: true);
 
     public static string EmailAlreadyRegistered => $"Email '{Email}' is already registered.";
 

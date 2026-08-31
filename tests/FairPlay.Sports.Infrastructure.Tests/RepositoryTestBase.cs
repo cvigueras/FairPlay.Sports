@@ -7,7 +7,7 @@ namespace FairPlay.Sports.Infrastructure.Tests;
 /// Base for tests that hit the real SQL Server container. Tests build fresh
 /// <see cref="FairPlaySportsDbContext"/> instances through <see cref="NewContext"/> (a separate
 /// one for arrange, act and assert avoids false positives from the change tracker); the
-/// <c>Users</c> table is emptied after every test so cases stay isolated.
+/// tables are emptied after every test so cases stay isolated.
 /// </summary>
 public abstract class RepositoryTestBase
 {
@@ -17,9 +17,11 @@ public abstract class RepositoryTestBase
             .Options);
 
     [TearDown]
-    public async Task EmptyUsersTable()
+    public async Task EmptyTables()
     {
         await using var context = NewContext();
+        // RefreshTokens first: it has an FK to Users.
+        await context.RefreshTokens.ExecuteDeleteAsync();
         await context.Users.ExecuteDeleteAsync();
     }
 }

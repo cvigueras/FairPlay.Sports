@@ -8,9 +8,10 @@ public sealed record UserDto(
     string UserName,
     string Email,
     string Team,
+    UserRole Role,
     DateTime CreatedAt,
     bool Active)
 {
     public static UserDto FromDomain(User user) =>
-        new(user.Id, user.UserName, user.Email, user.Team, user.CreatedAt, user.Active);
+        new(user.Id, user.UserName, user.Email, user.Team, user.Role, user.CreatedAt, user.Active);
 }
