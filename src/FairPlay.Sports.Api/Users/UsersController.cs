@@ -4,12 +4,14 @@ using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.Register;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FairPlay.Sports.Api.Users;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class UsersController(ISender sender) : ControllerBase
 {
     private readonly ISender _sender = sender;
@@ -33,8 +35,9 @@ public sealed class UsersController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Registers a new user and persists it to SQL Server.</summary>
+    /// <summary>Registers a new user and persists it to SQL Server. Public: this is sign-up.</summary>
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UserDto>> Register(RegisterUserRequest request, CancellationToken cancellationToken)

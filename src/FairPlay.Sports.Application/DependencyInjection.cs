@@ -1,3 +1,4 @@
+using FairPlay.Sports.Application.Auth;
 using FairPlay.Sports.Application.Common.Behaviors;
 using FairPlay.Sports.Application.Users.Register;
 using FluentValidation;
@@ -21,6 +22,9 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
+
+        // Application service shared by the login and refresh handlers.
+        services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
 
         return services;
     }
