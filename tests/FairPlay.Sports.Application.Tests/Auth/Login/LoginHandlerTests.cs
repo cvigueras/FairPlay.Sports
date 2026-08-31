@@ -8,12 +8,7 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Auth.Login;
 
-/// <summary>
-/// Unit tests for <see cref="LoginHandler"/>: repository, hasher and token issuer are all
-/// mocked. Scope is the handler's own logic - resolve the user by email, reject unknown /
-/// wrong-password / deactivated with one indistinguishable error, and hand a valid user to
-/// the issuer. Test data comes from <see cref="UserMother"/> / <see cref="AuthMother"/>.
-/// </summary>
+
 [TestFixture]
 public class LoginHandlerTests
 {

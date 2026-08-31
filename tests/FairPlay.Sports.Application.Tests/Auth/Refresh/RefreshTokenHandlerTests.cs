@@ -10,12 +10,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Auth.Refresh;
 
-/// <summary>
-/// Unit tests for <see cref="RefreshTokenHandler"/>: every port is mocked, real
-/// <see cref="RefreshToken"/> aggregates are used so revocation is observable. Scope is the
-/// rotation logic - reject unknown/expired tokens, burn the family when a revoked token is
-/// replayed, rotate a valid one and link old to new.
-/// </summary>
 [TestFixture]
 public class RefreshTokenHandlerTests
 {
@@ -133,7 +127,7 @@ public class RefreshTokenHandlerTests
             Assert.That(stored.RevokedAtUtc, Is.EqualTo(Now));
             Assert.That(stored.ReplacedByTokenId, Is.EqualTo(issued.RefreshTokenId));
         });
-        // The happy path relies on UnitOfWorkBehavior, not an explicit commit.
+
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

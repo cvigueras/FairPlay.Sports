@@ -17,7 +17,6 @@ public sealed class AuthController(ISender sender) : ControllerBase
 
     private readonly ISender _sender = sender;
 
-    /// <summary>Exchanges email + password for an access token and a refresh-token cookie.</summary>
     [HttpPost("login")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
@@ -28,7 +27,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
         return Authenticated(result);
     }
 
-    /// <summary>Rotates the refresh-token cookie and issues a fresh access token.</summary>
+    
     [HttpPost("refresh")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
@@ -39,7 +38,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
         return Authenticated(result);
     }
 
-    /// <summary>Revokes the current refresh token and clears its cookie.</summary>
+    
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

@@ -8,13 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FairPlay.Sports.Infrastructure.Tests.Auth;
 
-/// <summary>
-/// Integration tests for <see cref="EfRefreshTokenRepository"/> against a real SQL Server
-/// (Testcontainers). They cover what an in-memory provider cannot: the unique index on the
-/// token hash, the <c>UserId</c> foreign key, the server-side "active and not expired"
-/// filter, and that <see cref="EfRefreshTokenRepository.GetByTokenHashAsync"/> returns a
-/// tracked aggregate whose <c>Revoke</c> is persisted on commit.
-/// </summary>
+
 [TestFixture]
 public class EfRefreshTokenRepositoryTests : RepositoryTestBase
 {

@@ -51,6 +51,4 @@ public sealed class AuthTokenIssuer(
     }
 }
 
-/// <param name="Result">What the handler returns to the caller.</param>
-/// <param name="RefreshTokenId">Id of the new token, so a rotation can link the old one to it.</param>
 public sealed record IssuedTokens(AuthResultDto Result, Guid RefreshTokenId);

@@ -7,10 +7,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Auth.Logout;
 
-/// <summary>
-/// Unit tests for <see cref="LogoutHandler"/>: ports mocked, real aggregate used. Scope is
-/// "revoke the presented token if we have it, and always succeed".
-/// </summary>
 [TestFixture]
 public class LogoutHandlerTests
 {

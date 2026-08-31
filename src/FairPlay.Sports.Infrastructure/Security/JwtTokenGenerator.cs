@@ -9,11 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FairPlay.Sports.Infrastructure.Security;
 
-/// <summary>
-/// Driven adapter: signs a short-lived HS256 access token. Claims carry everything the
-/// Api needs to authorise a request without a database round-trip - the user id
-/// (<c>sub</c>), name, email, team and the single <c>role</c>.
-/// </summary>
 internal sealed class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly JwtOptions _options;
