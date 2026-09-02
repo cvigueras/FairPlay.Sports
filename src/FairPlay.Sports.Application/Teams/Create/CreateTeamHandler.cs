@@ -19,9 +19,7 @@ public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) 
             request.Name,
             request.Coach,
             request.City,
-            request.Type,
-            request.Division,
-            request.Category,
+            new TeamClassification(request.Type, request.Division, request.Category),
             _clock.UtcNow);
 
         await _repository.AddAsync(team, cancellationToken);

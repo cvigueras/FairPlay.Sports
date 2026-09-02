@@ -40,9 +40,9 @@ public class GetTeamByIdHandlerTests
             Assert.That(result.Value!.Name, Is.EqualTo(team.Name));
             Assert.That(result.Value!.Coach, Is.EqualTo(team.Coach));
             Assert.That(result.Value!.City, Is.EqualTo(team.City));
-            Assert.That(result.Value!.Type, Is.EqualTo(team.Type));
-            Assert.That(result.Value!.Division, Is.EqualTo(team.Division));
-            Assert.That(result.Value!.Category, Is.EqualTo(team.Category));
+            Assert.That(result.Value!.Type, Is.EqualTo(team.Classification.Type));
+            Assert.That(result.Value!.Division, Is.EqualTo(team.Classification.Division));
+            Assert.That(result.Value!.Category, Is.EqualTo(team.Classification.Category));
             Assert.That(result.Value!.HasCrest, Is.EqualTo(team.HasCrest));
             Assert.That(result.Value!.Active, Is.EqualTo(team.Active));
         });

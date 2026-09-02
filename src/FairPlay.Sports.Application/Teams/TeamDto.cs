@@ -20,9 +20,9 @@ public sealed record TeamDto(
             team.Name,
             team.Coach,
             team.City,
-            team.Type,
-            team.Division,
-            team.Category,
+            team.Classification.Type,
+            team.Classification.Division,
+            team.Classification.Category,
             team.HasCrest,
             team.CreatedAt,
             team.Active);

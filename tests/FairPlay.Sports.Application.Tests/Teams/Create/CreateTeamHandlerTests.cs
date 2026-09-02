@@ -68,9 +68,9 @@ public class CreateTeamHandlerTests
                 team.Name == TeamMother.Name &&
                 team.Coach == TeamMother.Coach &&
                 team.City == TeamMother.City &&
-                team.Type == TeamMother.DefaultType &&
-                team.Division == TeamMother.DefaultDivision &&
-                team.Category == TeamMother.DefaultCategory &&
+                team.Classification.Type == TeamMother.DefaultType &&
+                team.Classification.Division == TeamMother.DefaultDivision &&
+                team.Classification.Category == TeamMother.DefaultCategory &&
                 !team.HasCrest &&
                 !team.Active &&
                 team.Id != Guid.Empty &&

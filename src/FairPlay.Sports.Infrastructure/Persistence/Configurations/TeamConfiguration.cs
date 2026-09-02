@@ -15,18 +15,28 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(team => team.Name).IsRequired().HasMaxLength(100);
         builder.Property(team => team.Coach).IsRequired().HasMaxLength(100);
         builder.Property(team => team.City).IsRequired().HasMaxLength(100);
-        builder.Property(team => team.Type)
-            .IsRequired()
-            .HasMaxLength(20)
-            .HasConversion<string>();
-        builder.Property(team => team.Division)
-            .IsRequired()
-            .HasMaxLength(30)
-            .HasConversion<string>();
-        builder.Property(team => team.Category)
-            .IsRequired()
-            .HasMaxLength(20)
-            .HasConversion<string>();
+
+        // Value object flattened onto the same columns (Type / Division / Category)
+        // so the schema is unchanged.
+        builder.ComplexProperty(team => team.Classification, classification =>
+        {
+            classification.Property(c => c.Type)
+                .HasColumnName("Type")
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasConversion<string>();
+            classification.Property(c => c.Division)
+                .HasColumnName("Division")
+                .IsRequired()
+                .HasMaxLength(30)
+                .HasConversion<string>();
+            classification.Property(c => c.Category)
+                .HasColumnName("Category")
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasConversion<string>();
+        });
+
         builder.Property(team => team.Crest).HasColumnType("varbinary(max)");
         builder.Property(team => team.CrestContentType).HasMaxLength(100);
         builder.Property(team => team.CreatedAt).IsRequired();
