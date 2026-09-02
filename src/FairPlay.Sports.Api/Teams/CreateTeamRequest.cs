@@ -6,6 +6,6 @@ public sealed record CreateTeamRequest(
     string Name,
     string Coach,
     string City,
-    FootballType Type,
-    Division Division,
-    AgeCategory Category);
+    FootballType Type = default,
+    Division Division = default,
+    AgeCategory Category = default);

@@ -6,6 +6,7 @@ namespace FairPlay.Sports.Domain.Teams;
 /// </summary>
 public enum AgeCategory
 {
+    Default,
     /// <summary>Juvenil (16-18).</summary>
     Under19,
 

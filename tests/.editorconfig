@@ -1,0 +1,6 @@
+# Test projects only. No `root = true`, so any parent config still applies.
+
+[*.cs]
+# CA2007 ("call ConfigureAwait on the awaited task") targets reusable libraries.
+# Test hosts have no SynchronizationContext, so it adds only noise here.
+dotnet_diagnostic.CA2007.severity = none

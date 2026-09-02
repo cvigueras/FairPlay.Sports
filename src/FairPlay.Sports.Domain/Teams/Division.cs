@@ -3,6 +3,7 @@ namespace FairPlay.Sports.Domain.Teams;
 /// <summary>Competitive tier a team plays in, from the top down.</summary>
 public enum Division
 {
+    Default,
     /// <summary>División de Honor.</summary>
     HonorDivision,
 

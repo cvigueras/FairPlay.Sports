@@ -9,7 +9,7 @@ public sealed class User
     public string Team { get; private set; }
     public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; }
-    public bool Active { get; private set; }
+    public bool Active { get; private set; } = true;
 
     private User(
         Guid id,
@@ -18,8 +18,7 @@ public sealed class User
         string passwordHash,
         string team,
         UserRole role,
-        DateTime createdAt,
-        bool active)
+        DateTime createdAt)
     {
         Id = id;
         UserName = userName;
@@ -28,7 +27,6 @@ public sealed class User
         Team = team;
         Role = role;
         CreatedAt = createdAt;
-        Active = active;
     }
 
     public static User Create(
@@ -42,7 +40,7 @@ public sealed class User
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), role, createdAtUtc, active: true);
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), role, createdAtUtc);
     }
 
     public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);

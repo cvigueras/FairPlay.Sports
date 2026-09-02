@@ -18,7 +18,7 @@ public sealed class Team
     public byte[]? Crest { get; private set; }
     public string? CrestContentType { get; private set; }
     public DateTime CreatedAt { get; }
-    public bool Active { get; private set; }
+    public bool Active { get; private set; } = true;
 
     public bool HasCrest => Crest is { Length: > 0 };
 
@@ -30,8 +30,7 @@ public sealed class Team
         FootballType type,
         Division division,
         AgeCategory category,
-        DateTime createdAt,
-        bool active)
+        DateTime createdAt)
     {
         Id = id;
         Name = name;
@@ -41,7 +40,6 @@ public sealed class Team
         Division = division;
         Category = category;
         CreatedAt = createdAt;
-        Active = active;
     }
 
     public static Team Create(
@@ -65,8 +63,7 @@ public sealed class Team
             ValidateEnum(type, nameof(type)),
             ValidateEnum(division, nameof(division)),
             ValidateEnum(category, nameof(category)),
-            createdAtUtc,
-            active: true);
+            createdAtUtc);
     }
 
     public void Rename(string name) => Name = ValidateName(name);

@@ -6,6 +6,7 @@ namespace FairPlay.Sports.Domain.Teams;
 /// </summary>
 public enum FootballType
 {
+    Default,
     /// <summary>Fútbol 11 (eleven-a-side).</summary>
     Football11,
 
