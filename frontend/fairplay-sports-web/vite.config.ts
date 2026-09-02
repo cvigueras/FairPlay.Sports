@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import vuetify from 'vite-plugin-vuetify'
+import vueI18n from '@intlify/unplugin-vue-i18n/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +12,11 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     vuetify({ autoImport: true }),
+    // Precompiles src/locales/*.json at build time so we ship the smaller
+    // runtime-only vue-i18n (no in-browser message compiler, no unsafe-eval).
+    vueI18n({
+      include: [fileURLToPath(new URL('./src/locales/**', import.meta.url))],
+    }),
   ],
   resolve: {
     alias: {

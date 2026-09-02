@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "FairPlay Sports",
+    "passwordPlaceholder": "••••••••"
+  },
+  "validation": {
+    "userNameRequired": "Username is required.",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Enter a valid email.",
+    "teamRequired": "Team is required.",
+    "passwordRequired": "Password is required.",
+    "passwordMinLength": "Must be at least 8 characters.",
+    "passwordsMismatch": "Passwords do not match."
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Welcome back to FairPlay Sports",
+    "justRegistered": "Account created. Sign in to continue.",
+    "emailPlaceholder": "you{'@'}email.com",
+    "submit": "Sign in",
+    "submitting": "Signing in...",
+    "failed": "Incorrect email or password.",
+    "noAccount": "Don't have an account?",
+    "goRegister": "Sign up"
+  },
+  "register": {
+    "title": "Create account",
+    "subtitle": "Join FairPlay Sports",
+    "userName": "Username",
+    "userNamePlaceholder": "your_username",
+    "email": "Email",
+    "emailPlaceholder": "you{'@'}email.com",
+    "team": "Team",
+    "teamPlaceholder": "Your team",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Sign up",
+    "submitting": "Creating account...",
+    "failed": "Could not complete the registration. Please try again.",
+    "haveAccount": "Already have an account?",
+    "goLogin": "Sign in"
+  },
+  "profile": {
+    "title": "My profile",
+    "subtitle": "Your FairPlay Sports details",
+    "logout": "Log out",
+    "loggingOut": "Logging out...",
+    "fields": {
+      "userName": "Username",
+      "email": "Email",
+      "team": "Team",
+      "role": "Role",
+      "memberSince": "Member since",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "language": {
+    "label": "Language",
+    "es": "Spanish",
+    "en": "English"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "FairPlay Sports",
+    "passwordPlaceholder": "••••••••"
+  },
+  "validation": {
+    "userNameRequired": "El nombre de usuario es obligatorio.",
+    "emailRequired": "El email es obligatorio.",
+    "emailInvalid": "Introduce un email válido.",
+    "teamRequired": "El equipo es obligatorio.",
+    "passwordRequired": "La contraseña es obligatoria.",
+    "passwordMinLength": "Debe tener al menos 8 caracteres.",
+    "passwordsMismatch": "Las contraseñas no coinciden."
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "subtitle": "Bienvenido de nuevo a FairPlay Sports",
+    "justRegistered": "Cuenta creada. Inicia sesión para continuar.",
+    "emailPlaceholder": "tu{'@'}email.com",
+    "submit": "Entrar",
+    "submitting": "Entrando...",
+    "failed": "Email o contraseña incorrectos.",
+    "noAccount": "¿No tienes cuenta?",
+    "goRegister": "Regístrate"
+  },
+  "register": {
+    "title": "Crear cuenta",
+    "subtitle": "Únete a FairPlay Sports",
+    "userName": "Nombre de usuario",
+    "userNamePlaceholder": "tu_usuario",
+    "email": "Email",
+    "emailPlaceholder": "tu{'@'}email.com",
+    "team": "Equipo",
+    "teamPlaceholder": "Tu equipo",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "submit": "Registrarme",
+    "submitting": "Creando cuenta...",
+    "failed": "No se ha podido completar el registro. Inténtalo de nuevo.",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "goLogin": "Inicia sesión"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "subtitle": "Tu información en FairPlay Sports",
+    "logout": "Cerrar sesión",
+    "loggingOut": "Cerrando sesión...",
+    "fields": {
+      "userName": "Usuario",
+      "email": "Email",
+      "team": "Equipo",
+      "role": "Rol",
+      "memberSince": "Miembro desde",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    }
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "Inglés"
+  }
+}

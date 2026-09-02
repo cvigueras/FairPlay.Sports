@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/components/AuthLayout.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const form = reactive({
   userName: '',
@@ -28,24 +30,24 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 
 function validate(): boolean {
-  errors.userName = !form.userName.trim() ? 'El nombre de usuario es obligatorio.' : ''
+  errors.userName = !form.userName.trim() ? t('validation.userNameRequired') : ''
 
   errors.email = !form.email
-    ? 'El email es obligatorio.'
+    ? t('validation.emailRequired')
     : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-      ? 'Introduce un email válido.'
+      ? t('validation.emailInvalid')
       : ''
 
-  errors.team = !form.team.trim() ? 'El equipo es obligatorio.' : ''
+  errors.team = !form.team.trim() ? t('validation.teamRequired') : ''
 
   errors.password = !form.password
-    ? 'La contraseña es obligatoria.'
+    ? t('validation.passwordRequired')
     : form.password.length < 8
-      ? 'Debe tener al menos 8 caracteres.'
+      ? t('validation.passwordMinLength')
       : ''
 
   errors.confirmPassword =
-    form.confirmPassword !== form.password ? 'Las contraseñas no coinciden.' : ''
+    form.confirmPassword !== form.password ? t('validation.passwordsMismatch') : ''
 
   return (
     !errors.userName &&
@@ -70,10 +72,7 @@ async function handleSubmit() {
     })
     await router.push({ path: '/login', query: { registered: '1' } })
   } catch (error) {
-    submitError.value =
-      error instanceof ApiError
-        ? error.message
-        : 'No se ha podido completar el registro. Inténtalo de nuevo.'
+    submitError.value = error instanceof ApiError ? error.message : t('register.failed')
   } finally {
     isSubmitting.value = false
   }
@@ -81,47 +80,52 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Crear cuenta" subtitle="Únete a FairPlay Sports">
+  <AuthLayout :title="t('register.title')" :subtitle="t('register.subtitle')">
     <v-form novalidate @submit.prevent="handleSubmit">
       <v-text-field
         v-model="form.userName"
-        label="Nombre de usuario"
+        :label="t('register.userName')"
         autocomplete="username"
+        :placeholder="t('register.userNamePlaceholder')"
         :error-messages="errors.userName"
         class="mb-2"
       />
 
       <v-text-field
         v-model="form.email"
-        label="Email"
+        :label="t('register.email')"
         type="email"
         autocomplete="email"
+        :placeholder="t('register.emailPlaceholder')"
         :error-messages="errors.email"
         class="mb-2"
       />
 
       <v-text-field
         v-model="form.team"
-        label="Equipo"
+        :label="t('register.team')"
         autocomplete="organization"
+        :placeholder="t('register.teamPlaceholder')"
         :error-messages="errors.team"
         class="mb-2"
       />
 
       <v-text-field
         v-model="form.password"
-        label="Contraseña"
+        :label="t('register.password')"
         type="password"
         autocomplete="new-password"
+        :placeholder="t('common.passwordPlaceholder')"
         :error-messages="errors.password"
         class="mb-2"
       />
 
       <v-text-field
         v-model="form.confirmPassword"
-        label="Confirmar contraseña"
+        :label="t('register.confirmPassword')"
         type="password"
         autocomplete="new-password"
+        :placeholder="t('common.passwordPlaceholder')"
         :error-messages="errors.confirmPassword"
         class="mb-2"
       />
@@ -131,14 +135,14 @@ async function handleSubmit() {
       </v-alert>
 
       <v-btn type="submit" block size="large" :loading="isSubmitting">
-        {{ isSubmitting ? 'Creando cuenta...' : 'Registrarme' }}
+        {{ isSubmitting ? t('register.submitting') : t('register.submit') }}
       </v-btn>
     </v-form>
 
     <template #footer>
-      ¿Ya tienes cuenta?
+      {{ t('register.haveAccount') }}
       <RouterLink to="/login" class="text-primary text-decoration-none font-weight-medium">
-        Inicia sesión
+        {{ t('register.goLogin') }}
       </RouterLink>
     </template>
   </AuthLayout>
