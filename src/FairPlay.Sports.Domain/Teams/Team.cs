@@ -2,7 +2,6 @@ namespace FairPlay.Sports.Domain.Teams;
 
 public sealed class Team
 {
-    /// <summary>Upper bound for a stored crest image.</summary>
     public const int MaxCrestBytes = 2 * 1024 * 1024;
 
     private static readonly string[] AllowedCrestContentTypes =
@@ -13,13 +12,11 @@ public sealed class Team
     public string Coach { get; private set; }
     public string City { get; private set; }
 
-    /// <summary>Set by the factory; EF populates it as a complex property, not via the ctor.</summary>
     public TeamClassification Classification { get; private set; } = null!;
 
     public byte[]? Crest { get; private set; }
     public string? CrestContentType { get; private set; }
 
-    /// <summary>Set by the domain when the team is created; never passed to the constructor.</summary>
     public DateTime CreatedAt { get; private init; }
 
     public bool Active { get; private set; } = false;
