@@ -84,7 +84,7 @@ async function handleLogout() {
         <v-avatar color="primary" size="64" class="text-h6 font-weight-bold">
           {{ initials }}
         </v-avatar>
-        <div class="flex-grow-1 min-w-0">
+        <div class="flex-grow-1 overflow-hidden">
           <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
           <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
           <v-chip

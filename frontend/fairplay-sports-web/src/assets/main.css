@@ -1,12 +1,19 @@
 /* FairPlay Sports - app-wide styles.
  *
- * Screen styling is done with Vuetify component props and utility classes;
- * this file collects the handful of rules that have no utility equivalent, so
- * that no component carries its own <style> block. */
+ * Screens are styled with Vuetify component props and utility classes. Only the
+ * rules below have no Vuetify utility equivalent, so they live here as shared
+ * classes instead of in any component's <style> block.
+ *
+ * Reviewed against Vuetify 4 utilities:
+ *   - min-width:0  -> replaced in markup by `overflow-hidden` (makes a flex
+ *                     child shrinkable so `text-truncate` works).
+ *   - h-screen     -> exists (height: 100dvh) but is a fixed height; the auth
+ *                     pages need `min-height` so a tall form can still grow and
+ *                     scroll on short viewports.
+ *   - max-width    -> Vuetify only ships `w-100` / `w-auto`, no arbitrary value.
+ *   - gradients    -> no utility; `bg-*` only maps theme colours. */
 
-/* Auth pages: full-height slate gradient behind the centered card. An explicit
- * min-height is needed because Vuetify's `fill-height` (height: 100%) collapses
- * under a flex-stretched <v-main> - the percentage has no definite base. */
+/* Auth pages: full-height slate gradient behind the centered card. */
 .auth-bg {
   min-height: 100dvh;
   background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
@@ -15,9 +22,4 @@
 /* Profile screen: constrain the content column. */
 .profile-container {
   max-width: 800px;
-}
-
-/* Let a flex child shrink past its content so `text-truncate` can apply. */
-.min-w-0 {
-  min-width: 0;
 }
