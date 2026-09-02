@@ -9,7 +9,7 @@ public sealed class User
     public string Team { get; private set; }
     public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; }
-    public bool Active { get; private set; } = true;
+    public bool Active { get; private set; } = false;
 
     private User(
         Guid id,
@@ -53,7 +53,7 @@ public sealed class User
 
     public void Deactivate() => Active = false;
 
-    public void Reactivate() => Active = true;
+    public void Activate() => Active = true;
 
     private static string ValidateUserName(string userName)
     {

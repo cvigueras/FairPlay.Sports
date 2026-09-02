@@ -26,8 +26,10 @@ public static class TeamMother
         string? city = null,
         FootballType? type = null,
         Division? division = null,
-        AgeCategory? category = null) =>
-        Team.Create(
+        AgeCategory? category = null,
+        bool active = true)
+    {
+        var team = Team.Create(
             id ?? Guid.NewGuid(),
             name ?? Name,
             coach ?? Coach,
@@ -36,6 +38,12 @@ public static class TeamMother
             division ?? DefaultDivision,
             category ?? DefaultCategory,
             DateTime.UtcNow);
+
+        if (active)
+            team.Activate();
+
+        return team;
+    }
 
     public static Team DomainTeamWithCrest(Guid? id = null)
     {

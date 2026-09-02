@@ -17,7 +17,7 @@ public class TeamTests
         Team.Create(Guid.NewGuid(), name, coach, city, type, division, category, Now);
 
     [Test]
-    public void Create_TrimsTextFields_AndStartsActiveWithoutCrest()
+    public void Create_TrimsTextFields_AndStartsInactiveWithoutCrest()
     {
         var team = Create(name: "  FairPlay FC  ", coach: "  Marta Rios  ", city: "  Sevilla  ");
 
@@ -26,10 +26,20 @@ public class TeamTests
             Assert.That(team.Name, Is.EqualTo("FairPlay FC"));
             Assert.That(team.Coach, Is.EqualTo("Marta Rios"));
             Assert.That(team.City, Is.EqualTo("Sevilla"));
-            Assert.That(team.Active, Is.True);
+            Assert.That(team.Active, Is.False);
             Assert.That(team.HasCrest, Is.False);
             Assert.That(team.CreatedAt, Is.EqualTo(Now));
         });
+    }
+
+    [Test]
+    public void Activate_TurnsTheTeamActive()
+    {
+        var team = Create();
+
+        team.Activate();
+
+        Assert.That(team.Active, Is.True);
     }
 
     [TestCase("")]

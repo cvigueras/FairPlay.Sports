@@ -55,7 +55,7 @@ public class CreateTeamHandlerTests
             Assert.That(result.Value!.Division, Is.EqualTo(TeamMother.DefaultDivision));
             Assert.That(result.Value!.Category, Is.EqualTo(TeamMother.DefaultCategory));
             Assert.That(result.Value!.HasCrest, Is.False);
-            Assert.That(result.Value!.Active, Is.True);
+            Assert.That(result.Value!.Active, Is.False);
             Assert.That(result.Value!.Id, Is.Not.EqualTo(Guid.Empty));
         });
 
@@ -68,7 +68,7 @@ public class CreateTeamHandlerTests
                 team.Division == TeamMother.DefaultDivision &&
                 team.Category == TeamMother.DefaultCategory &&
                 !team.HasCrest &&
-                team.Active &&
+                !team.Active &&
                 team.Id != Guid.Empty &&
                 team.CreatedAt >= before && team.CreatedAt <= after),
             Arg.Any<CancellationToken>());

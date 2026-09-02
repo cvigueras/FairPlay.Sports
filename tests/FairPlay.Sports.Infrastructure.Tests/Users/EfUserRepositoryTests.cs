@@ -134,6 +134,38 @@ public class EfUserRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task GetByIdForUpdateAsync_tracksTheEntity()
+    {
+        var user = UserMother.DomainUser();
+        await SeedAsync(user);
+
+        await using var context = NewContext();
+        await new EfUserRepository(context).GetByIdForUpdateAsync(user.Id);
+
+        Assert.That(context.ChangeTracker.Entries<User>(), Is.Not.Empty);
+    }
+
+    [Test]
+    public async Task Activate_throughTrackedGetter_thenCommit_persistsActiveTrue()
+    {
+        var user = UserMother.DomainUser(active: false);
+        await SeedAsync(user);
+
+        await using (var act = NewContext())
+        {
+            var repository = new EfUserRepository(act);
+            var unitOfWork = new UnitOfWork(act);
+            var tracked = await repository.GetByIdForUpdateAsync(user.Id);
+            tracked!.Activate();
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(persisted.Active, Is.True);
+    }
+
+    [Test]
     public async Task GetAllAsync_ordersByUserNameAscending()
     {
         await SeedAsync(

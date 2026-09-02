@@ -18,7 +18,7 @@ public sealed class Team
     public byte[]? Crest { get; private set; }
     public string? CrestContentType { get; private set; }
     public DateTime CreatedAt { get; }
-    public bool Active { get; private set; } = true;
+    public bool Active { get; private set; } = false;
 
     public bool HasCrest => Crest is { Length: > 0 };
 
@@ -80,7 +80,7 @@ public sealed class Team
 
     public void Deactivate() => Active = false;
 
-    public void Reactivate() => Active = true;
+    public void Activate() => Active = true;
 
     public void SetCrest(byte[] image, string contentType)
     {

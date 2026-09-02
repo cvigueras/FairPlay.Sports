@@ -1,6 +1,7 @@
 using FairPlay.Sports.Api.Common;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Teams;
+using FairPlay.Sports.Application.Teams.Activate;
 using FairPlay.Sports.Application.Teams.Create;
 using FairPlay.Sports.Application.Teams.GetAll;
 using FairPlay.Sports.Application.Teams.GetById;
@@ -56,6 +57,15 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+
+    [HttpPost("{id:guid}/activate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ActivateTeamCommand(id), cancellationToken);
+        return result.ToActionResult(this);
     }
 
     [HttpPost("{id:guid}/crest")]

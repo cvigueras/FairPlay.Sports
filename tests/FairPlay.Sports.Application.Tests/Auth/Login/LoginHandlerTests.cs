@@ -55,16 +55,20 @@ public class LoginHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenUserDeactivated_ReturnsGenericFailure_WithoutCheckingPassword()
+    public async Task Handle_WhenUserInactive_StillSignsIn()
     {
-        var user = UserMother.DomainUser();
-        user.Deactivate();
+        // Newly registered users are inactive until they have a team; that gates
+        // team features, not sign-in.
+        var user = UserMother.DomainUser(active: false);
+        var issued = AuthMother.Issued();
         _users.GetByEmailAsync(UserMother.Email, Arg.Any<CancellationToken>()).Returns(user);
+        _passwordHasher.Verify(user.PasswordHash, UserMother.Password).Returns(true);
+        _tokenIssuer.IssueAsync(user, Arg.Any<CancellationToken>()).Returns(issued);
 
         var result = await _handler.Handle(AuthMother.LoginCommand(), CancellationToken.None);
 
-        Assert.That(result.Error, Is.EqualTo(AuthMother.InvalidCredentials));
-        _passwordHasher.DidNotReceive().Verify(Arg.Any<string>(), Arg.Any<string>());
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.SameAs(issued.Result));
     }
 
     [Test]
