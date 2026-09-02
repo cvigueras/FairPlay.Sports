@@ -6,13 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FairPlay.Sports.Infrastructure.Tests.Teams;
 
-/// <summary>
-/// Integration tests for <see cref="EfTeamRepository"/> against a real SQL Server (Testcontainers).
-/// They cover what an in-memory provider cannot: the unique index on Name, the column length
-/// limits, the enum-to-string conversions, the crest <c>varbinary</c> round-trip, tracked vs
-/// no-tracking reads, and that writes only land once the unit of work commits. Test data comes
-/// from <see cref="TeamMother"/>.
-/// </summary>
 [TestFixture]
 public class EfTeamRepositoryTests : RepositoryTestBase
 {

@@ -6,11 +6,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Teams.GetCrest;
 
-/// <summary>
-/// Unit tests for <see cref="GetTeamCrestHandler"/>: the repository port is mocked. Scope is
-/// "return the projected crest, or NotFound when the team has none". Test data comes from
-/// <see cref="TeamMother"/>.
-/// </summary>
 [TestFixture]
 public class GetTeamCrestHandlerTests
 {

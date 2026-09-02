@@ -2,7 +2,6 @@ using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Application.Teams;
 
-/// <summary>Read model for a team. Carries whether a crest exists, not the image bytes.</summary>
 public sealed record TeamDto(
     Guid Id,
     string Name,

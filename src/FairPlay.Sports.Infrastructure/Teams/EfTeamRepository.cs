@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FairPlay.Sports.Infrastructure.Teams;
 
-/// <summary>Driven adapter: implements <see cref="ITeamRepository"/> over SQL Server.</summary>
 internal sealed class EfTeamRepository : ITeamRepository
 {
     private readonly FairPlaySportsDbContext _context;

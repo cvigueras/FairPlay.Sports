@@ -19,7 +19,6 @@ public sealed class TeamsController(ISender sender) : ControllerBase
 {
     private readonly ISender _sender = sender;
 
-    /// <summary>Returns every team.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<TeamDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<TeamDto>>> GetAll(CancellationToken cancellationToken)
@@ -28,7 +27,6 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         return Ok(result.Value);
     }
 
-    /// <summary>Returns a single team by id.</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(TeamDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -38,7 +36,6 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Creates a new team and persists it to SQL Server.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(TeamDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -61,7 +58,6 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
     }
 
-    /// <summary>Uploads (or replaces) the team crest image.</summary>
     [HttpPost("{id:guid}/crest")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(Domain.Teams.Team.MaxCrestBytes + 4096)]
@@ -79,7 +75,6 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Serves the team crest image. Public so it can be used directly as an image source.</summary>
     [HttpGet("{id:guid}/crest")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]

@@ -6,11 +6,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Teams.GetAll;
 
-/// <summary>
-/// Unit tests for <see cref="GetAllTeamsHandler"/>: the repository port is mocked, the real
-/// <c>TeamDto.FromDomain</c> mapping runs. Scope is the handler's own logic - fetch, map,
-/// wrap in a successful Result. Test data comes from <see cref="TeamMother"/>.
-/// </summary>
 [TestFixture]
 public class GetAllTeamsHandlerTests
 {

@@ -7,13 +7,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Teams.Create;
 
-/// <summary>
-/// Unit tests for <see cref="CreateTeamHandler"/>: the <see cref="ITeamRepository"/> port is
-/// mocked, the real <see cref="Team"/> aggregate is built. Scope is the handler's own logic -
-/// the uniqueness guard on the name and building the created-team DTO. FluentValidation and the
-/// unit-of-work commit are pipeline behaviors and out of scope here. Test data comes from
-/// <see cref="TeamMother"/>.
-/// </summary>
 [TestFixture]
 public class CreateTeamHandlerTests
 {

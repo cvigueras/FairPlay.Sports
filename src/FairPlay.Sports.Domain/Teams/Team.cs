@@ -85,7 +85,6 @@ public sealed class Team
 
     public void Reactivate() => Active = true;
 
-    /// <summary>Attaches (or replaces) the team crest image.</summary>
     public void SetCrest(byte[] image, string contentType)
     {
         if (image is null || image.Length == 0)

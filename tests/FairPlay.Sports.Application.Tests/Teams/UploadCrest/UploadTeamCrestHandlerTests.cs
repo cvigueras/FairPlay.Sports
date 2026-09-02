@@ -7,12 +7,6 @@ using NSubstitute;
 
 namespace FairPlay.Sports.Application.Tests.Teams.UploadCrest;
 
-/// <summary>
-/// Unit tests for <see cref="UploadTeamCrestHandler"/>: the repository port is mocked, the real
-/// <see cref="Team"/> aggregate is mutated. Scope is "load the tracked team, set the crest,
-/// translate missing into NotFound". Structural checks on the image are a validator concern and
-/// out of scope here. Test data comes from <see cref="TeamMother"/>.
-/// </summary>
 [TestFixture]
 public class UploadTeamCrestHandlerTests
 {
