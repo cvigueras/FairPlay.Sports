@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
+import AuthLayout from '@/components/AuthLayout.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
 
 const form = reactive({
-  name: '',
+  userName: '',
   email: '',
+  team: '',
   password: '',
   confirmPassword: '',
 })
 
 const errors = reactive({
-  name: '',
+  userName: '',
   email: '',
+  team: '',
   password: '',
   confirmPassword: '',
 })
@@ -24,7 +28,7 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 
 function validate(): boolean {
-  errors.name = !form.name.trim() ? 'El nombre es obligatorio.' : ''
+  errors.userName = !form.userName.trim() ? 'El nombre de usuario es obligatorio.' : ''
 
   errors.email = !form.email
     ? 'El email es obligatorio.'
@@ -32,16 +36,24 @@ function validate(): boolean {
       ? 'Introduce un email válido.'
       : ''
 
+  errors.team = !form.team.trim() ? 'El equipo es obligatorio.' : ''
+
   errors.password = !form.password
     ? 'La contraseña es obligatoria.'
-    : form.password.length < 6
-      ? 'Debe tener al menos 6 caracteres.'
+    : form.password.length < 8
+      ? 'Debe tener al menos 8 caracteres.'
       : ''
 
   errors.confirmPassword =
     form.confirmPassword !== form.password ? 'Las contraseñas no coinciden.' : ''
 
-  return !errors.name && !errors.email && !errors.password && !errors.confirmPassword
+  return (
+    !errors.userName &&
+    !errors.email &&
+    !errors.team &&
+    !errors.password &&
+    !errors.confirmPassword
+  )
 }
 
 async function handleSubmit() {
@@ -50,10 +62,18 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   try {
-    await auth.register(form.name, form.email)
-    await router.push('/dashboard')
-  } catch {
-    submitError.value = 'No se ha podido completar el registro. Inténtalo de nuevo.'
+    await auth.register({
+      userName: form.userName.trim(),
+      email: form.email,
+      team: form.team.trim(),
+      password: form.password,
+    })
+    await router.push({ path: '/login', query: { registered: '1' } })
+  } catch (error) {
+    submitError.value =
+      error instanceof ApiError
+        ? error.message
+        : 'No se ha podido completar el registro. Inténtalo de nuevo.'
   } finally {
     isSubmitting.value = false
   }
@@ -61,69 +81,65 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="auth-page">
-    <form class="auth-card" novalidate @submit.prevent="handleSubmit">
-      <h1 class="auth-title">Crear cuenta</h1>
-      <p class="auth-subtitle">Únete a FairPlay Sports</p>
+  <AuthLayout title="Crear cuenta" subtitle="Únete a FairPlay Sports">
+    <v-form novalidate @submit.prevent="handleSubmit">
+      <v-text-field
+        v-model="form.userName"
+        label="Nombre de usuario"
+        autocomplete="username"
+        :error-messages="errors.userName"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Nombre</span>
-        <input
-          v-model="form.name"
-          type="text"
-          autocomplete="name"
-          placeholder="Tu nombre"
-          :class="{ invalid: errors.name }"
-        />
-        <span v-if="errors.name" class="field-error">{{ errors.name }}</span>
-      </label>
+      <v-text-field
+        v-model="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        :error-messages="errors.email"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Email</span>
-        <input
-          v-model="form.email"
-          type="email"
-          autocomplete="email"
-          placeholder="tu@email.com"
-          :class="{ invalid: errors.email }"
-        />
-        <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-      </label>
+      <v-text-field
+        v-model="form.team"
+        label="Equipo"
+        autocomplete="organization"
+        :error-messages="errors.team"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Contraseña</span>
-        <input
-          v-model="form.password"
-          type="password"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          :class="{ invalid: errors.password }"
-        />
-        <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-      </label>
+      <v-text-field
+        v-model="form.password"
+        label="Contraseña"
+        type="password"
+        autocomplete="new-password"
+        :error-messages="errors.password"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Confirmar contraseña</span>
-        <input
-          v-model="form.confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          :class="{ invalid: errors.confirmPassword }"
-        />
-        <span v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</span>
-      </label>
+      <v-text-field
+        v-model="form.confirmPassword"
+        label="Confirmar contraseña"
+        type="password"
+        autocomplete="new-password"
+        :error-messages="errors.confirmPassword"
+        class="mb-2"
+      />
 
-      <p v-if="submitError" class="form-error">{{ submitError }}</p>
+      <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
+        {{ submitError }}
+      </v-alert>
 
-      <button class="submit-button" type="submit" :disabled="isSubmitting">
+      <v-btn type="submit" block size="large" :loading="isSubmitting">
         {{ isSubmitting ? 'Creando cuenta...' : 'Registrarme' }}
-      </button>
+      </v-btn>
+    </v-form>
 
-      <p class="auth-footer">
-        ¿Ya tienes cuenta?
-        <RouterLink to="/login">Inicia sesión</RouterLink>
-      </p>
-    </form>
-  </div>
+    <template #footer>
+      ¿Ya tienes cuenta?
+      <RouterLink to="/login" class="text-primary text-decoration-none font-weight-medium">
+        Inicia sesión
+      </RouterLink>
+    </template>
+  </AuthLayout>
 </template>

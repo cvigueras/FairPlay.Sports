@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AuthLayout from '@/components/AuthLayout.vue'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
+
+const justRegistered = computed(() => route.query.registered === '1')
 
 const form = reactive({
   email: '',
@@ -26,11 +30,7 @@ function validate(): boolean {
       ? 'Introduce un email válido.'
       : ''
 
-  errors.password = !form.password
-    ? 'La contraseña es obligatoria.'
-    : form.password.length < 6
-      ? 'Debe tener al menos 6 caracteres.'
-      : ''
+  errors.password = !form.password ? 'La contraseña es obligatoria.' : ''
 
   return !errors.email && !errors.password
 }
@@ -41,10 +41,10 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   try {
-    await auth.login(form.email)
-    await router.push('/dashboard')
+    await auth.login(form.email, form.password)
+    await router.push('/profile')
   } catch {
-    submitError.value = 'No se ha podido iniciar sesión. Inténtalo de nuevo.'
+    submitError.value = 'Email o contraseña incorrectos.'
   } finally {
     isSubmitting.value = false
   }
@@ -52,45 +52,50 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="auth-page">
-    <form class="auth-card" novalidate @submit.prevent="handleSubmit">
-      <h1 class="auth-title">Iniciar sesión</h1>
-      <p class="auth-subtitle">Bienvenido de nuevo a FairPlay Sports</p>
+  <AuthLayout title="Iniciar sesión" subtitle="Bienvenido de nuevo a FairPlay Sports">
+    <v-form novalidate @submit.prevent="handleSubmit">
+      <v-alert
+        v-if="justRegistered"
+        type="success"
+        variant="tonal"
+        density="compact"
+        class="mb-4"
+      >
+        Cuenta creada. Inicia sesión para continuar.
+      </v-alert>
 
-      <label class="field">
-        <span class="field-label">Email</span>
-        <input
-          v-model="form.email"
-          type="email"
-          autocomplete="email"
-          placeholder="tu@email.com"
-          :class="{ invalid: errors.email }"
-        />
-        <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-      </label>
+      <v-text-field
+        v-model="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        :error-messages="errors.email"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Contraseña</span>
-        <input
-          v-model="form.password"
-          type="password"
-          autocomplete="current-password"
-          placeholder="••••••••"
-          :class="{ invalid: errors.password }"
-        />
-        <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-      </label>
+      <v-text-field
+        v-model="form.password"
+        label="Contraseña"
+        type="password"
+        autocomplete="current-password"
+        :error-messages="errors.password"
+        class="mb-2"
+      />
 
-      <p v-if="submitError" class="form-error">{{ submitError }}</p>
+      <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
+        {{ submitError }}
+      </v-alert>
 
-      <button class="submit-button" type="submit" :disabled="isSubmitting">
+      <v-btn type="submit" block size="large" :loading="isSubmitting">
         {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
-      </button>
+      </v-btn>
+    </v-form>
 
-      <p class="auth-footer">
-        ¿No tienes cuenta?
-        <RouterLink to="/register">Regístrate</RouterLink>
-      </p>
-    </form>
-  </div>
+    <template #footer>
+      ¿No tienes cuenta?
+      <RouterLink to="/register" class="text-primary text-decoration-none font-weight-medium">
+        Regístrate
+      </RouterLink>
+    </template>
+  </AuthLayout>
 </template>
