@@ -11,12 +11,10 @@ const string FrontendCorsPolicy = "FrontendCorsPolicy";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
@@ -50,9 +48,6 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
-// Origins allowed to call the API with credentials. Defaults cover the Vite dev
-// server on both hostnames (localhost and 127.0.0.1 are distinct origins to the
-// browser); override via `Cors:AllowedOrigins` in config for other setups.
 string[] corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     is { Length: > 0 } configured
     ? configured
@@ -65,18 +60,14 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
-            // Required so the browser sends and stores the refresh-token cookie.
             .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Local convenience: bring the database up to the latest migration on startup.
-    // Production applies migrations as an explicit deploy step, never here.
     await app.Services.MigrateAsync();
 
     app.MapOpenApi();
@@ -98,7 +89,6 @@ app.MapControllers();
 
 app.Run();
 
-// Exposed so WebApplicationFactory<Program> can be used from integration tests.
 public partial class Program
 {
 }
