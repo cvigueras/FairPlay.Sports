@@ -3,10 +3,6 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Teams.Activate;
 
-/// <summary>
-/// Turns a team active. Teams are created inactive. Idempotent: activating an
-/// already-active team succeeds. Committed by <c>UnitOfWorkBehavior</c>.
-/// </summary>
 public sealed class ActivateTeamHandler(ITeamRepository repository) : IRequestHandler<ActivateTeamCommand, Result>
 {
     private readonly ITeamRepository _repository = repository;
