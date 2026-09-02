@@ -76,7 +76,7 @@ async function handleLogout() {
   </v-app-bar>
 
   <v-main>
-    <v-container v-if="user" class="py-10" style="max-width: 800px">
+    <v-container v-if="user" class="py-10 profile-container">
       <h1 class="text-h5 font-weight-bold">Mi perfil</h1>
       <p class="text-body-2 text-medium-emphasis mb-6">Tu información en FairPlay Sports</p>
 
@@ -84,7 +84,7 @@ async function handleLogout() {
         <v-avatar color="primary" size="64" class="text-h6 font-weight-bold">
           {{ initials }}
         </v-avatar>
-        <div class="flex-grow-1" style="min-width: 0">
+        <div class="flex-grow-1 min-w-0">
           <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
           <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
           <v-chip

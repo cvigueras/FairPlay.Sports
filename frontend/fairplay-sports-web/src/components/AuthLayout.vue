@@ -23,13 +23,3 @@ defineProps<{
     </div>
   </v-main>
 </template>
-
-<style scoped>
-/* Own the full viewport height explicitly: Vuetify's `fill-height` (height: 100%)
-   collapses here because <v-main>'s height comes from flex-stretch, not a
-   definite value, so a percentage height has nothing to resolve against. */
-.auth-bg {
-  min-height: 100dvh;
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
-}
-</style>
