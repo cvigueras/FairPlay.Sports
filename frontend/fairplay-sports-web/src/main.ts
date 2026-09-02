@@ -5,10 +5,16 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
+import { useAuthStore } from './stores/auth'
 
 const app = createApp(App)
 
 app.use(createPinia())
+
+// Restore the session from the refresh-token cookie before the first route
+// resolves, so a reload on a protected page doesn't bounce to /login.
+await useAuthStore().tryRefresh()
+
 app.use(router)
 
 app.mount('#app')

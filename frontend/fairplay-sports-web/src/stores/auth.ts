@@ -1,41 +1,69 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { http } from '@/lib/http'
+import type { User } from '@/types/user'
 
-export interface DummyUser {
-  name: string
+interface AuthResponse {
+  accessToken: string
+  expiresAtUtc: string
+  user: User
+}
+
+export interface RegisterPayload {
+  userName: string
   email: string
+  password: string
+  team: string
 }
 
 /**
- * Dummy auth store: no real backend call is made. Login/register just
- * simulate network latency and store a fake user in memory (Pinia state
- * is not persisted, so a page refresh logs the user out again - by design).
+ * Talks to the FairPlay backend auth endpoints. The access token lives only in
+ * memory; the refresh token is an HttpOnly cookie the browser stores and the
+ * API rotates. On a full page reload `tryRefresh()` swaps that cookie for a
+ * fresh access token so the session survives.
  */
 export const useAuthStore = defineStore('auth', () => {
-  const currentUser = ref<DummyUser | null>(null)
+  const accessToken = ref<string | null>(null)
+  const currentUser = ref<User | null>(null)
   const isAuthenticated = computed(() => currentUser.value !== null)
 
-  function login(email: string): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        currentUser.value = { name: email.split('@')[0] ?? email, email }
-        resolve()
-      }, 400)
-    })
+  function apply(response: AuthResponse): void {
+    accessToken.value = response.accessToken
+    currentUser.value = response.user
   }
 
-  function register(name: string, email: string): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        currentUser.value = { name, email }
-        resolve()
-      }, 400)
-    })
-  }
-
-  function logout(): void {
+  function clear(): void {
+    accessToken.value = null
     currentUser.value = null
   }
 
-  return { currentUser, isAuthenticated, login, register, logout }
+  async function login(email: string, password: string): Promise<void> {
+    apply(await http.post<AuthResponse>('/api/auth/login', { email, password }))
+  }
+
+  /** Creates the account. Does not sign in - the caller sends the user to login. */
+  async function register(payload: RegisterPayload): Promise<User> {
+    return http.post<User>('/api/users', payload)
+  }
+
+  /** Best-effort session restore from the refresh cookie. Never throws. */
+  async function tryRefresh(): Promise<void> {
+    try {
+      apply(await http.post<AuthResponse>('/api/auth/refresh'))
+    } catch {
+      clear()
+    }
+  }
+
+  async function logout(): Promise<void> {
+    try {
+      await http.post<void>('/api/auth/logout', undefined, { token: accessToken.value })
+    } catch {
+      // The cookie may already be gone; clear the client either way.
+    } finally {
+      clear()
+    }
+  }
+
+  return { accessToken, currentUser, isAuthenticated, login, register, tryRefresh, logout }
 })

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
+
+const justRegistered = computed(() => route.query.registered === '1')
 
 const form = reactive({
   email: '',
@@ -26,11 +29,7 @@ function validate(): boolean {
       ? 'Introduce un email válido.'
       : ''
 
-  errors.password = !form.password
-    ? 'La contraseña es obligatoria.'
-    : form.password.length < 6
-      ? 'Debe tener al menos 6 caracteres.'
-      : ''
+  errors.password = !form.password ? 'La contraseña es obligatoria.' : ''
 
   return !errors.email && !errors.password
 }
@@ -41,10 +40,10 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   try {
-    await auth.login(form.email)
-    await router.push('/dashboard')
+    await auth.login(form.email, form.password)
+    await router.push('/profile')
   } catch {
-    submitError.value = 'No se ha podido iniciar sesión. Inténtalo de nuevo.'
+    submitError.value = 'Email o contraseña incorrectos.'
   } finally {
     isSubmitting.value = false
   }
@@ -56,6 +55,10 @@ async function handleSubmit() {
     <form class="auth-card" novalidate @submit.prevent="handleSubmit">
       <h1 class="auth-title">Iniciar sesión</h1>
       <p class="auth-subtitle">Bienvenido de nuevo a FairPlay Sports</p>
+
+      <p v-if="justRegistered" class="form-success">
+        Cuenta creada. Inicia sesión para continuar.
+      </p>
 
       <label class="field">
         <span class="field-label">Email</span>

@@ -1,21 +1,24 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
 
 const form = reactive({
-  name: '',
+  userName: '',
   email: '',
+  team: '',
   password: '',
   confirmPassword: '',
 })
 
 const errors = reactive({
-  name: '',
+  userName: '',
   email: '',
+  team: '',
   password: '',
   confirmPassword: '',
 })
@@ -24,7 +27,7 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 
 function validate(): boolean {
-  errors.name = !form.name.trim() ? 'El nombre es obligatorio.' : ''
+  errors.userName = !form.userName.trim() ? 'El nombre de usuario es obligatorio.' : ''
 
   errors.email = !form.email
     ? 'El email es obligatorio.'
@@ -32,16 +35,24 @@ function validate(): boolean {
       ? 'Introduce un email válido.'
       : ''
 
+  errors.team = !form.team.trim() ? 'El equipo es obligatorio.' : ''
+
   errors.password = !form.password
     ? 'La contraseña es obligatoria.'
-    : form.password.length < 6
-      ? 'Debe tener al menos 6 caracteres.'
+    : form.password.length < 8
+      ? 'Debe tener al menos 8 caracteres.'
       : ''
 
   errors.confirmPassword =
     form.confirmPassword !== form.password ? 'Las contraseñas no coinciden.' : ''
 
-  return !errors.name && !errors.email && !errors.password && !errors.confirmPassword
+  return (
+    !errors.userName &&
+    !errors.email &&
+    !errors.team &&
+    !errors.password &&
+    !errors.confirmPassword
+  )
 }
 
 async function handleSubmit() {
@@ -50,10 +61,18 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   try {
-    await auth.register(form.name, form.email)
-    await router.push('/dashboard')
-  } catch {
-    submitError.value = 'No se ha podido completar el registro. Inténtalo de nuevo.'
+    await auth.register({
+      userName: form.userName.trim(),
+      email: form.email,
+      team: form.team.trim(),
+      password: form.password,
+    })
+    await router.push({ path: '/login', query: { registered: '1' } })
+  } catch (error) {
+    submitError.value =
+      error instanceof ApiError
+        ? error.message
+        : 'No se ha podido completar el registro. Inténtalo de nuevo.'
   } finally {
     isSubmitting.value = false
   }
@@ -67,15 +86,15 @@ async function handleSubmit() {
       <p class="auth-subtitle">Únete a FairPlay Sports</p>
 
       <label class="field">
-        <span class="field-label">Nombre</span>
+        <span class="field-label">Nombre de usuario</span>
         <input
-          v-model="form.name"
+          v-model="form.userName"
           type="text"
-          autocomplete="name"
-          placeholder="Tu nombre"
-          :class="{ invalid: errors.name }"
+          autocomplete="username"
+          placeholder="tu_usuario"
+          :class="{ invalid: errors.userName }"
         />
-        <span v-if="errors.name" class="field-error">{{ errors.name }}</span>
+        <span v-if="errors.userName" class="field-error">{{ errors.userName }}</span>
       </label>
 
       <label class="field">
@@ -88,6 +107,18 @@ async function handleSubmit() {
           :class="{ invalid: errors.email }"
         />
         <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Equipo</span>
+        <input
+          v-model="form.team"
+          type="text"
+          autocomplete="organization"
+          placeholder="Tu equipo"
+          :class="{ invalid: errors.team }"
+        />
+        <span v-if="errors.team" class="field-error">{{ errors.team }}</span>
       </label>
 
       <label class="field">
