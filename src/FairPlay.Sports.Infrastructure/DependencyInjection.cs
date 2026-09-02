@@ -1,9 +1,11 @@
 using FairPlay.Sports.Application.Auth;
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Infrastructure.Auth;
 using FairPlay.Sports.Infrastructure.Persistence;
 using FairPlay.Sports.Infrastructure.Security;
+using FairPlay.Sports.Infrastructure.Teams;
 using FairPlay.Sports.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +29,7 @@ public static class DependencyInjection
 
         // DbContext, repositories and unit of work are all scoped (one per request).
         services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<ITeamRepository, EfTeamRepository>();
         services.AddScoped<IRefreshTokenRepository, EfRefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

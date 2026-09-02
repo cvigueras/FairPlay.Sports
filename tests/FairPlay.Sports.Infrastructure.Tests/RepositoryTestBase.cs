@@ -23,5 +23,6 @@ public abstract class RepositoryTestBase
         // RefreshTokens first: it has an FK to Users.
         await context.RefreshTokens.ExecuteDeleteAsync();
         await context.Users.ExecuteDeleteAsync();
+        await context.Teams.ExecuteDeleteAsync();
     }
 }
