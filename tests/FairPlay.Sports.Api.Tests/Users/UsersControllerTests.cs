@@ -2,6 +2,7 @@ using FairPlay.Sports.Api.Users;
 using FairPlay.Sports.TestSupport.Users;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
+using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.Register;
@@ -122,5 +123,31 @@ public class UsersControllerTests
         var response = await _controller.Register(UserRequestMother.RegisterRequest(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task Activate_DispatchesCommandWithRouteId_AndReturnsNoContent()
+    {
+        var id = Guid.NewGuid();
+        _sender.Send(Arg.Any<ActivateUserCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _controller.Activate(id, CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NoContentResult>());
+        await _sender.Received(1).Send(
+            Arg.Is<ActivateUserCommand>(command => command.Id == id), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Activate_WhenHandlerReturnsNotFound_Returns404()
+    {
+        var id = Guid.NewGuid();
+        _sender.Send(Arg.Any<ActivateUserCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.NotFound($"User '{id}' was not found."));
+
+        var response = await _controller.Activate(id, CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
     }
 }

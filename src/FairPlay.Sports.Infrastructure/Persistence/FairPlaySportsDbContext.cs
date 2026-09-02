@@ -1,4 +1,5 @@
 using FairPlay.Sports.Domain.Auth;
+using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,8 @@ public sealed class FairPlaySportsDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<Team> Teams => Set<Team>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

@@ -93,7 +93,7 @@ public class RefreshTokenHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenUserGoneOrInactive_RevokesThePresentedToken_AndCommits()
+    public async Task Handle_WhenUserGone_RevokesThePresentedToken_AndCommits()
     {
         var stored = AuthMother.DomainRefreshToken(tokenHash: AuthMother.RefreshTokenHash);
         _refreshTokens.GetByTokenHashAsync(AuthMother.RefreshTokenHash, Arg.Any<CancellationToken>())

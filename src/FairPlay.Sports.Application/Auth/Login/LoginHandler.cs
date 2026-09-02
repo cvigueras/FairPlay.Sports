@@ -19,9 +19,10 @@ public sealed class LoginHandler(
     {
         var user = await _users.GetByEmailAsync(request.Email, cancellationToken);
 
-        // One error for every failure mode - unknown email, wrong password, deactivated
-        // account - so the endpoint never confirms which addresses are registered.
-        if (user is null || !user.Active || !_passwordHasher.Verify(user.PasswordHash, request.Password))
+        // One error for every failure mode - unknown email or wrong password - so the
+        // endpoint never confirms which addresses are registered. `Active` is not
+        // checked here: it gates team features, not sign-in.
+        if (user is null || !_passwordHasher.Verify(user.PasswordHash, request.Password))
             return Result<AuthResultDto>.Failure(InvalidCredentials);
 
         var issued = await _tokenIssuer.IssueAsync(user, cancellationToken);

@@ -1,5 +1,6 @@
 using FairPlay.Sports.Api.Common;
 using FairPlay.Sports.Application.Users;
+using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.Register;
@@ -51,5 +52,15 @@ public sealed class UsersController(ISender sender) : ControllerBase
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+
+    /// <summary>Activates a user so they can sign in. Users are registered inactive.</summary>
+    [HttpPost("{id:guid}/activate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ActivateUserCommand(id), cancellationToken);
+        return result.ToActionResult(this);
     }
 }

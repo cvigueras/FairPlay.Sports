@@ -47,7 +47,7 @@ public sealed class RefreshTokenHandler(
         }
 
         var user = await _users.GetByIdAsync(stored.UserId, cancellationToken);
-        if (user is null || !user.Active)
+        if (user is null)
         {
             stored.Revoke(now);
             await PersistFailedSideEffectsAsync(cancellationToken);

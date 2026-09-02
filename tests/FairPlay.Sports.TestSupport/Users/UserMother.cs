@@ -19,8 +19,10 @@ public static class UserMother
         string? userName = null,
         string? email = null,
         string? team = null,
-        UserRole role = UserRole.Member) =>
-        User.Create(
+        UserRole role = UserRole.Member,
+        bool active = true)
+    {
+        var user = User.Create(
             id ?? Guid.NewGuid(),
             userName ?? UserName,
             email ?? Email,
@@ -28,6 +30,12 @@ public static class UserMother
             team ?? Team,
             DateTime.UtcNow,
             role);
+
+        if (active)
+            user.Activate();
+
+        return user;
+    }
 
     public static UserDto Dto(Guid? id = null) =>
         new(id ?? Guid.NewGuid(), UserName, Email, Team, UserRole.Member, DateTime.UtcNow, Active: true);

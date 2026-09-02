@@ -26,6 +26,9 @@ internal sealed class EfUserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
 
+    public Task<User?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _context.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default) =>
         _context.Users
             .AsNoTracking()

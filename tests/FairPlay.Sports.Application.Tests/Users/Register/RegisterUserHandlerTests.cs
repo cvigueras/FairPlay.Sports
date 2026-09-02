@@ -91,7 +91,7 @@ public class RegisterUserHandlerTests
             Assert.That(result.Value!.UserName, Is.EqualTo(UserMother.UserName));
             Assert.That(result.Value!.Email, Is.EqualTo(UserMother.Email));
             Assert.That(result.Value!.Team, Is.EqualTo(UserMother.Team));
-            Assert.That(result.Value!.Active, Is.True);
+            Assert.That(result.Value!.Active, Is.False);
             Assert.That(result.Value!.Id, Is.Not.EqualTo(Guid.Empty));
         });
 
@@ -101,7 +101,7 @@ public class RegisterUserHandlerTests
                 user.UserName == UserMother.UserName &&
                 user.Email == UserMother.Email &&
                 user.Team == UserMother.Team &&
-                user.Active &&
+                !user.Active &&
                 user.Id != Guid.Empty &&
                 user.CreatedAt >= before && user.CreatedAt <= after),
             Arg.Any<CancellationToken>());
