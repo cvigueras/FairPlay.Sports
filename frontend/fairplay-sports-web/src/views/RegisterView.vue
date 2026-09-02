@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
+import AuthLayout from '@/components/AuthLayout.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -80,81 +81,65 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="auth-page">
-    <form class="auth-card" novalidate @submit.prevent="handleSubmit">
-      <h1 class="auth-title">Crear cuenta</h1>
-      <p class="auth-subtitle">Únete a FairPlay Sports</p>
+  <AuthLayout title="Crear cuenta" subtitle="Únete a FairPlay Sports">
+    <v-form novalidate @submit.prevent="handleSubmit">
+      <v-text-field
+        v-model="form.userName"
+        label="Nombre de usuario"
+        autocomplete="username"
+        :error-messages="errors.userName"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Nombre de usuario</span>
-        <input
-          v-model="form.userName"
-          type="text"
-          autocomplete="username"
-          placeholder="tu_usuario"
-          :class="{ invalid: errors.userName }"
-        />
-        <span v-if="errors.userName" class="field-error">{{ errors.userName }}</span>
-      </label>
+      <v-text-field
+        v-model="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        :error-messages="errors.email"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Email</span>
-        <input
-          v-model="form.email"
-          type="email"
-          autocomplete="email"
-          placeholder="tu@email.com"
-          :class="{ invalid: errors.email }"
-        />
-        <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-      </label>
+      <v-text-field
+        v-model="form.team"
+        label="Equipo"
+        autocomplete="organization"
+        :error-messages="errors.team"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Equipo</span>
-        <input
-          v-model="form.team"
-          type="text"
-          autocomplete="organization"
-          placeholder="Tu equipo"
-          :class="{ invalid: errors.team }"
-        />
-        <span v-if="errors.team" class="field-error">{{ errors.team }}</span>
-      </label>
+      <v-text-field
+        v-model="form.password"
+        label="Contraseña"
+        type="password"
+        autocomplete="new-password"
+        :error-messages="errors.password"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Contraseña</span>
-        <input
-          v-model="form.password"
-          type="password"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          :class="{ invalid: errors.password }"
-        />
-        <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-      </label>
+      <v-text-field
+        v-model="form.confirmPassword"
+        label="Confirmar contraseña"
+        type="password"
+        autocomplete="new-password"
+        :error-messages="errors.confirmPassword"
+        class="mb-2"
+      />
 
-      <label class="field">
-        <span class="field-label">Confirmar contraseña</span>
-        <input
-          v-model="form.confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          :class="{ invalid: errors.confirmPassword }"
-        />
-        <span v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</span>
-      </label>
+      <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
+        {{ submitError }}
+      </v-alert>
 
-      <p v-if="submitError" class="form-error">{{ submitError }}</p>
-
-      <button class="submit-button" type="submit" :disabled="isSubmitting">
+      <v-btn type="submit" block size="large" :loading="isSubmitting">
         {{ isSubmitting ? 'Creando cuenta...' : 'Registrarme' }}
-      </button>
+      </v-btn>
+    </v-form>
 
-      <p class="auth-footer">
-        ¿Ya tienes cuenta?
-        <RouterLink to="/login">Inicia sesión</RouterLink>
-      </p>
-    </form>
-  </div>
+    <template #footer>
+      ¿Ya tienes cuenta?
+      <RouterLink to="/login" class="text-primary text-decoration-none font-weight-medium">
+        Inicia sesión
+      </RouterLink>
+    </template>
+  </AuthLayout>
 </template>

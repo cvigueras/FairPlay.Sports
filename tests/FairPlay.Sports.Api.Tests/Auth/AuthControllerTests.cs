@@ -6,6 +6,7 @@ using FairPlay.Sports.Application.Auth.Refresh;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.TestSupport.Auth;
 using MediatR;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
@@ -18,6 +19,7 @@ public class AuthControllerTests
     private const string RefreshCookieName = "fps_refresh_token";
 
     private ISender _sender = null!;
+    private IWebHostEnvironment _environment = null!;
     private DefaultHttpContext _httpContext = null!;
     private AuthController _controller = null!;
 
@@ -25,8 +27,10 @@ public class AuthControllerTests
     public void SetUp()
     {
         _sender = Substitute.For<ISender>();
+        _environment = Substitute.For<IWebHostEnvironment>();
+        _environment.EnvironmentName.Returns("Production");
         _httpContext = new DefaultHttpContext();
-        _controller = new AuthController(_sender)
+        _controller = new AuthController(_sender, _environment)
         {
             ControllerContext = new ControllerContext { HttpContext = _httpContext }
         };
@@ -109,6 +113,15 @@ public class AuthControllerTests
         var response = await _controller.Refresh(CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task Refresh_WithNoRefreshCookie_ReturnsUnauthorized_AndDoesNotDispatch()
+    {
+        var response = await _controller.Refresh(CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<UnauthorizedObjectResult>());
+        await _sender.DidNotReceive().Send(Arg.Any<RefreshTokenCommand>(), Arg.Any<CancellationToken>());
     }
 
     [Test]

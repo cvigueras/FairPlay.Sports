@@ -50,11 +50,19 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// Origins allowed to call the API with credentials. Defaults cover the Vite dev
+// server on both hostnames (localhost and 127.0.0.1 are distinct origins to the
+// browser); override via `Cors:AllowedOrigins` in config for other setups.
+string[] corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    is { Length: > 0 } configured
+    ? configured
+    : ["http://localhost:5173", "http://127.0.0.1:5173"];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             // Required so the browser sends and stores the refresh-token cookie.
