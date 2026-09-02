@@ -101,41 +101,17 @@ public class TeamTests
         Assert.That(() => Create().SetCrest([1], "image/gif"), Throws.ArgumentException);
 
     [Test]
-    public void RemoveCrest_ClearsBoth()
+    public void SetCrest_Twice_ReplacesTheExistingImage()
     {
         var team = Create();
         team.SetCrest([1], "image/png");
 
-        team.RemoveCrest();
+        team.SetCrest([2, 2], "image/webp");
 
         Assert.Multiple(() =>
         {
-            Assert.That(team.HasCrest, Is.False);
-            Assert.That(team.Crest, Is.Null);
-            Assert.That(team.CrestContentType, Is.Null);
-        });
-    }
-
-    [Test]
-    public void Mutators_ChangeTheExpectedField()
-    {
-        var team = Create();
-
-        team.Rename("Rivals CF");
-        team.ChangeCoach("Leo Pena");
-        team.Relocate("Cadiz");
-        team.Reclassify(Classification(FootballType.Football8, Division.Second, AgeCategory.Under10));
-        team.Deactivate();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(team.Name, Is.EqualTo("Rivals CF"));
-            Assert.That(team.Coach, Is.EqualTo("Leo Pena"));
-            Assert.That(team.City, Is.EqualTo("Cadiz"));
-            Assert.That(team.Classification.Type, Is.EqualTo(FootballType.Football8));
-            Assert.That(team.Classification.Division, Is.EqualTo(Division.Second));
-            Assert.That(team.Classification.Category, Is.EqualTo(AgeCategory.Under10));
-            Assert.That(team.Active, Is.False);
+            Assert.That(team.Crest, Is.EqualTo(new byte[] { 2, 2 }));
+            Assert.That(team.CrestContentType, Is.EqualTo("image/webp"));
         });
     }
 }

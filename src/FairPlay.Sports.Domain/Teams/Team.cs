@@ -58,20 +58,6 @@ public sealed class Team
         };
     }
 
-    public void Rename(string name) => Name = ValidateName(name);
-
-    public void ChangeCoach(string coach) => Coach = ValidateCoach(coach);
-
-    public void Relocate(string city) => City = ValidateCity(city);
-
-    public void Reclassify(TeamClassification classification)
-    {
-        ArgumentNullException.ThrowIfNull(classification);
-        Classification = classification;
-    }
-
-    public void Deactivate() => Active = false;
-
     public void Activate() => Active = true;
 
     public void SetCrest(byte[] image, string contentType)
@@ -84,12 +70,6 @@ public sealed class Team
 
         Crest = image;
         CrestContentType = ValidateCrestContentType(contentType);
-    }
-
-    public void RemoveCrest()
-    {
-        Crest = null;
-        CrestContentType = null;
     }
 
     private static string ValidateName(string name)
