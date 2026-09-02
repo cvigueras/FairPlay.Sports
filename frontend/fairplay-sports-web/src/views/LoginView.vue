@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/components/AuthLayout.vue'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const justRegistered = computed(() => route.query.registered === '1')
 
@@ -25,12 +27,12 @@ const submitError = ref('')
 
 function validate(): boolean {
   errors.email = !form.email
-    ? 'El email es obligatorio.'
+    ? t('validation.emailRequired')
     : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-      ? 'Introduce un email válido.'
+      ? t('validation.emailInvalid')
       : ''
 
-  errors.password = !form.password ? 'La contraseña es obligatoria.' : ''
+  errors.password = !form.password ? t('validation.passwordRequired') : ''
 
   return !errors.email && !errors.password
 }
@@ -44,7 +46,7 @@ async function handleSubmit() {
     await auth.login(form.email, form.password)
     await router.push('/profile')
   } catch {
-    submitError.value = 'Email o contraseña incorrectos.'
+    submitError.value = t('login.failed')
   } finally {
     isSubmitting.value = false
   }
@@ -52,7 +54,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Iniciar sesión" subtitle="Bienvenido de nuevo a FairPlay Sports">
+  <AuthLayout :title="t('login.title')" :subtitle="t('login.subtitle')">
     <v-form novalidate @submit.prevent="handleSubmit">
       <v-alert
         v-if="justRegistered"
@@ -61,23 +63,25 @@ async function handleSubmit() {
         density="compact"
         class="mb-4"
       >
-        Cuenta creada. Inicia sesión para continuar.
+        {{ t('login.justRegistered') }}
       </v-alert>
 
       <v-text-field
         v-model="form.email"
-        label="Email"
+        :label="t('register.email')"
         type="email"
         autocomplete="email"
+        :placeholder="t('login.emailPlaceholder')"
         :error-messages="errors.email"
         class="mb-2"
       />
 
       <v-text-field
         v-model="form.password"
-        label="Contraseña"
+        :label="t('register.password')"
         type="password"
         autocomplete="current-password"
+        :placeholder="t('common.passwordPlaceholder')"
         :error-messages="errors.password"
         class="mb-2"
       />
@@ -87,14 +91,14 @@ async function handleSubmit() {
       </v-alert>
 
       <v-btn type="submit" block size="large" :loading="isSubmitting">
-        {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
+        {{ isSubmitting ? t('login.submitting') : t('login.submit') }}
       </v-btn>
     </v-form>
 
     <template #footer>
-      ¿No tienes cuenta?
+      {{ t('login.noAccount') }}
       <RouterLink to="/register" class="text-primary text-decoration-none font-weight-medium">
-        Regístrate
+        {{ t('login.goRegister') }}
       </RouterLink>
     </template>
   </AuthLayout>
