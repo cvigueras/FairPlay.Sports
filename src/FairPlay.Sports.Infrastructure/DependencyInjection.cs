@@ -17,15 +17,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Users slice: real SQL Server persistence via EF Core.
+        // Users slice: real PostgreSQL persistence via EF Core (Npgsql).
         var connectionString = configuration.GetConnectionString("FairPlaySports")
             ?? throw new InvalidOperationException(
                 "Connection string 'FairPlaySports' was not found. Set ConnectionStrings:FairPlaySports.");
 
         services.AddDbContext<FairPlaySportsDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 connectionString,
-                sql => sql.MigrationsAssembly(typeof(FairPlaySportsDbContext).Assembly.FullName)));
+                npgsql => npgsql.MigrationsAssembly(typeof(FairPlaySportsDbContext).Assembly.FullName)));
 
         // DbContext, repositories and unit of work are all scoped (one per request).
         services.AddScoped<IUserRepository, EfUserRepository>();

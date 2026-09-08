@@ -56,7 +56,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
 
         await using var context = NewContext();
         var stored = await context.Database
-            .SqlQuery<string>($"SELECT CONCAT([Type], '|', [Division], '|', [Category]) AS Value FROM Teams WHERE Id = {team.Id}")
+            .SqlQuery<string>($"""SELECT CONCAT("Type", '|', "Division", '|', "Category") AS "Value" FROM "Teams" WHERE "Id" = {team.Id}""")
             .SingleAsync();
 
         Assert.That(stored, Is.EqualTo("Futsal|RegionalLeague|Under10"));

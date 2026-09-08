@@ -37,7 +37,7 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
                 .HasConversion<string>();
         });
 
-        builder.Property(team => team.Crest).HasColumnType("varbinary(max)");
+        // byte[] maps to PostgreSQL 'bytea' by convention - no explicit column type needed.
         builder.Property(team => team.CrestContentType).HasMaxLength(100);
         builder.Property(team => team.CreatedAt).IsRequired();
         builder.Property(team => team.Active).IsRequired();
