@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/components/AuthLayout.vue'
+import logoUrl from '@/assets/logo.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -54,7 +55,11 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <AuthLayout :title="t('login.title')" :subtitle="t('login.subtitle')">
+  <AuthLayout>
+    <template #brand>
+      <img :src="logoUrl" :alt="t('common.appName')" class="auth-logo" />
+    </template>
+
     <v-form novalidate @submit.prevent="handleSubmit">
       <v-alert
         v-if="justRegistered"
@@ -103,3 +108,16 @@ async function handleSubmit() {
     </template>
   </AuthLayout>
 </template>
+
+<style scoped>
+.auth-logo {
+  display: block;
+  height: 200px;
+  width: auto;
+  max-width: 100%;
+  /* Negative margins trim the dead space above/below the logo art so it
+     sits closer to the card edge and to the first input. */
+  margin: -24px auto -20px;
+  object-fit: contain;
+}
+</style>
