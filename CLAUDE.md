@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # FairPlay.Sports
 
 Backend .NET 10, hexagonal architecture + DDD organised as **vertical slices**.
@@ -6,8 +10,17 @@ mirror its files across the four layers. **Teams** and **Auth** are the other
 two slices; Teams follows the same shape (plus binary crest upload/download),
 Auth is the one deliberate outlier (see the Api row below).
 
-Frontend (`frontend/fairplay-sports-web`, Vue 3) is out of scope for these
-notes unless the task explicitly targets it.
+Frontend (`frontend/fairplay-sports-web`) is out of scope for these notes
+unless the task explicitly targets it. When it does: Vue 3 + Vuetify 4
+(mdi-svg icons — pass icon paths, no runtime font), Pinia, vue-i18n
+(switch/persist the locale via `setLocale` in `src/plugins/i18n.ts`; it is
+global, so a change on any screen shows everywhere). All HTTP goes through
+`src/lib/http.ts` (`get/post/put/postForm`); the access token lives in
+memory in the `auth` store, the refresh token in an `HttpOnly` cookie.
+`npm run build` runs the type-check (`vue-tsc`) and the build; there are no
+frontend tests. In `handleSubmit`-style flows keep `router.push` **outside**
+the try/catch that wraps the API call, so a navigation rejection is not
+surfaced as an API error.
 
 ## Layers
 
@@ -38,6 +51,17 @@ backs an activate command). Never add speculative `RenameX` / `ChangeY` /
 Everything else an aggregate does is invariant validation, not public API.
 No `<summary>` / XML doc comments on aggregates, entities or handlers — the
 type, member names and factory speak for themselves.
+`User.Create` lower-cases (and trims) the email; the user repository normalises
+email lookups the same way, so sign-in is case-insensitive.
+
+**Binary image on an aggregate** (Team crest, User photo — mirror one when
+adding another): `byte[]? X` + `string? XContentType` + `bool HasX` +
+`void SetX(byte[], string)` on the aggregate (validates non-empty, a byte cap,
+an allowed-content-type list); an `<Slice>/XPayload`-style record (`TeamCrest`,
+`UserPhoto`); a repo `GetXAsync` projecting straight to that record;
+`POST /api/<slice>/{id}/x` (`multipart/form-data`, `IFormFile file`,
+`[RequestSizeLimit]`) and an `[AllowAnonymous]` `GET .../{id}/x` returning
+`File(bytes, contentType)`. The list DTO carries `HasX`, not the bytes.
 
 **Application** — one folder per use case: `Users/<UseCase>/`.
 - `<UseCase>Command` / `<UseCase>Query` — `record`, implements `IRequest<Result<T>>`.
@@ -95,6 +119,10 @@ on a successful create). Inbound request DTOs are separate records in
   `dotnet ef migrations add <Name> -p src/FairPlay.Sports.Infrastructure -s src/FairPlay.Sports.Api -o Persistence/Migrations`.
   Auto-applied on startup only in Development (`app.Services.MigrateAsync()` in
   `Program.cs`); production applies them as an explicit deploy step.
+- **Add the migration before you run or test after a model change.** EF 10's
+  `MigrateAsync()` throws `PendingModelChangesWarning` (so the
+  `PostgreSqlContainerFixture` `[SetUpFixture]` fails for the whole assembly)
+  when the model no longer matches the last migration's snapshot.
 
 ## Tests (NUnit 4 + NSubstitute + Object Mother)
 
@@ -121,6 +149,16 @@ on a successful create). Inbound request DTOs are separate records in
   A new project must be added to **both**.
 - `dotnet build FairPlay.Sports.Backend.slnf`
 - `dotnet test FairPlay.Sports.Backend.slnf`
+- One class / test:
+  `dotnet test tests/<Project>/<Project>.csproj --filter "FullyQualifiedName~<ClassOrMethod>"`.
+- Run the API: `dotnet run --project src/FairPlay.Sports.Api` → `https://localhost:7090`.
+  In Development it auto-migrates, so a PostgreSQL server must be reachable at the
+  `FairPlaySports` connection string (local dev: a `postgres:17-alpine` container on
+  `5432`, `postgres`/`postgres`, db `FairPlaySports`). `Jwt:SigningKey` comes from
+  `appsettings.Development.json` (dev only); running outside Development needs it set
+  via env var / user-secrets or startup throws.
+- Frontend: `cd frontend/fairplay-sports-web && npm run dev` (Vite, pinned to
+  `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks.
 
 ## Commits & PRs
 
