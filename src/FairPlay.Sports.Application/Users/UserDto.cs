@@ -10,8 +10,9 @@ public sealed record UserDto(
     Guid? TeamId,
     UserRole Role,
     DateTime CreatedAt,
-    bool Active)
+    bool Active,
+    bool HasPhoto)
 {
     public static UserDto FromDomain(User user) =>
-        new(user.Id, user.UserName, user.Email, user.TeamId, user.Role, user.CreatedAt, user.Active);
+        new(user.Id, user.UserName, user.Email, user.TeamId, user.Role, user.CreatedAt, user.Active, user.HasPhoto);
 }

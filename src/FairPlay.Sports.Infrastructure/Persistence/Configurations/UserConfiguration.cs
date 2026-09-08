@@ -24,6 +24,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.CreatedAt).IsRequired();
         builder.Property(user => user.Active).IsRequired();
 
+        // byte[] maps to PostgreSQL 'bytea' by convention - no explicit column type needed.
+        builder.Property(user => user.PhotoContentType).HasMaxLength(100);
+
         builder.HasIndex(user => user.Email).IsUnique();
         builder.HasIndex(user => user.UserName).IsUnique();
         builder.HasIndex(user => user.TeamId);

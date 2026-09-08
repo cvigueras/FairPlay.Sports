@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { mdiCircle, mdiImageOutline, mdiLogout, mdiTranslate } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
+import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import {
@@ -23,15 +24,6 @@ const { t, locale } = useI18n()
 
 const user = computed(() => auth.currentUser)
 const isLoggingOut = ref(false)
-
-const initials = computed(() =>
-  (user.value?.userName ?? '')
-    .split(/[\s_-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join(''),
-)
 
 const memberSince = computed(() => {
   if (!user.value) return ''
@@ -279,9 +271,7 @@ async function createTeam() {
       <v-row v-if="user.teamId">
         <v-col cols="12" md="6" class="d-flex flex-column ga-6">
           <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
-            <v-avatar color="primary" size="120" class="text-h4 font-weight-bold flex-shrink-0">
-              {{ initials }}
-            </v-avatar>
+            <ProfileAvatar />
             <div class="flex-grow-1 overflow-hidden ms-6">
               <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
               <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
@@ -350,9 +340,7 @@ async function createTeam() {
         <!-- Top left: profile summary -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
-            <v-avatar color="primary" size="120" class="text-h4 font-weight-bold flex-shrink-0">
-              {{ initials }}
-            </v-avatar>
+            <ProfileAvatar />
             <div class="flex-grow-1 overflow-hidden ms-6">
               <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
               <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>

@@ -78,6 +78,41 @@ public class EfUserRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task SetPhoto_thenCommit_roundTripsTheImageBytes()
+    {
+        var user = UserMother.DomainUser();
+        await SeedAsync(user);
+
+        await using (var act = NewContext())
+        {
+            var repository = new EfUserRepository(act);
+            var unitOfWork = new UnitOfWork(act);
+            var tracked = await repository.GetByIdForUpdateAsync(user.Id);
+            tracked!.SetPhoto(UserMother.PhotoBytes, UserMother.PhotoContentType);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var photo = await new EfUserRepository(assert).GetPhotoAsync(user.Id);
+        Assert.That(photo, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(photo!.Content, Is.EqualTo(UserMother.PhotoBytes));
+            Assert.That(photo.ContentType, Is.EqualTo(UserMother.PhotoContentType));
+        });
+    }
+
+    [Test]
+    public async Task GetPhotoAsync_whenUserHasNoPhoto_returnsNull()
+    {
+        var user = UserMother.DomainUser();
+        await SeedAsync(user);
+
+        await using var context = NewContext();
+        Assert.That(await new EfUserRepository(context).GetPhotoAsync(user.Id), Is.Null);
+    }
+
+    [Test]
     public async Task AddAsync_withoutCommit_doesNotPersist()
     {
         var user = UserMother.DomainUser();

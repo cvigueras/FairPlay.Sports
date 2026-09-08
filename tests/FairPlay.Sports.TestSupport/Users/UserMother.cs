@@ -12,6 +12,9 @@ public static class UserMother
     public const string PasswordHash = "hashed-password";
     public static readonly Guid TeamId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
+    public const string PhotoContentType = "image/png";
+    public static byte[] PhotoBytes => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
     public static RegisterUserCommand Command() => new(UserName, Email, Password, TeamId);
 
     public static User DomainUser(
@@ -38,8 +41,15 @@ public static class UserMother
         return user;
     }
 
-    public static UserDto Dto(Guid? id = null) =>
-        new(id ?? Guid.NewGuid(), UserName, Email, TeamId, UserRole.Member, DateTime.UtcNow, Active: true);
+    public static User DomainUserWithPhoto(Guid? id = null)
+    {
+        var user = DomainUser(id);
+        user.SetPhoto(PhotoBytes, PhotoContentType);
+        return user;
+    }
+
+    public static UserDto Dto(Guid? id = null, bool hasPhoto = false) =>
+        new(id ?? Guid.NewGuid(), UserName, Email, TeamId, UserRole.Member, DateTime.UtcNow, Active: true, HasPhoto: hasPhoto);
 
     public static string EmailAlreadyRegistered => $"Email '{Email}' is already registered.";
 

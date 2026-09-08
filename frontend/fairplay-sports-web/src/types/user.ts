@@ -9,4 +9,5 @@ export interface User {
   role: UserRole
   createdAt: string
   active: boolean
+  hasPhoto: boolean
 }
