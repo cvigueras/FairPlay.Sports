@@ -52,6 +52,47 @@
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "team": {
+      "title": "My team",
+      "subtitle": "Pick your team, or create a new one.",
+      "select": "Team",
+      "selectPlaceholder": "Choose a team",
+      "noCrest": "This team has no crest yet.",
+      "save": "Save team",
+      "saved": "Your team was updated.",
+      "loadFailed": "Could not load the teams.",
+      "saveFailed": "Could not update your team.",
+      "createTitle": "Create a new team",
+      "name": "Name",
+      "coach": "Coach",
+      "city": "City",
+      "type": "Modality",
+      "division": "Division",
+      "category": "Age category",
+      "crest": "Crest image",
+      "create": "Create and assign",
+      "creating": "Creating...",
+      "createFailed": "Could not create the team.",
+      "required": "Required.",
+      "crestRequired": "A crest image is required.",
+      "enums": {
+        "Football11": "11-a-side",
+        "Football8": "8-a-side",
+        "Futsal": "Futsal",
+        "BeachSoccer": "Beach soccer",
+        "HonorDivision": "Honor Division",
+        "RegionalLeague": "Regional League",
+        "First": "First",
+        "Second": "Second",
+        "Under19": "U19",
+        "Under16": "U16",
+        "Under14": "U14",
+        "Under12": "U12",
+        "Under10": "U10",
+        "Under8": "U8",
+        "Under6": "U6"
+      }
     }
   },
   "language": {

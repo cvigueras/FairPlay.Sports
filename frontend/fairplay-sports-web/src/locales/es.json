@@ -52,6 +52,47 @@
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
+    },
+    "team": {
+      "title": "Mi equipo",
+      "subtitle": "Elige tu equipo o crea uno nuevo.",
+      "select": "Equipo",
+      "selectPlaceholder": "Elige un equipo",
+      "noCrest": "Este equipo aún no tiene escudo.",
+      "save": "Guardar equipo",
+      "saved": "Tu equipo se ha actualizado.",
+      "loadFailed": "No se han podido cargar los equipos.",
+      "saveFailed": "No se ha podido actualizar tu equipo.",
+      "createTitle": "Crear un equipo nuevo",
+      "name": "Nombre",
+      "coach": "Entrenador",
+      "city": "Ciudad",
+      "type": "Modalidad",
+      "division": "División",
+      "category": "Categoría",
+      "crest": "Imagen del escudo",
+      "create": "Crear y asignar",
+      "creating": "Creando...",
+      "createFailed": "No se ha podido crear el equipo.",
+      "required": "Obligatorio.",
+      "crestRequired": "La imagen del escudo es obligatoria.",
+      "enums": {
+        "Football11": "Fútbol 11",
+        "Football8": "Fútbol 8",
+        "Futsal": "Fútbol sala",
+        "BeachSoccer": "Fútbol playa",
+        "HonorDivision": "División de Honor",
+        "RegionalLeague": "Liga Regional",
+        "First": "Primera",
+        "Second": "Segunda",
+        "Under19": "Sub-19",
+        "Under16": "Sub-16",
+        "Under14": "Sub-14",
+        "Under12": "Sub-12",
+        "Under10": "Sub-10",
+        "Under8": "Sub-8",
+        "Under6": "Sub-6"
+      }
     }
   },
   "language": {

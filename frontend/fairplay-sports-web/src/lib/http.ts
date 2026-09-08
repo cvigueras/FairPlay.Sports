@@ -1,4 +1,7 @@
-const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7090').replace(/\/$/, '')
+export const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7090').replace(
+  /\/$/,
+  '',
+)
 
 export class ApiError extends Error {
   constructor(
@@ -37,6 +40,29 @@ async function request<T>(
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 
+  return unwrap<T>(response)
+}
+
+/** POSTs a `FormData` body (multipart). The browser sets the boundary header. */
+async function requestForm<T>(
+  path: string,
+  form: FormData,
+  { token }: RequestOptions = {},
+): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: form,
+  })
+
+  return unwrap<T>(response)
+}
+
+async function unwrap<T>(response: Response): Promise<T> {
   if (response.status === 204) return undefined as T
 
   const payload = await response.json().catch(() => null)
@@ -55,4 +81,8 @@ export const http = {
   get: <T>(path: string, options?: RequestOptions) => request<T>('GET', path, undefined, options),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>('POST', path, body, options),
+  put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
+    request<T>('PUT', path, body, options),
+  postForm: <T>(path: string, form: FormData, options?: RequestOptions) =>
+    requestForm<T>(path, form, options),
 }

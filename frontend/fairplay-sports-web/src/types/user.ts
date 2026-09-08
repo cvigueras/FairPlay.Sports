@@ -5,6 +5,7 @@ export interface User {
   id: string
   userName: string
   email: string
+  teamId: string | null
   role: UserRole
   createdAt: string
   active: boolean
