@@ -54,15 +54,7 @@ public sealed class User
         return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateOptionalTeamId(teamId), role, createdAtUtc);
     }
 
-    public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);
-
     public void MoveToTeam(Guid teamId) => TeamId = ValidateTeamId(teamId);
-
-    public void PromoteToAdmin() => Role = UserRole.Admin;
-
-    public void DemoteToMember() => Role = UserRole.Member;
-
-    public void Deactivate() => Active = false;
 
     public void Activate() => Active = true;
 
@@ -91,7 +83,7 @@ public sealed class User
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email is required.", nameof(email));
 
-        var normalized = email.Trim();
+        var normalized = email.Trim().ToLowerInvariant();
         if (!normalized.Contains('@', StringComparison.Ordinal))
             throw new ArgumentException("Email is not a valid address.", nameof(email));
 
