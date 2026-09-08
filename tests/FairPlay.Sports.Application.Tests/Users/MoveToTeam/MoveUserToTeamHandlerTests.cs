@@ -58,11 +58,11 @@ public class MoveUserToTeamHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenUserAndTeamExist_MovesUser_AndReturnsUpdatedDto()
+    public async Task Handle_WhenUserAndTeamExist_MovesUser_ActivatesIt_AndReturnsUpdatedDto()
     {
         var newTeamId = Guid.NewGuid();
         var command = new MoveUserToTeamCommand(Guid.NewGuid(), newTeamId);
-        var user = UserMother.DomainUser(id: command.UserId);
+        var user = UserMother.DomainUser(id: command.UserId, withTeam: false, active: false);
         _users.GetByIdForUpdateAsync(command.UserId, Arg.Any<CancellationToken>()).Returns(user);
 
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -71,7 +71,9 @@ public class MoveUserToTeamHandlerTests
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Value!.TeamId, Is.EqualTo(newTeamId));
+            Assert.That(result.Value!.Active, Is.True);
             Assert.That(user.TeamId, Is.EqualTo(newTeamId));
+            Assert.That(user.Active, Is.True);
         });
     }
 }

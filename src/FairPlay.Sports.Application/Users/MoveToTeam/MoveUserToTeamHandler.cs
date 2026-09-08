@@ -21,6 +21,9 @@ public sealed class MoveUserToTeamHandler(IUserRepository users, ITeamRepository
 
         user.MoveToTeam(request.TeamId);
 
+        // Belonging to a team is what activates the user.
+        user.Activate();
+
         return Result<UserDto>.Success(UserDto.FromDomain(user));
     }
 }

@@ -112,14 +112,18 @@ public class RegisterUserHandlerTests
         var result = await _handler.Handle(UserMother.Command() with { TeamId = null }, CancellationToken.None);
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value!.TeamId, Is.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.TeamId, Is.Null);
+            Assert.That(result.Value!.Active, Is.False);
+        });
         await _teams.DidNotReceive().ExistsByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
         await _repository.Received(1).AddAsync(
-            Arg.Is<User>(user => user.TeamId == null), Arg.Any<CancellationToken>());
+            Arg.Is<User>(user => user.TeamId == null && !user.Active), Arg.Any<CancellationToken>());
     }
 
     [Test]
-    public async Task Handle_WhenEmailAndUserNameFree_HashesPassword_PersistsUser_AndReturnsDto()
+    public async Task Handle_WhenRegisteredWithAKnownTeam_HashesPassword_PersistsActiveUser_AndReturnsDto()
     {
         _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
@@ -133,7 +137,7 @@ public class RegisterUserHandlerTests
             Assert.That(result.Value!.UserName, Is.EqualTo(UserMother.UserName));
             Assert.That(result.Value!.Email, Is.EqualTo(UserMother.Email));
             Assert.That(result.Value!.TeamId, Is.EqualTo(UserMother.TeamId));
-            Assert.That(result.Value!.Active, Is.False);
+            Assert.That(result.Value!.Active, Is.True);
             Assert.That(result.Value!.CreatedAt, Is.EqualTo(Now));
             Assert.That(result.Value!.Id, Is.Not.EqualTo(Guid.Empty));
         });
@@ -144,7 +148,7 @@ public class RegisterUserHandlerTests
                 user.UserName == UserMother.UserName &&
                 user.Email == UserMother.Email &&
                 user.TeamId == UserMother.TeamId &&
-                !user.Active &&
+                user.Active &&
                 user.Id != Guid.Empty &&
                 user.CreatedAt == Now),
             Arg.Any<CancellationToken>());

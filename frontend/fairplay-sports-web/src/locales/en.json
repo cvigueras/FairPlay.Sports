@@ -38,10 +38,11 @@
     "goLogin": "Sign in"
   },
   "profile": {
-    "title": "My profile",
-    "subtitle": "Your FairPlay Sports details",
     "logout": "Log out",
     "loggingOut": "Logging out...",
+    "activation": {
+      "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
+    },
     "fields": {
       "userName": "Username",
       "email": "Email",

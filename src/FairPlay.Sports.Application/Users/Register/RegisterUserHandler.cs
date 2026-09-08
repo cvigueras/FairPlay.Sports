@@ -35,6 +35,10 @@ public sealed class RegisterUserHandler(
             request.TeamId,
             _clock.UtcNow);
 
+        // A user is only active once they belong to a team.
+        if (request.TeamId is not null)
+            user.Activate();
+
         await _repository.AddAsync(user, cancellationToken);
 
         return Result<UserDto>.Success(UserDto.FromDomain(user));

@@ -38,10 +38,11 @@
     "goLogin": "Inicia sesión"
   },
   "profile": {
-    "title": "Mi perfil",
-    "subtitle": "Tu información en FairPlay Sports",
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión...",
+    "activation": {
+      "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
+    },
     "fields": {
       "userName": "Usuario",
       "email": "Email",

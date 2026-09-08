@@ -245,8 +245,15 @@ async function createTeam() {
 
   <v-main>
     <v-container v-if="user" class="py-10 profile-container">
-      <h1 class="text-h5 font-weight-bold">{{ t('profile.title') }}</h1>
-      <p class="text-body-2 text-medium-emphasis mb-6">{{ t('profile.subtitle') }}</p>
+      <v-alert
+        v-if="!user.teamId"
+        type="warning"
+        variant="tonal"
+        density="comfortable"
+        class="mb-6"
+      >
+        {{ t('profile.activation.needsTeam') }}
+      </v-alert>
 
       <v-row>
         <!-- Left: the profile itself -->
