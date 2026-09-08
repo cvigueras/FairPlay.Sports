@@ -56,9 +56,8 @@
     },
     "team": {
       "title": "Mi equipo",
-      "subtitle": "Elige tu equipo o crea uno nuevo.",
       "select": "Equipo",
-      "selectPlaceholder": "Elige un equipo",
+      "selectPlaceholder": "Elige tu equipo",
       "noCrest": "Este equipo aún no tiene escudo.",
       "save": "Guardar equipo",
       "saved": "Tu equipo se ha actualizado.",

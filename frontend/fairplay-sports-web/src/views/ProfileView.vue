@@ -294,8 +294,7 @@ async function createTeam() {
         <!-- Right: the team the user belongs to -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6">
-            <h2 class="text-h6 font-weight-bold">{{ t('profile.team.title') }}</h2>
-            <p class="text-body-2 text-medium-emphasis mb-4">{{ t('profile.team.subtitle') }}</p>
+            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
 
             <v-select
               v-model="selectedTeamId"
@@ -306,6 +305,7 @@ async function createTeam() {
               density="comfortable"
               :label="t('profile.team.select')"
               :placeholder="t('profile.team.selectPlaceholder')"
+              persistent-placeholder
               :loading="loadingTeams"
               hide-details="auto"
               class="mb-4"

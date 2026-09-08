@@ -56,9 +56,8 @@
     },
     "team": {
       "title": "My team",
-      "subtitle": "Pick your team, or create a new one.",
       "select": "Team",
-      "selectPlaceholder": "Choose a team",
+      "selectPlaceholder": "Pick your team",
       "noCrest": "This team has no crest yet.",
       "save": "Save team",
       "saved": "Your team was updated.",
