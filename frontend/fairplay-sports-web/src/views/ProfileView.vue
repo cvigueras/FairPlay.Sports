@@ -256,9 +256,9 @@ async function createTeam() {
       </v-alert>
 
       <v-row>
-        <!-- Left: the profile itself -->
+        <!-- Top left: profile summary -->
         <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="mb-6 pa-6 d-flex align-center ga-4">
+          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-4 h-100">
             <v-avatar color="primary" size="64" class="text-h6 font-weight-bold">
               {{ initials }}
             </v-avatar>
@@ -275,25 +275,11 @@ async function createTeam() {
               </v-chip>
             </div>
           </v-card>
-
-          <v-card border flat rounded="xl">
-            <v-list>
-              <template v-for="(row, index) in details" :key="row.label">
-                <v-divider v-if="index > 0" />
-                <v-list-item class="py-3">
-                  <template #subtitle>
-                    <span class="text-caption text-uppercase">{{ row.label }}</span>
-                  </template>
-                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-list>
-          </v-card>
         </v-col>
 
-        <!-- Right: the team the user belongs to -->
+        <!-- Top right: the team the user belongs to -->
         <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6">
+          <v-card border flat rounded="xl" class="pa-6 h-100">
             <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
 
             <v-select
@@ -353,12 +339,32 @@ async function createTeam() {
             >
               {{ t('profile.team.save') }}
             </v-btn>
+          </v-card>
+        </v-col>
+      </v-row>
 
-            <v-divider class="my-6" />
+      <v-row class="mt-6">
+        <!-- Bottom left: profile details -->
+        <v-col cols="12" md="6">
+          <v-card border flat rounded="xl">
+            <v-list>
+              <template v-for="(row, index) in details" :key="row.label">
+                <v-divider v-if="index > 0" />
+                <v-list-item class="py-3">
+                  <template #subtitle>
+                    <span class="text-caption text-uppercase">{{ row.label }}</span>
+                  </template>
+                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
+                </v-list-item>
+              </template>
+            </v-list>
+          </v-card>
+        </v-col>
 
-            <h3 class="text-subtitle-1 font-weight-bold mb-3">
-              {{ t('profile.team.createTitle') }}
-            </h3>
+        <!-- Bottom right: create a new team -->
+        <v-col cols="12" md="6">
+          <v-card border flat rounded="xl" class="pa-6">
+            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.createTitle') }}</h2>
 
             <v-form novalidate @submit.prevent="createTeam">
               <v-text-field
