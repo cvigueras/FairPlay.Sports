@@ -27,8 +27,9 @@ public class GetAllUsersHandlerTests
     [Test]
     public async Task Handle_MapsEveryUserToDto()
     {
+        var rivalsTeamId = Guid.Parse("22222222-2222-2222-2222-222222222222");
         var first = UserMother.DomainUser(userName: "carlos", email: "carlos@example.com");
-        var second = UserMother.DomainUser(userName: "ana", email: "ana@example.com", team: "Rivals CF");
+        var second = UserMother.DomainUser(userName: "ana", email: "ana@example.com", teamId: rivalsTeamId);
         _repository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(new List<User> { first, second });
 
@@ -43,7 +44,7 @@ public class GetAllUsersHandlerTests
             Assert.That(result.Value![0].Email, Is.EqualTo("carlos@example.com"));
             Assert.That(result.Value![0].Active, Is.True);
             Assert.That(result.Value![1].UserName, Is.EqualTo("ana"));
-            Assert.That(result.Value![1].Team, Is.EqualTo("Rivals CF"));
+            Assert.That(result.Value![1].TeamId, Is.EqualTo(rivalsTeamId));
         });
     }
 

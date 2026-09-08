@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FairPlay.Sports.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FairPlaySportsDbContext))]
-    partial class FairPlaySportsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908082156_UserTeamIdReference")]
+    partial class UserTeamIdReference
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,7 +153,7 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("Member");
 
-                    b.Property<Guid?>("TeamId")
+                    b.Property<Guid>("TeamId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("UserName")
@@ -185,7 +188,8 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.HasOne("FairPlay.Sports.Domain.Teams.Team", null)
                         .WithMany()
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

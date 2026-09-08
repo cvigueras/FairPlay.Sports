@@ -5,6 +5,7 @@ using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
+using FairPlay.Sports.Application.Users.MoveToTeam;
 using FairPlay.Sports.Application.Users.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -91,7 +92,7 @@ public class UsersControllerTests
                 command.UserName == request.UserName &&
                 command.Email == request.Email &&
                 command.Password == request.Password &&
-                command.Team == request.Team),
+                command.TeamId == request.TeamId),
             Arg.Any<CancellationToken>());
     }
 
@@ -149,5 +150,33 @@ public class UsersControllerTests
         var response = await _controller.Activate(id, CancellationToken.None);
 
         Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task MoveToTeam_DispatchesCommandWithRouteIdAndBody_AndReturnsOkWithHandlerValue()
+    {
+        var userId = Guid.NewGuid();
+        var teamId = Guid.NewGuid();
+        var dto = UserMother.Dto(userId);
+        _sender.Send(Arg.Any<MoveUserToTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserDto>.Success(dto));
+
+        var response = await _controller.MoveToTeam(userId, new MoveUserToTeamRequest(teamId), CancellationToken.None);
+
+        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dto));
+        await _sender.Received(1).Send(
+            Arg.Is<MoveUserToTeamCommand>(command => command.UserId == userId && command.TeamId == teamId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task MoveToTeam_WhenHandlerReturnsNotFound_Returns404()
+    {
+        _sender.Send(Arg.Any<MoveUserToTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserDto>.NotFound("Team was not found."));
+
+        var response = await _controller.MoveToTeam(Guid.NewGuid(), new MoveUserToTeamRequest(Guid.NewGuid()), CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
     }
 }

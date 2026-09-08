@@ -1,5 +1,6 @@
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.TestSupport.Users;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Register;
 using FairPlay.Sports.Domain.Users;
@@ -21,6 +22,7 @@ public class RegisterUserHandlerTests
     private static readonly DateTime Now = new(2026, 9, 2, 12, 0, 0, DateTimeKind.Utc);
 
     private IUserRepository _repository = null!;
+    private ITeamRepository _teams = null!;
     private IPasswordHasher _passwordHasher = null!;
     private IClock _clock = null!;
     private RegisterUserHandler _handler = null!;
@@ -29,10 +31,12 @@ public class RegisterUserHandlerTests
     public void SetUp()
     {
         _repository = Substitute.For<IUserRepository>();
+        _teams = Substitute.For<ITeamRepository>();
+        _teams.ExistsByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
         _passwordHasher = Substitute.For<IPasswordHasher>();
         _clock = Substitute.For<IClock>();
         _clock.UtcNow.Returns(Now);
-        _handler = new RegisterUserHandler(_repository, _passwordHasher, _clock);
+        _handler = new RegisterUserHandler(_repository, _teams, _passwordHasher, _clock);
     }
 
     [Test]
@@ -80,7 +84,46 @@ public class RegisterUserHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenEmailAndUserNameFree_HashesPassword_PersistsUser_AndReturnsDto()
+    public async Task Handle_WhenTeamDoesNotExist_ReturnsNotFound_AndDoesNotPersist()
+    {
+        _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _teams.ExistsByIdAsync(UserMother.TeamId, Arg.Any<CancellationToken>()).Returns(false);
+
+        var result = await _handler.Handle(UserMother.Command(), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.NotFound));
+            Assert.That(result.Error, Is.EqualTo($"Team '{UserMother.TeamId}' was not found."));
+        });
+        await _repository.DidNotReceive().AddAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
+        _passwordHasher.DidNotReceive().Hash(Arg.Any<string>());
+    }
+
+    [Test]
+    public async Task Handle_WithoutTeam_RegistersUserWithNoTeam_AndSkipsTheTeamLookup()
+    {
+        _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _passwordHasher.Hash(UserMother.Password).Returns("HASHED");
+
+        var result = await _handler.Handle(UserMother.Command() with { TeamId = null }, CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.TeamId, Is.Null);
+            Assert.That(result.Value!.Active, Is.False);
+        });
+        await _teams.DidNotReceive().ExistsByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        await _repository.Received(1).AddAsync(
+            Arg.Is<User>(user => user.TeamId == null && !user.Active), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Handle_WhenRegisteredWithAKnownTeam_HashesPassword_PersistsActiveUser_AndReturnsDto()
     {
         _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
@@ -93,8 +136,8 @@ public class RegisterUserHandlerTests
         {
             Assert.That(result.Value!.UserName, Is.EqualTo(UserMother.UserName));
             Assert.That(result.Value!.Email, Is.EqualTo(UserMother.Email));
-            Assert.That(result.Value!.Team, Is.EqualTo(UserMother.Team));
-            Assert.That(result.Value!.Active, Is.False);
+            Assert.That(result.Value!.TeamId, Is.EqualTo(UserMother.TeamId));
+            Assert.That(result.Value!.Active, Is.True);
             Assert.That(result.Value!.CreatedAt, Is.EqualTo(Now));
             Assert.That(result.Value!.Id, Is.Not.EqualTo(Guid.Empty));
         });
@@ -104,8 +147,8 @@ public class RegisterUserHandlerTests
                 user.PasswordHash == "HASHED" &&
                 user.UserName == UserMother.UserName &&
                 user.Email == UserMother.Email &&
-                user.Team == UserMother.Team &&
-                !user.Active &&
+                user.TeamId == UserMother.TeamId &&
+                user.Active &&
                 user.Id != Guid.Empty &&
                 user.CreatedAt == Now),
             Arg.Any<CancellationToken>());

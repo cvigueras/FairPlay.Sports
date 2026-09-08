@@ -10,6 +10,8 @@ public interface ITeamRepository
 
     Task<Team?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default);
 
     Task<TeamCrest?> GetCrestAsync(Guid id, CancellationToken cancellationToken = default);

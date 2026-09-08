@@ -1,6 +1,7 @@
 using FairPlay.Sports.Domain.Users;
 using FairPlay.Sports.Infrastructure.Persistence;
 using FairPlay.Sports.Infrastructure.Users;
+using FairPlay.Sports.TestSupport.Teams;
 using FairPlay.Sports.TestSupport.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,15 @@ namespace FairPlay.Sports.Infrastructure.Tests.Users;
 [TestFixture]
 public class EfUserRepositoryTests : RepositoryTestBase
 {
+    // Users carry an FK to Teams; every seeded user references this one.
+    [SetUp]
+    public async Task SeedReferencedTeam()
+    {
+        await using var context = NewContext();
+        context.Teams.Add(TeamMother.DomainTeam(id: UserMother.TeamId));
+        await context.SaveChangesAsync();
+    }
+
     private static async Task SeedAsync(params User[] users)
     {
         await using var context = NewContext();
@@ -42,11 +52,29 @@ public class EfUserRepositoryTests : RepositoryTestBase
         {
             Assert.That(persisted!.UserName, Is.EqualTo(user.UserName));
             Assert.That(persisted.Email, Is.EqualTo(user.Email));
-            Assert.That(persisted.Team, Is.EqualTo(user.Team));
+            Assert.That(persisted.TeamId, Is.EqualTo(user.TeamId));
             Assert.That(persisted.PasswordHash, Is.EqualTo(user.PasswordHash));
             Assert.That(persisted.Active, Is.True);
             Assert.That(persisted.CreatedAt, Is.EqualTo(user.CreatedAt).Within(TimeSpan.FromMilliseconds(10)));
         });
+    }
+
+    [Test]
+    public async Task AddAsync_withoutTeam_thenCommit_persistsNullTeamId()
+    {
+        var user = UserMother.DomainUser(withTeam: false);
+
+        await using (var arrange = NewContext())
+        {
+            var repository = new EfUserRepository(arrange);
+            var unitOfWork = new UnitOfWork(arrange);
+            await repository.AddAsync(user);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(persisted.TeamId, Is.Null);
     }
 
     [Test]

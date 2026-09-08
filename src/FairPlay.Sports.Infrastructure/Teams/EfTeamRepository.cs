@@ -28,6 +28,9 @@ internal sealed class EfTeamRepository : ITeamRepository
     public Task<Team?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams.FirstOrDefaultAsync(team => team.Id == id, cancellationToken);
 
+    public Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _context.Teams.AnyAsync(team => team.Id == id, cancellationToken);
+
     public Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default) =>
         _context.Teams.AnyAsync(team => team.Name == name, cancellationToken);
 

@@ -13,7 +13,6 @@ export interface RegisterPayload {
   userName: string
   email: string
   password: string
-  team: string
 }
 
 /**
@@ -46,6 +45,16 @@ export const useAuthStore = defineStore('auth', () => {
     return http.post<User>('/api/users', payload)
   }
 
+  /** Assigns the signed-in user to a team and refreshes the cached user. */
+  async function setTeam(teamId: string): Promise<void> {
+    if (!currentUser.value) return
+    currentUser.value = await http.put<User>(
+      `/api/users/${currentUser.value.id}/team`,
+      { teamId },
+      { token: accessToken.value },
+    )
+  }
+
   /** Best-effort session restore from the refresh cookie. Never throws. */
   async function tryRefresh(): Promise<void> {
     try {
@@ -65,5 +74,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { accessToken, currentUser, isAuthenticated, login, register, tryRefresh, logout }
+  return {
+    accessToken,
+    currentUser,
+    isAuthenticated,
+    login,
+    register,
+    setTeam,
+    tryRefresh,
+    logout,
+  }
 })

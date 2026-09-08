@@ -7,7 +7,6 @@
     "userNameRequired": "El nombre de usuario es obligatorio.",
     "emailRequired": "El email es obligatorio.",
     "emailInvalid": "Introduce un email válido.",
-    "teamRequired": "El equipo es obligatorio.",
     "passwordRequired": "La contraseña es obligatoria.",
     "passwordMinLength": "Debe tener al menos 8 caracteres.",
     "passwordsMismatch": "Las contraseñas no coinciden."
@@ -30,8 +29,6 @@
     "userNamePlaceholder": "tu_usuario",
     "email": "Email",
     "emailPlaceholder": "tu{'@'}email.com",
-    "team": "Equipo",
-    "teamPlaceholder": "Tu equipo",
     "password": "Contraseña",
     "confirmPassword": "Confirmar contraseña",
     "submit": "Registrarme",
@@ -41,14 +38,14 @@
     "goLogin": "Inicia sesión"
   },
   "profile": {
-    "title": "Mi perfil",
-    "subtitle": "Tu información en FairPlay Sports",
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión...",
+    "activation": {
+      "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
+    },
     "fields": {
       "userName": "Usuario",
       "email": "Email",
-      "team": "Equipo",
       "role": "Rol",
       "memberSince": "Miembro desde",
       "status": "Estado"
@@ -56,6 +53,46 @@
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
+    },
+    "team": {
+      "title": "Mi equipo",
+      "select": "Equipo",
+      "selectPlaceholder": "Elige tu equipo",
+      "noCrest": "Este equipo aún no tiene escudo.",
+      "save": "Guardar equipo",
+      "saved": "Tu equipo se ha actualizado.",
+      "loadFailed": "No se han podido cargar los equipos.",
+      "saveFailed": "No se ha podido actualizar tu equipo.",
+      "createTitle": "Crear un equipo nuevo",
+      "name": "Nombre",
+      "coach": "Entrenador",
+      "city": "Ciudad",
+      "type": "Modalidad",
+      "division": "División",
+      "category": "Categoría",
+      "crest": "Imagen del escudo",
+      "create": "Crear y asignar",
+      "creating": "Creando...",
+      "createFailed": "No se ha podido crear el equipo.",
+      "required": "Obligatorio.",
+      "crestRequired": "La imagen del escudo es obligatoria.",
+      "enums": {
+        "Football11": "Fútbol 11",
+        "Football8": "Fútbol 8",
+        "Futsal": "Fútbol sala",
+        "BeachSoccer": "Fútbol playa",
+        "HonorDivision": "División de Honor",
+        "RegionalLeague": "Liga Regional",
+        "First": "Primera",
+        "Second": "Segunda",
+        "Under19": "Sub-19",
+        "Under16": "Sub-16",
+        "Under14": "Sub-14",
+        "Under12": "Sub-12",
+        "Under10": "Sub-10",
+        "Under8": "Sub-8",
+        "Under6": "Sub-6"
+      }
     }
   },
   "language": {

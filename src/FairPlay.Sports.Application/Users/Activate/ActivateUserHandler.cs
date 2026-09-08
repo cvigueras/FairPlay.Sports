@@ -13,6 +13,9 @@ public sealed class ActivateUserHandler(IUserRepository repository) : IRequestHa
         if (user is null)
             return Result.NotFound($"User '{request.Id}' was not found.");
 
+        if (user.TeamId is null)
+            return Result.Failure("A user cannot be activated until they belong to a team.");
+
         user.Activate();
 
         return Result.Success();

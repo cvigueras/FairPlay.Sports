@@ -48,6 +48,22 @@ public class ActivateUserHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenUserHasNoTeam_ReturnsFailure_AndDoesNotActivate()
+    {
+        var user = UserMother.DomainUser(active: false, withTeam: false);
+        _repository.GetByIdForUpdateAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        var result = await _handler.Handle(new ActivateUserCommand(user.Id), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ResultErrorType.Validation));
+            Assert.That(user.Active, Is.False);
+        });
+    }
+
+    [Test]
     public async Task Handle_WhenUserMissing_ReturnsNotFound()
     {
         var id = Guid.NewGuid();
