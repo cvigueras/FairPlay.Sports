@@ -2,13 +2,16 @@
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { mdiTranslate } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/components/AuthLayout.vue'
+import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
+import logoUrl from '@/assets/logo.png'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const justRegistered = computed(() => route.query.registered === '1')
 
@@ -44,17 +47,50 @@ async function handleSubmit() {
   isSubmitting.value = true
   try {
     await auth.login(form.email, form.password)
-    await router.push('/profile')
   } catch {
     submitError.value = t('login.failed')
+    return
   } finally {
     isSubmitting.value = false
   }
+
+  // Navigate only after a successful sign-in; a router rejection here must not
+  // surface as a "wrong credentials" message.
+  await router.push('/profile')
 }
 </script>
 
 <template>
-  <AuthLayout :title="t('login.title')" :subtitle="t('login.subtitle')">
+  <AuthLayout>
+    <template #brand>
+      <img :src="logoUrl" :alt="t('common.appName')" class="auth-logo" />
+    </template>
+
+    <v-menu>
+      <template #activator="{ props }">
+        <v-btn
+          class="login-lang"
+          variant="text"
+          size="small"
+          :prepend-icon="mdiTranslate"
+          :aria-label="t('language.label')"
+          v-bind="props"
+        >
+          {{ locale.toUpperCase() }}
+        </v-btn>
+      </template>
+      <v-list density="compact">
+        <v-list-item
+          v-for="code in SUPPORTED_LOCALES"
+          :key="code"
+          :active="code === locale"
+          @click="setLocale(code)"
+        >
+          <v-list-item-title>{{ t(`language.${code}`) }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+
     <v-form novalidate @submit.prevent="handleSubmit">
       <v-alert
         v-if="justRegistered"
@@ -103,3 +139,22 @@ async function handleSubmit() {
     </template>
   </AuthLayout>
 </template>
+
+<style scoped>
+.auth-logo {
+  display: block;
+  height: 200px;
+  width: auto;
+  max-width: 100%;
+  /* Negative margins trim the dead space above/below the logo art so it
+     sits closer to the card edge and to the first input. */
+  margin: -24px auto -20px;
+  object-fit: contain;
+}
+
+.login-lang {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+</style>

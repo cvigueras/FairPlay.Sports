@@ -64,12 +64,16 @@ async function handleSubmit() {
       email: form.email,
       password: form.password,
     })
-    await router.push({ path: '/login', query: { registered: '1' } })
   } catch (error) {
     submitError.value = error instanceof ApiError ? error.message : t('register.failed')
+    return
   } finally {
     isSubmitting.value = false
   }
+
+  // Navigate only after the account was created; a router rejection here must
+  // not surface as a registration error.
+  await router.push({ path: '/login', query: { registered: '1' } })
 }
 </script>
 
