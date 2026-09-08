@@ -3,7 +3,7 @@
 [![CI](https://github.com/cvigueras/FairPlay.Sports/actions/workflows/ci.yml/badge.svg)](https://github.com/cvigueras/FairPlay.Sports/actions/workflows/ci.yml)
 
 Sample project demonstrating a **hexagonal architecture** combined with **vertical slicing** in
-.NET 10, with a RESTful users API backed by SQL Server (EF Core) and a Vue 3 frontend with dummy
+.NET 10, with a RESTful users API backed by PostgreSQL (EF Core) and a Vue 3 frontend with dummy
 login and register screens.
 
 > 🤖 **Built with Claude AI.** This project was generated entirely with Claude AI, applied
@@ -15,7 +15,7 @@ login and register screens.
 
 - **Hexagonal (ports & adapters):** `Domain` has no dependencies; `Application` defines the ports
   (`IUserRepository`) and the use cases; `Infrastructure` implements the ports with an EF Core /
-  SQL Server adapter; `Api` is the driving adapter (REST controllers) and acts as the composition
+  PostgreSQL adapter; `Api` is the driving adapter (REST controllers) and acts as the composition
   root.
 - **Vertical slicing:** inside `Application`, each CRUD operation (`Create`, `Update`, `Delete`,
   `GetById`, `GetAll`) is an independent folder with its own Command/Query, Handler and Validator.
@@ -32,7 +32,7 @@ FairPlay.Sports.slnx
 src/
   FairPlay.Sports.Domain/          Domain entities and business rules
   FairPlay.Sports.Application/     Use cases (vertical slices) + ports
-  FairPlay.Sports.Infrastructure/  EF Core / SQL Server adapter
+  FairPlay.Sports.Infrastructure/  EF Core / PostgreSQL adapter
   FairPlay.Sports.Api/             REST API (ASP.NET Core)
 tests/
   FairPlay.Sports.Domain.Tests/
@@ -112,7 +112,7 @@ with native Visual Studio support for running npm scripts (`dev`, `build`) from 
 
 ## Notes
 
-- The users API persists to SQL Server via EF Core. In `Development` the API applies the latest
-  migrations on startup; set `ConnectionStrings:FairPlaySports` to point at your database.
+- The users API persists to PostgreSQL via EF Core (Npgsql). In `Development` the API applies the
+  latest migrations on startup; set `ConnectionStrings:FairPlaySports` to point at your database.
 - CORS is enabled for `http://localhost:5173`, in case the frontend is later wired up to the real
   backend.
