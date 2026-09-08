@@ -39,9 +39,9 @@ public class EfTeamRepositoryTests : RepositoryTestBase
             Assert.That(persisted!.Name, Is.EqualTo(team.Name));
             Assert.That(persisted.Coach, Is.EqualTo(team.Coach));
             Assert.That(persisted.City, Is.EqualTo("Sevilla"));
-            Assert.That(persisted.Type, Is.EqualTo(FootballType.BeachSoccer));
-            Assert.That(persisted.Division, Is.EqualTo(Division.HonorDivision));
-            Assert.That(persisted.Category, Is.EqualTo(AgeCategory.Under12));
+            Assert.That(persisted.Classification.Type, Is.EqualTo(FootballType.BeachSoccer));
+            Assert.That(persisted.Classification.Division, Is.EqualTo(Division.HonorDivision));
+            Assert.That(persisted.Classification.Category, Is.EqualTo(AgeCategory.Under12));
             Assert.That(persisted.HasCrest, Is.False);
             Assert.That(persisted.Active, Is.True);
             Assert.That(persisted.CreatedAt, Is.EqualTo(team.CreatedAt).Within(TimeSpan.FromMilliseconds(10)));

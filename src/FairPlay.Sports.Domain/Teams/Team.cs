@@ -2,7 +2,6 @@ namespace FairPlay.Sports.Domain.Teams;
 
 public sealed class Team
 {
-    /// <summary>Upper bound for a stored crest image.</summary>
     public const int MaxCrestBytes = 2 * 1024 * 1024;
 
     private static readonly string[] AllowedCrestContentTypes =
@@ -12,12 +11,14 @@ public sealed class Team
     public string Name { get; private set; }
     public string Coach { get; private set; }
     public string City { get; private set; }
-    public FootballType Type { get; private set; }
-    public Division Division { get; private set; }
-    public AgeCategory Category { get; private set; }
+
+    public TeamClassification Classification { get; private set; } = null!;
+
     public byte[]? Crest { get; private set; }
     public string? CrestContentType { get; private set; }
-    public DateTime CreatedAt { get; }
+
+    public DateTime CreatedAt { get; private init; }
+
     public bool Active { get; private set; } = false;
 
     public bool HasCrest => Crest is { Length: > 0 };
@@ -26,20 +27,12 @@ public sealed class Team
         Guid id,
         string name,
         string coach,
-        string city,
-        FootballType type,
-        Division division,
-        AgeCategory category,
-        DateTime createdAt)
+        string city)
     {
         Id = id;
         Name = name;
         Coach = coach;
         City = city;
-        Type = type;
-        Division = division;
-        Category = category;
-        CreatedAt = createdAt;
     }
 
     public static Team Create(
@@ -47,38 +40,20 @@ public sealed class Team
         string name,
         string coach,
         string city,
-        FootballType type,
-        Division division,
-        AgeCategory category,
+        TeamClassification classification,
         DateTime createdAtUtc)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Team id cannot be empty.", nameof(id));
 
-        return new(
-            id,
-            ValidateName(name),
-            ValidateCoach(coach),
-            ValidateCity(city),
-            ValidateEnum(type, nameof(type)),
-            ValidateEnum(division, nameof(division)),
-            ValidateEnum(category, nameof(category)),
-            createdAtUtc);
+        ArgumentNullException.ThrowIfNull(classification);
+
+        return new(id, ValidateName(name), ValidateCoach(coach), ValidateCity(city))
+        {
+            Classification = classification,
+            CreatedAt = createdAtUtc
+        };
     }
-
-    public void Rename(string name) => Name = ValidateName(name);
-
-    public void ChangeCoach(string coach) => Coach = ValidateCoach(coach);
-
-    public void Relocate(string city) => City = ValidateCity(city);
-
-    public void ChangeType(FootballType type) => Type = ValidateEnum(type, nameof(type));
-
-    public void MoveToDivision(Division division) => Division = ValidateEnum(division, nameof(division));
-
-    public void ChangeCategory(AgeCategory category) => Category = ValidateEnum(category, nameof(category));
-
-    public void Deactivate() => Active = false;
 
     public void Activate() => Active = true;
 
@@ -92,12 +67,6 @@ public sealed class Team
 
         Crest = image;
         CrestContentType = ValidateCrestContentType(contentType);
-    }
-
-    public void RemoveCrest()
-    {
-        Crest = null;
-        CrestContentType = null;
     }
 
     private static string ValidateName(string name)
@@ -122,14 +91,6 @@ public sealed class Team
             throw new ArgumentException("Team city is required.", nameof(city));
 
         return city.Trim();
-    }
-
-    private static TEnum ValidateEnum<TEnum>(TEnum value, string paramName) where TEnum : struct, Enum
-    {
-        if (!Enum.IsDefined(value))
-            throw new ArgumentException($"'{value}' is not a valid {typeof(TEnum).Name}.", paramName);
-
-        return value;
     }
 
     private static string ValidateCrestContentType(string contentType)

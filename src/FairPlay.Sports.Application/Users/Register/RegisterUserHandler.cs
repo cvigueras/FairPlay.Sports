@@ -4,10 +4,14 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Users.Register;
 
-public sealed class RegisterUserHandler(IUserRepository respository, IPasswordHasher passwordHasher) : IRequestHandler<RegisterUserCommand, Result<UserDto>>
+public sealed class RegisterUserHandler(
+    IUserRepository respository,
+    IPasswordHasher passwordHasher,
+    IClock clock) : IRequestHandler<RegisterUserCommand, Result<UserDto>>
 {
     private readonly IUserRepository _repository = respository;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly IClock _clock = clock;
 
     public async Task<Result<UserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
@@ -23,7 +27,7 @@ public sealed class RegisterUserHandler(IUserRepository respository, IPasswordHa
             request.Email,
             _passwordHasher.Hash(request.Password),
             request.Team,
-            DateTime.UtcNow);
+            _clock.UtcNow);
 
         await _repository.AddAsync(user, cancellationToken);
 

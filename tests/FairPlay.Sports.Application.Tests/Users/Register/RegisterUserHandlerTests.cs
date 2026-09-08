@@ -18,8 +18,11 @@ namespace FairPlay.Sports.Application.Tests.Users.Register;
 [TestFixture]
 public class RegisterUserHandlerTests
 {
+    private static readonly DateTime Now = new(2026, 9, 2, 12, 0, 0, DateTimeKind.Utc);
+
     private IUserRepository _repository = null!;
     private IPasswordHasher _passwordHasher = null!;
+    private IClock _clock = null!;
     private RegisterUserHandler _handler = null!;
 
     [SetUp]
@@ -27,7 +30,9 @@ public class RegisterUserHandlerTests
     {
         _repository = Substitute.For<IUserRepository>();
         _passwordHasher = Substitute.For<IPasswordHasher>();
-        _handler = new RegisterUserHandler(_repository, _passwordHasher);
+        _clock = Substitute.For<IClock>();
+        _clock.UtcNow.Returns(Now);
+        _handler = new RegisterUserHandler(_repository, _passwordHasher, _clock);
     }
 
     [Test]
@@ -81,9 +86,7 @@ public class RegisterUserHandlerTests
         _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         _passwordHasher.Hash(UserMother.Password).Returns("HASHED");
 
-        var before = DateTime.UtcNow;
         var result = await _handler.Handle(UserMother.Command(), CancellationToken.None);
-        var after = DateTime.UtcNow;
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.Multiple(() =>
@@ -92,6 +95,7 @@ public class RegisterUserHandlerTests
             Assert.That(result.Value!.Email, Is.EqualTo(UserMother.Email));
             Assert.That(result.Value!.Team, Is.EqualTo(UserMother.Team));
             Assert.That(result.Value!.Active, Is.False);
+            Assert.That(result.Value!.CreatedAt, Is.EqualTo(Now));
             Assert.That(result.Value!.Id, Is.Not.EqualTo(Guid.Empty));
         });
 
@@ -103,7 +107,7 @@ public class RegisterUserHandlerTests
                 user.Team == UserMother.Team &&
                 !user.Active &&
                 user.Id != Guid.Empty &&
-                user.CreatedAt >= before && user.CreatedAt <= after),
+                user.CreatedAt == Now),
             Arg.Any<CancellationToken>());
     }
 

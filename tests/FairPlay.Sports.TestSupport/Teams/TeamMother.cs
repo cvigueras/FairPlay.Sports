@@ -34,9 +34,10 @@ public static class TeamMother
             name ?? Name,
             coach ?? Coach,
             city ?? City,
-            type ?? DefaultType,
-            division ?? DefaultDivision,
-            category ?? DefaultCategory,
+            new TeamClassification(
+                type ?? DefaultType,
+                division ?? DefaultDivision,
+                category ?? DefaultCategory),
             DateTime.UtcNow);
 
         if (active)

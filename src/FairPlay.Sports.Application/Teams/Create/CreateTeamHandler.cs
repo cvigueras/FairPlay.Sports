@@ -4,9 +4,10 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Teams.Create;
 
-public sealed class CreateTeamHandler(ITeamRepository repository) : IRequestHandler<CreateTeamCommand, Result<TeamDto>>
+public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) : IRequestHandler<CreateTeamCommand, Result<TeamDto>>
 {
     private readonly ITeamRepository _repository = repository;
+    private readonly IClock _clock = clock;
 
     public async Task<Result<TeamDto>> Handle(CreateTeamCommand request, CancellationToken cancellationToken)
     {
@@ -18,10 +19,8 @@ public sealed class CreateTeamHandler(ITeamRepository repository) : IRequestHand
             request.Name,
             request.Coach,
             request.City,
-            request.Type,
-            request.Division,
-            request.Category,
-            DateTime.UtcNow);
+            new TeamClassification(request.Type, request.Division, request.Category),
+            _clock.UtcNow);
 
         await _repository.AddAsync(team, cancellationToken);
 
