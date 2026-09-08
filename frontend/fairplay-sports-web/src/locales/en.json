@@ -7,7 +7,6 @@
     "userNameRequired": "Username is required.",
     "emailRequired": "Email is required.",
     "emailInvalid": "Enter a valid email.",
-    "teamRequired": "Team is required.",
     "passwordRequired": "Password is required.",
     "passwordMinLength": "Must be at least 8 characters.",
     "passwordsMismatch": "Passwords do not match."
@@ -30,8 +29,6 @@
     "userNamePlaceholder": "your_username",
     "email": "Email",
     "emailPlaceholder": "you{'@'}email.com",
-    "team": "Team",
-    "teamPlaceholder": "Your team",
     "password": "Password",
     "confirmPassword": "Confirm password",
     "submit": "Sign up",
@@ -48,7 +45,6 @@
     "fields": {
       "userName": "Username",
       "email": "Email",
-      "team": "Team",
       "role": "Role",
       "memberSince": "Member since",
       "status": "Status"

@@ -6,7 +6,7 @@ public sealed class User
     public string UserName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
-    public Guid TeamId { get; private set; }
+    public Guid? TeamId { get; private set; }
     public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; }
     public bool Active { get; private set; } = false;
@@ -16,7 +16,7 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        Guid teamId,
+        Guid? teamId,
         UserRole role,
         DateTime createdAt)
     {
@@ -34,13 +34,13 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        Guid teamId,
+        Guid? teamId,
         DateTime createdAtUtc,
         UserRole role = UserRole.Member)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeamId(teamId), role, createdAtUtc);
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateOptionalTeamId(teamId), role, createdAtUtc);
     }
 
     public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);
@@ -90,4 +90,7 @@ public sealed class User
 
         return teamId;
     }
+
+    private static Guid? ValidateOptionalTeamId(Guid? teamId) =>
+        teamId is null ? null : ValidateTeamId(teamId.Value);
 }

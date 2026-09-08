@@ -103,6 +103,22 @@ public class RegisterUserHandlerTests
     }
 
     [Test]
+    public async Task Handle_WithoutTeam_RegistersUserWithNoTeam_AndSkipsTheTeamLookup()
+    {
+        _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByUserNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _passwordHasher.Hash(UserMother.Password).Returns("HASHED");
+
+        var result = await _handler.Handle(UserMother.Command() with { TeamId = null }, CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value!.TeamId, Is.Null);
+        await _teams.DidNotReceive().ExistsByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        await _repository.Received(1).AddAsync(
+            Arg.Is<User>(user => user.TeamId == null), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
     public async Task Handle_WhenEmailAndUserNameFree_HashesPassword_PersistsUser_AndReturnsDto()
     {
         _repository.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);

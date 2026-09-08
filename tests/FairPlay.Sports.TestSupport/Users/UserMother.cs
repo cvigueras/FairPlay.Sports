@@ -19,6 +19,7 @@ public static class UserMother
         string? userName = null,
         string? email = null,
         Guid? teamId = null,
+        bool withTeam = true,
         UserRole role = UserRole.Member,
         bool active = true)
     {
@@ -27,7 +28,7 @@ public static class UserMother
             userName ?? UserName,
             email ?? Email,
             PasswordHash,
-            teamId ?? TeamId,
+            withTeam ? teamId ?? TeamId : null,
             DateTime.UtcNow,
             role);
 

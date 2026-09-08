@@ -13,7 +13,6 @@ const { t } = useI18n()
 const form = reactive({
   userName: '',
   email: '',
-  team: '',
   password: '',
   confirmPassword: '',
 })
@@ -21,7 +20,6 @@ const form = reactive({
 const errors = reactive({
   userName: '',
   email: '',
-  team: '',
   password: '',
   confirmPassword: '',
 })
@@ -38,8 +36,6 @@ function validate(): boolean {
       ? t('validation.emailInvalid')
       : ''
 
-  errors.team = !form.team.trim() ? t('validation.teamRequired') : ''
-
   errors.password = !form.password
     ? t('validation.passwordRequired')
     : form.password.length < 8
@@ -52,7 +48,6 @@ function validate(): boolean {
   return (
     !errors.userName &&
     !errors.email &&
-    !errors.team &&
     !errors.password &&
     !errors.confirmPassword
   )
@@ -67,7 +62,6 @@ async function handleSubmit() {
     await auth.register({
       userName: form.userName.trim(),
       email: form.email,
-      team: form.team.trim(),
       password: form.password,
     })
     await router.push({ path: '/login', query: { registered: '1' } })
@@ -98,15 +92,6 @@ async function handleSubmit() {
         autocomplete="email"
         :placeholder="t('register.emailPlaceholder')"
         :error-messages="errors.email"
-        class="mb-2"
-      />
-
-      <v-text-field
-        v-model="form.team"
-        :label="t('register.team')"
-        autocomplete="organization"
-        :placeholder="t('register.teamPlaceholder')"
-        :error-messages="errors.team"
         class="mb-2"
       />
 

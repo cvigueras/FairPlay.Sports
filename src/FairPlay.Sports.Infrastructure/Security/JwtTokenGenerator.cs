@@ -25,15 +25,18 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
         var issuedAt = _clock.UtcNow;
         var expiresAt = issuedAt.AddMinutes(_options.AccessTokenMinutes);
 
-        Claim[] claims =
+        List<Claim> claims =
         [
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.UserName),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new("team", user.TeamId.ToString()),
             new("role", user.Role.ToString())
         ];
+
+        // Only users that belong to a team carry the claim.
+        if (user.TeamId is { } teamId)
+            claims.Add(new Claim("team", teamId.ToString()));
 
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey)),

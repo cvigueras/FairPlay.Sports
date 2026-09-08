@@ -36,7 +36,6 @@ const details = computed(() => {
   return [
     { label: t('profile.fields.userName'), value: user.value.userName },
     { label: t('profile.fields.email'), value: user.value.email },
-    { label: t('profile.fields.team'), value: user.value.team },
     { label: t('profile.fields.role'), value: user.value.role },
     { label: t('profile.fields.memberSince'), value: memberSince.value },
     {

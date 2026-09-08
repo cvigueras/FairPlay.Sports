@@ -7,7 +7,7 @@ public sealed record UserDto(
     Guid Id,
     string UserName,
     string Email,
-    Guid TeamId,
+    Guid? TeamId,
     UserRole Role,
     DateTime CreatedAt,
     bool Active)

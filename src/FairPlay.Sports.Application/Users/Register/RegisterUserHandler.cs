@@ -24,8 +24,8 @@ public sealed class RegisterUserHandler(
         if (await _repository.ExistsByUserNameAsync(request.UserName, cancellationToken))
             return Result<UserDto>.Failure($"User name '{request.UserName}' is already taken.");
 
-        if (!await _teams.ExistsByIdAsync(request.TeamId, cancellationToken))
-            return Result<UserDto>.NotFound($"Team '{request.TeamId}' was not found.");
+        if (request.TeamId is { } teamId && !await _teams.ExistsByIdAsync(teamId, cancellationToken))
+            return Result<UserDto>.NotFound($"Team '{teamId}' was not found.");
 
         var user = User.Create(
             Guid.NewGuid(),

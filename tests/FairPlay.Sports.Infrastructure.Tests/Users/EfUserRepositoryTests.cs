@@ -60,6 +60,24 @@ public class EfUserRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task AddAsync_withoutTeam_thenCommit_persistsNullTeamId()
+    {
+        var user = UserMother.DomainUser(withTeam: false);
+
+        await using (var arrange = NewContext())
+        {
+            var repository = new EfUserRepository(arrange);
+            var unitOfWork = new UnitOfWork(arrange);
+            await repository.AddAsync(user);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(persisted.TeamId, Is.Null);
+    }
+
+    [Test]
     public async Task AddAsync_withoutCommit_doesNotPersist()
     {
         var user = UserMother.DomainUser();

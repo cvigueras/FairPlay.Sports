@@ -124,5 +124,7 @@ on a successful create). Inbound request DTOs are separate records in
 
 ## Commits & PRs
 
-Conventional Commits. Use the `/commit` and `/pr` commands; do not push or merge
-unless asked.
+Conventional Commits. Use the `/commit` and `/pr` commands. **Never `git commit`,
+push or merge until the user explicitly asks.** Make and verify the changes
+(build, tests), then stop and wait — leave everything staged/unstaged in the
+working tree for the user to review first.

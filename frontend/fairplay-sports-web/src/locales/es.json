@@ -7,7 +7,6 @@
     "userNameRequired": "El nombre de usuario es obligatorio.",
     "emailRequired": "El email es obligatorio.",
     "emailInvalid": "Introduce un email válido.",
-    "teamRequired": "El equipo es obligatorio.",
     "passwordRequired": "La contraseña es obligatoria.",
     "passwordMinLength": "Debe tener al menos 8 caracteres.",
     "passwordsMismatch": "Las contraseñas no coinciden."
@@ -30,8 +29,6 @@
     "userNamePlaceholder": "tu_usuario",
     "email": "Email",
     "emailPlaceholder": "tu{'@'}email.com",
-    "team": "Equipo",
-    "teamPlaceholder": "Tu equipo",
     "password": "Contraseña",
     "confirmPassword": "Confirmar contraseña",
     "submit": "Registrarme",
@@ -48,7 +45,6 @@
     "fields": {
       "userName": "Usuario",
       "email": "Email",
-      "team": "Equipo",
       "role": "Rol",
       "memberSince": "Miembro desde",
       "status": "Estado"
