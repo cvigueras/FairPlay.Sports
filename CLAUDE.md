@@ -2,7 +2,9 @@
 
 Backend .NET 10, hexagonal architecture + DDD organised as **vertical slices**.
 The **Users** slice is the reference implementation: when adding a feature,
-mirror its files across the four layers.
+mirror its files across the four layers. **Teams** and **Auth** are the other
+two slices; Teams follows the same shape (plus binary crest upload/download),
+Auth is the one deliberate outlier (see the Api row below).
 
 Frontend (`frontend/fairplay-sports-web`, Vue 3) is out of scope for these
 notes unless the task explicitly targets it.
@@ -18,6 +20,12 @@ Api composes everything; nothing depends on Api or Infrastructure.
 | `Application` | CQRS use cases via MediatR. Defines the driven ports. Returns `Result`. | `Application/Users/Register/*`, `Application/Common/*` |
 | `Infrastructure` | `internal sealed` driven adapters: EF Core repository, DbContext, configs, migrations. | `Infrastructure/Users/EfUserRepository.cs`, `Infrastructure/Persistence/*` |
 | `Api` | Thin controllers: dispatch via `ISender`, translate `Result` to `IActionResult`. | `Api/Users/UsersController.cs`, `Api/Common/ResultExtensions.cs` |
+
+`Api/Auth/AuthController.cs` does not use `ResultExtensions.ToActionResult` — login/refresh
+also have to set/clear the `fps_refresh_token` `HttpOnly` cookie, so it maps `Result` to
+`IActionResult` by hand. Its cookie is `SameSite=None` in Development only (the Vite dev
+server and the API are on different origins/schemes there) and `SameSite=Strict` otherwise;
+don't "fix" this into a single constant.
 
 ## Conventions (follow the Users slice)
 
@@ -41,11 +49,21 @@ type, member names and factory speak for themselves.
   auto-discovered. Structural validation lives here, not in the handler.
 - DTOs: `record` with a static `FromDomain(...)`; never expose `PasswordHash`.
 - Ports live here (`Application/Users/IUserRepository.cs`,
-  `Application/Common/IUnitOfWork.cs`).
+  `Application/Common/IUnitOfWork.cs`). `Application/Common/IClock.cs` is
+  injected into any handler that needs "now" (registration/activation
+  timestamps, refresh-token expiry) instead of calling `DateTime.UtcNow`
+  directly, so handler tests can control time.
+- Cross-slice application services (not tied to one use case) live at the
+  slice root, e.g. `Application/Auth/IAuthTokenIssuer.cs` — shared by the
+  login and refresh handlers to mint the access/refresh token pair.
 
 **Infrastructure** — adapters are `internal sealed`. EF mapping via
 `IEntityTypeConfiguration<T>` in `Persistence/Configurations/`. Repositories
-issue reads with `AsNoTracking()` and **never call `SaveChanges`**.
+issue reads with `AsNoTracking()` and **never call `SaveChanges`**. Every
+repository exposes both a plain `GetByIdAsync` (no-tracking, for queries) and a
+`GetByIdForUpdateAsync` (tracked, for command handlers that mutate the
+aggregate and rely on `UnitOfWorkBehavior` to commit) — pick the tracked one
+whenever the handler calls a mutator on the aggregate.
 
 **Api** — controller is `sealed`, `[ApiController]`, `[Route("api/[controller]")]`,
 primary ctor `(ISender sender)`. Actions build the command/query, `await
@@ -68,10 +86,11 @@ on a successful create). Inbound request DTOs are separate records in
 
 ## Persistence
 
-- **Users** slice: real SQL Server via EF Core. Local dev DB is SQL Express,
-  connection string `FairPlaySports` in `appsettings.json`.
-- **Products** slice is a seeded **in-memory** adapter on purpose (demo only) —
-  do not migrate it to EF.
+- All slices (Users, Teams, Auth's `RefreshToken`) share one EF Core
+  `FairPlaySportsDbContext` against PostgreSQL (Npgsql provider). Local dev DB is
+  a PostgreSQL server, connection string `FairPlaySports` in `appsettings.json`.
+  Keep entity configs provider-agnostic — no `HasColumnType("varbinary(max)")`
+  and the like; let Npgsql map (`byte[]` → `bytea`, `DateTime` → `timestamptz`).
 - Migrations:
   `dotnet ef migrations add <Name> -p src/FairPlay.Sports.Infrastructure -s src/FairPlay.Sports.Api -o Persistence/Migrations`.
   Auto-applied on startup only in Development (`app.Services.MigrateAsync()` in
@@ -87,12 +106,12 @@ on a successful create). Inbound request DTOs are separate records in
   with `Substitute.For<...>`. Assert `Result` shape, error type, and port calls.
 - `Api.Tests/Users/UsersControllerTests.cs` — `ISender` mocked; assert the right
   request is dispatched and the `Result` maps to the right `IActionResult`.
-- `Infrastructure.Tests` — integration against real SQL Server via
-  **Testcontainers.MsSql**. `SqlServerContainerFixture` (`[SetUpFixture]`) starts
-  one container per assembly and runs `MigrateAsync()` once; `RepositoryTestBase`
-  gives fresh `DbContext`s and empties the table between tests;
-  `[assembly: NonParallelizable]`. Container reuse is on locally, off on CI (`CI`
-  env var). Requires Docker Desktop in **Linux-container** mode.
+- `Infrastructure.Tests` — integration against real PostgreSQL via
+  **Testcontainers.PostgreSql**. `PostgreSqlContainerFixture` (`[SetUpFixture]`)
+  starts one container per assembly and runs `MigrateAsync()` once;
+  `RepositoryTestBase` gives fresh `DbContext`s and empties the table between
+  tests; `[assembly: NonParallelizable]`. Container reuse is on locally, off on
+  CI (`CI` env var). Requires a running Docker daemon.
 - Frameworks: `[TestFixture]`, `Assert.That` / `Assert.Multiple`. Prefer the
   behaviour-named test style already in the suite.
 
