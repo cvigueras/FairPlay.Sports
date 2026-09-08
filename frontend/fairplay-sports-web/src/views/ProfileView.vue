@@ -77,6 +77,26 @@ const teamError = ref('')
 
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 
+/** The team the user currently belongs to, resolved from the loaded list. */
+const myTeam = computed(() => teams.value.find((team) => team.id === user.value?.teamId) ?? null)
+
+const teamDetails = computed(() => {
+  const team = myTeam.value
+  if (!team) return []
+  return [
+    { label: t('profile.team.name'), value: team.name },
+    { label: t('profile.team.coach'), value: team.coach },
+    { label: t('profile.team.city'), value: team.city },
+    { label: t('profile.team.type'), value: t(`profile.team.enums.${team.type}`) },
+    { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
+    { label: t('profile.team.category'), value: t(`profile.team.enums.${team.category}`) },
+    {
+      label: t('profile.fields.status'),
+      value: team.active ? t('profile.status.active') : t('profile.status.inactive'),
+    },
+  ]
+})
+
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
 const typeItems = computed(() => enumItems(FOOTBALL_TYPES))
@@ -255,14 +275,85 @@ async function createTeam() {
         {{ t('profile.activation.needsTeam') }}
       </v-alert>
 
-      <v-row>
-        <!-- Top left: profile summary -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-4 h-100">
-            <v-avatar color="primary" size="64" class="text-h6 font-weight-bold">
+      <!-- Has a team: profile on the left, the team's details on the right -->
+      <v-row v-if="user.teamId">
+        <v-col cols="12" md="6" class="d-flex flex-column ga-6">
+          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
+            <v-avatar color="primary" size="120" class="text-h4 font-weight-bold flex-shrink-0">
               {{ initials }}
             </v-avatar>
-            <div class="flex-grow-1 overflow-hidden">
+            <div class="flex-grow-1 overflow-hidden ms-6">
+              <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
+              <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
+              <v-chip
+                :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'"
+                size="small"
+                variant="tonal"
+                class="mt-1"
+              >
+                {{ user.role }}
+              </v-chip>
+            </div>
+          </v-card>
+
+          <v-card border flat rounded="xl" class="flex-grow-1">
+            <v-list>
+              <template v-for="(row, index) in details" :key="row.label">
+                <v-divider v-if="index > 0" />
+                <v-list-item class="py-3">
+                  <template #subtitle>
+                    <span class="text-caption text-uppercase">{{ row.label }}</span>
+                  </template>
+                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
+                </v-list-item>
+              </template>
+            </v-list>
+          </v-card>
+        </v-col>
+
+        <v-col cols="12" md="6">
+          <v-card border flat rounded="xl" class="pa-6 h-100">
+            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
+
+            <template v-if="myTeam">
+              <v-img
+                v-if="myTeam.hasCrest"
+                :src="teamsApi.crestUrl(myTeam.id)"
+                :alt="myTeam.name"
+                height="180"
+                class="mx-auto mb-4"
+                style="max-width: 220px"
+              />
+              <v-list>
+                <template v-for="(row, index) in teamDetails" :key="row.label">
+                  <v-divider v-if="index > 0" />
+                  <v-list-item class="py-3">
+                    <template #subtitle>
+                      <span class="text-caption text-uppercase">{{ row.label }}</span>
+                    </template>
+                    <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-list>
+            </template>
+            <v-progress-circular
+              v-else
+              indeterminate
+              color="primary"
+              class="d-block mx-auto my-10"
+            />
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <v-row v-if="!user.teamId">
+        <!-- Top left: profile summary -->
+        <v-col cols="12" md="6">
+          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
+            <v-avatar color="primary" size="120" class="text-h4 font-weight-bold flex-shrink-0">
+              {{ initials }}
+            </v-avatar>
+            <div class="flex-grow-1 overflow-hidden ms-6">
               <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
               <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
               <v-chip
@@ -343,7 +434,7 @@ async function createTeam() {
         </v-col>
       </v-row>
 
-      <v-row class="mt-6">
+      <v-row v-if="!user.teamId" class="mt-6">
         <!-- Bottom left: profile details -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl">
