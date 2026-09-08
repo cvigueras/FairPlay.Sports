@@ -55,6 +55,19 @@ export const useAuthStore = defineStore('auth', () => {
     )
   }
 
+  /** Uploads the user's profile photo, then refreshes the cached user. */
+  async function uploadPhoto(file: File): Promise<void> {
+    if (!currentUser.value) return
+    const form = new FormData()
+    form.append('file', file)
+    await http.postForm<void>(`/api/users/${currentUser.value.id}/photo`, form, {
+      token: accessToken.value,
+    })
+    currentUser.value = await http.get<User>(`/api/users/${currentUser.value.id}`, {
+      token: accessToken.value,
+    })
+  }
+
   /** Best-effort session restore from the refresh cookie. Never throws. */
   async function tryRefresh(): Promise<void> {
     try {
@@ -81,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     setTeam,
+    uploadPhoto,
     tryRefresh,
     logout,
   }

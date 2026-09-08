@@ -43,6 +43,11 @@
     "activation": {
       "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },
+    "photo": {
+      "change": "Cambiar foto",
+      "alt": "Foto de perfil",
+      "uploadFailed": "No se ha podido subir la foto."
+    },
     "fields": {
       "userName": "Usuario",
       "email": "Email",

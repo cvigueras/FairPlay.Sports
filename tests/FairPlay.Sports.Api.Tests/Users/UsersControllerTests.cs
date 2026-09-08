@@ -1,3 +1,4 @@
+using System.Text;
 using FairPlay.Sports.Api.Users;
 using FairPlay.Sports.TestSupport.Users;
 using FairPlay.Sports.Application.Common;
@@ -5,9 +6,12 @@ using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
+using FairPlay.Sports.Application.Users.GetPhoto;
 using FairPlay.Sports.Application.Users.MoveToTeam;
 using FairPlay.Sports.Application.Users.Register;
+using FairPlay.Sports.Application.Users.UploadPhoto;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 
@@ -178,5 +182,75 @@ public class UsersControllerTests
         var response = await _controller.MoveToTeam(Guid.NewGuid(), new MoveUserToTeamRequest(Guid.NewGuid()), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    private static IFormFile FormFile(byte[] content, string contentType, string fileName = "photo.png")
+    {
+        var stream = new MemoryStream(content);
+        return new FormFile(stream, 0, content.Length, "file", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = contentType,
+        };
+    }
+
+    [Test]
+    public async Task UploadPhoto_ReadsTheFile_AndDispatchesCommandWithItsBytesAndContentType()
+    {
+        var id = Guid.NewGuid();
+        var bytes = Encoding.UTF8.GetBytes("fake-png-bytes");
+        _sender.Send(Arg.Any<UploadUserPhotoCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _controller.UploadPhoto(id, FormFile(bytes, "image/png"), CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NoContentResult>());
+        await _sender.Received(1).Send(
+            Arg.Is<UploadUserPhotoCommand>(command =>
+                command.UserId == id &&
+                command.ContentType == "image/png" &&
+                command.Content.SequenceEqual(bytes)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task UploadPhoto_WhenHandlerReturnsNotFound_Returns404()
+    {
+        _sender.Send(Arg.Any<UploadUserPhotoCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.NotFound("User was not found."));
+
+        var response = await _controller.UploadPhoto(Guid.NewGuid(), FormFile([1, 2, 3], "image/png"), CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task GetPhoto_WhenPresent_ReturnsFileWithStoredContentType()
+    {
+        var id = Guid.NewGuid();
+        var photo = new UserPhoto(Encoding.UTF8.GetBytes("bytes"), "image/webp");
+        _sender.Send(Arg.Any<GetUserPhotoQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserPhoto>.Success(photo));
+
+        var response = await _controller.GetPhoto(id, CancellationToken.None);
+
+        var fileResult = response as FileContentResult;
+        Assert.That(fileResult, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(fileResult!.ContentType, Is.EqualTo("image/webp"));
+            Assert.That(fileResult!.FileContents, Is.EqualTo(photo.Content));
+        });
+    }
+
+    [Test]
+    public async Task GetPhoto_WhenMissing_Returns404()
+    {
+        _sender.Send(Arg.Any<GetUserPhotoQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserPhoto>.NotFound("User has no photo."));
+
+        var response = await _controller.GetPhoto(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
     }
 }

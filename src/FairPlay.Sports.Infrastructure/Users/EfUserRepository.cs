@@ -40,6 +40,13 @@ internal sealed class EfUserRepository : IUserRepository
     public Task<bool> ExistsByUserNameAsync(string userName, CancellationToken cancellationToken = default) =>
         _context.Users.AnyAsync(user => user.UserName == userName, cancellationToken);
 
+    public Task<UserPhoto?> GetPhotoAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == id && user.Photo != null && user.PhotoContentType != null)
+            .Select(user => new UserPhoto(user.Photo!, user.PhotoContentType!))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default) =>
         await _context.Users.AddAsync(user, cancellationToken);
 }

@@ -43,6 +43,11 @@
     "activation": {
       "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
     },
+    "photo": {
+      "change": "Change photo",
+      "alt": "Profile photo",
+      "uploadFailed": "Could not upload the photo."
+    },
     "fields": {
       "userName": "Username",
       "email": "Email",

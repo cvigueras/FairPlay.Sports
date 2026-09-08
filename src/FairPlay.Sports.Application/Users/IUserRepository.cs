@@ -22,5 +22,7 @@ public interface IUserRepository
 
     Task<bool> ExistsByUserNameAsync(string userName, CancellationToken cancellationToken = default);
 
+    Task<UserPhoto?> GetPhotoAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task AddAsync(User user, CancellationToken cancellationToken = default);
 }

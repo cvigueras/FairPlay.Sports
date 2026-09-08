@@ -1,10 +1,13 @@
 using FairPlay.Sports.Api.Common;
+using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
+using FairPlay.Sports.Application.Users.GetPhoto;
 using FairPlay.Sports.Application.Users.MoveToTeam;
 using FairPlay.Sports.Application.Users.Register;
+using FairPlay.Sports.Application.Users.UploadPhoto;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,5 +78,42 @@ public sealed class UsersController(ISender sender) : ControllerBase
     {
         var result = await _sender.Send(new ActivateUserCommand(id), cancellationToken);
         return result.ToActionResult(this);
+    }
+
+    /// <summary>Uploads (or replaces) the user's profile photo.</summary>
+    [HttpPost("{id:guid}/photo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(Domain.Users.User.MaxPhotoBytes + 4096)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadPhoto(Guid id, IFormFile file, CancellationToken cancellationToken)
+    {
+        using var buffer = new MemoryStream();
+        await file.CopyToAsync(buffer, cancellationToken);
+
+        var command = new UploadUserPhotoCommand(id, buffer.ToArray(), file.ContentType ?? string.Empty);
+        var result = await _sender.Send(command, cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Streams the user's profile photo.</summary>
+    [HttpGet("{id:guid}/photo")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPhoto(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new GetUserPhotoQuery(id), cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            return File(result.Value!.Content, result.Value.ContentType);
+        }
+
+        return result.ErrorType == ResultErrorType.NotFound
+            ? NotFound(new { error = result.Error })
+            : BadRequest(new { error = result.Error });
     }
 }
