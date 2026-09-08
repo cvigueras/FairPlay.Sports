@@ -12,7 +12,7 @@ namespace FairPlay.Sports.Infrastructure.Security;
 internal sealed class PasswordHasher : IPasswordHasher
 {
     private static readonly User HashingContext = User.Create(
-        Guid.NewGuid(), "hashing-context", "hashing@context.local", "placeholder", "none", DateTime.UnixEpoch);
+        Guid.NewGuid(), "hashing-context", "hashing@context.local", "placeholder", Guid.NewGuid(), DateTime.UnixEpoch);
 
     private readonly IdentityPasswordHasher _inner = new();
 

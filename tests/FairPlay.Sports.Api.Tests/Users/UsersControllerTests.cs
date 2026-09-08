@@ -91,7 +91,7 @@ public class UsersControllerTests
                 command.UserName == request.UserName &&
                 command.Email == request.Email &&
                 command.Password == request.Password &&
-                command.Team == request.Team),
+                command.TeamId == request.TeamId),
             Arg.Any<CancellationToken>());
     }
 

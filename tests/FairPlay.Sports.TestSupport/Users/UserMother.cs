@@ -10,15 +10,15 @@ public static class UserMother
     public const string Email = "carlos@example.com";
     public const string Password = "not-a-real-password";
     public const string PasswordHash = "hashed-password";
-    public const string Team = "FairPlay FC";
+    public static readonly Guid TeamId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    public static RegisterUserCommand Command() => new(UserName, Email, Password, Team);
+    public static RegisterUserCommand Command() => new(UserName, Email, Password, TeamId);
 
     public static User DomainUser(
         Guid? id = null,
         string? userName = null,
         string? email = null,
-        string? team = null,
+        Guid? teamId = null,
         UserRole role = UserRole.Member,
         bool active = true)
     {
@@ -27,7 +27,7 @@ public static class UserMother
             userName ?? UserName,
             email ?? Email,
             PasswordHash,
-            team ?? Team,
+            teamId ?? TeamId,
             DateTime.UtcNow,
             role);
 
@@ -38,7 +38,7 @@ public static class UserMother
     }
 
     public static UserDto Dto(Guid? id = null) =>
-        new(id ?? Guid.NewGuid(), UserName, Email, Team, UserRole.Member, DateTime.UtcNow, Active: true);
+        new(id ?? Guid.NewGuid(), UserName, Email, TeamId, UserRole.Member, DateTime.UtcNow, Active: true);
 
     public static string EmailAlreadyRegistered => $"Email '{Email}' is already registered.";
 

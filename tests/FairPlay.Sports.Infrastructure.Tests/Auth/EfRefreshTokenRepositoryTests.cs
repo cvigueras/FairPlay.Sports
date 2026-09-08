@@ -3,6 +3,7 @@ using FairPlay.Sports.Domain.Users;
 using FairPlay.Sports.Infrastructure.Auth;
 using FairPlay.Sports.Infrastructure.Persistence;
 using FairPlay.Sports.TestSupport.Auth;
+using FairPlay.Sports.TestSupport.Teams;
 using FairPlay.Sports.TestSupport.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,15 @@ namespace FairPlay.Sports.Infrastructure.Tests.Auth;
 public class EfRefreshTokenRepositoryTests : RepositoryTestBase
 {
     private static readonly DateTime Now = new(2026, 8, 29, 12, 0, 0, DateTimeKind.Utc);
+
+    // Seeded users carry an FK to Teams; they all reference this one.
+    [SetUp]
+    public async Task SeedReferencedTeam()
+    {
+        await using var context = NewContext();
+        context.Teams.Add(TeamMother.DomainTeam(id: UserMother.TeamId));
+        await context.SaveChangesAsync();
+    }
 
     private static async Task<User> SeedUserAsync(Guid? id = null)
     {

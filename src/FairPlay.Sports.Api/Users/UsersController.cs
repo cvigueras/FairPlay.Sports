@@ -36,14 +36,15 @@ public sealed class UsersController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Registers a new user and persists it to SQL Server. Public: this is sign-up.</summary>
+    /// <summary>Registers a new user. Public: this is sign-up.</summary>
     [HttpPost]
     [AllowAnonymous]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> Register(RegisterUserRequest request, CancellationToken cancellationToken)
     {
-        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password, request.Team);
+        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password, request.TeamId);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)

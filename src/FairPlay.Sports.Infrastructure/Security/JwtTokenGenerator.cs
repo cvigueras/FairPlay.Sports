@@ -31,7 +31,7 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.UserName),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new("team", user.Team),
+            new("team", user.TeamId.ToString()),
             new("role", user.Role.ToString())
         ];
 

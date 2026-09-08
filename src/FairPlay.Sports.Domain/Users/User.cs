@@ -6,7 +6,7 @@ public sealed class User
     public string UserName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
-    public string Team { get; private set; }
+    public Guid TeamId { get; private set; }
     public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; }
     public bool Active { get; private set; } = false;
@@ -16,7 +16,7 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        string team,
+        Guid teamId,
         UserRole role,
         DateTime createdAt)
     {
@@ -24,7 +24,7 @@ public sealed class User
         UserName = userName;
         Email = email;
         PasswordHash = passwordHash;
-        Team = team;
+        TeamId = teamId;
         Role = role;
         CreatedAt = createdAt;
     }
@@ -34,18 +34,18 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        string team,
+        Guid teamId,
         DateTime createdAtUtc,
         UserRole role = UserRole.Member)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeam(team), role, createdAtUtc);
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateTeamId(teamId), role, createdAtUtc);
     }
 
     public void ChangePassword(string newPasswordHash) => PasswordHash = ValidatePasswordHash(newPasswordHash);
 
-    public void MoveToTeam(string team) => Team = ValidateTeam(team);
+    public void MoveToTeam(Guid teamId) => TeamId = ValidateTeamId(teamId);
 
     public void PromoteToAdmin() => Role = UserRole.Admin;
 
@@ -83,11 +83,11 @@ public sealed class User
         return passwordHash;
     }
 
-    private static string ValidateTeam(string team)
+    private static Guid ValidateTeamId(Guid teamId)
     {
-        if (string.IsNullOrWhiteSpace(team))
-            throw new ArgumentException("Team is required.", nameof(team));
+        if (teamId == Guid.Empty)
+            throw new ArgumentException("Team id is required.", nameof(teamId));
 
-        return team.Trim();
+        return teamId;
     }
 }

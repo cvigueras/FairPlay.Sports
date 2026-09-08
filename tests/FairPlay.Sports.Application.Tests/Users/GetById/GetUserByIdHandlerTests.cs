@@ -39,7 +39,7 @@ public class GetUserByIdHandlerTests
             Assert.That(result.Value!.Id, Is.EqualTo(user.Id));
             Assert.That(result.Value!.UserName, Is.EqualTo(user.UserName));
             Assert.That(result.Value!.Email, Is.EqualTo(user.Email));
-            Assert.That(result.Value!.Team, Is.EqualTo(user.Team));
+            Assert.That(result.Value!.TeamId, Is.EqualTo(user.TeamId));
             Assert.That(result.Value!.Active, Is.EqualTo(user.Active));
         });
     }
