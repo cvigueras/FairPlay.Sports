@@ -29,13 +29,21 @@ internal sealed class EfUserRepository : IUserRepository
     public Task<User?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
 
-    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default) =>
-        _context.Users
+    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        // `User` stores the email lower-cased; look it up the same way so sign-in is
+        // case-insensitive.
+        var normalized = email.Trim().ToLowerInvariant();
+        return _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
+            .FirstOrDefaultAsync(user => user.Email == normalized, cancellationToken);
+    }
 
-    public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default) =>
-        _context.Users.AnyAsync(user => user.Email == email, cancellationToken);
+    public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        return _context.Users.AnyAsync(user => user.Email == normalized, cancellationToken);
+    }
 
     public Task<bool> ExistsByUserNameAsync(string userName, CancellationToken cancellationToken = default) =>
         _context.Users.AnyAsync(user => user.UserName == userName, cancellationToken);

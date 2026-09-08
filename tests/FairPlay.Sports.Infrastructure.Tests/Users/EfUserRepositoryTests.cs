@@ -263,6 +263,27 @@ public class EfUserRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task EmailLookups_areCaseInsensitive()
+    {
+        var user = UserMother.DomainUser(email: "Mixed.Case@Example.COM");
+        await SeedAsync(user);
+
+        await using var context = NewContext();
+        var repository = new EfUserRepository(context);
+
+        var persisted = await context.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        var found = await repository.GetByEmailAsync("  mixed.case@EXAMPLE.com  ");
+        var exists = await repository.ExistsByEmailAsync("MIXED.CASE@EXAMPLE.COM");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(persisted.Email, Is.EqualTo("mixed.case@example.com"));
+            Assert.That(found?.Id, Is.EqualTo(user.Id));
+            Assert.That(exists, Is.True);
+        });
+    }
+
+    [Test]
     public async Task ExistsByUserNameAsync_reflectsWhetherRowExists()
     {
         await SeedAsync(UserMother.DomainUser(userName: "known"));

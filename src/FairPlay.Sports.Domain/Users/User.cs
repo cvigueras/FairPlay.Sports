@@ -91,7 +91,7 @@ public sealed class User
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email is required.", nameof(email));
 
-        var normalized = email.Trim();
+        var normalized = email.Trim().ToLowerInvariant();
         if (!normalized.Contains('@', StringComparison.Ordinal))
             throw new ArgumentException("Email is not a valid address.", nameof(email));
 
