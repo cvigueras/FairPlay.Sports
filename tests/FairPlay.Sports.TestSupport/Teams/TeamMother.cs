@@ -11,7 +11,7 @@ public static class TeamMother
     public const string City = "Sevilla";
     public const FootballType DefaultType = FootballType.Futsal;
     public const Division DefaultDivision = Division.First;
-    public const AgeCategory DefaultCategory = AgeCategory.Under19;
+    public const AgeCategory DefaultCategory = AgeCategory.Juveniles;
 
     public const string CrestContentType = "image/png";
     public static byte[] CrestBytes => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];

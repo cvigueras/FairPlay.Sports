@@ -1,30 +1,37 @@
 namespace FairPlay.Sports.Domain.Teams;
 
 /// <summary>
-/// Grassroots age bracket. Named with the international U-notation so it reads
-/// the same across modalities; the Spanish label each one maps to is noted.
+/// Grassroots age bracket, named with the Spanish federation categories. The
+/// age range / birth years in each note are for reference only.
 /// </summary>
 public enum AgeCategory
 {
     Default,
-    /// <summary>Juvenil (16-18).</summary>
-    Under19,
 
-    /// <summary>Cadete (14-15).</summary>
-    Under16,
+    /// <summary>4-5 años.</summary>
+    Chupetes,
 
-    /// <summary>Infantil (12-13).</summary>
-    Under14,
+    /// <summary>6-7 años (nacidos en 2019-2020).</summary>
+    Prebenjamines,
 
-    /// <summary>Alevín (10-11).</summary>
-    Under12,
+    /// <summary>8-9 años (nacidos en 2017-2018).</summary>
+    Benjamines,
 
-    /// <summary>Benjamín (8-9).</summary>
-    Under10,
+    /// <summary>10-11 años (nacidos en 2015-2016).</summary>
+    Alevines,
 
-    /// <summary>Prebenjamín (6-7).</summary>
-    Under8,
+    /// <summary>12-13 años (nacidos en 2013-2014).</summary>
+    Infantiles,
 
-    /// <summary>Debutante (4-5).</summary>
-    Under6
+    /// <summary>14-15 años (nacidos en 2011-2012).</summary>
+    Cadetes,
+
+    /// <summary>16-18 años (nacidos en 2008-2010).</summary>
+    Juveniles,
+
+    /// <summary>A partir de 19 años (nacidos en 2007 y anteriores).</summary>
+    Aficionados,
+
+    /// <summary>Generalmente a partir de los 30-35 años.</summary>
+    Veteranos
 }

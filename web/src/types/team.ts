@@ -1,13 +1,15 @@
 export type FootballType = 'Football11' | 'Football8' | 'Futsal' | 'BeachSoccer'
 export type Division = 'HonorDivision' | 'RegionalLeague' | 'First' | 'Second'
 export type AgeCategory =
-  | 'Under19'
-  | 'Under16'
-  | 'Under14'
-  | 'Under12'
-  | 'Under10'
-  | 'Under8'
-  | 'Under6'
+  | 'Chupetes'
+  | 'Prebenjamines'
+  | 'Benjamines'
+  | 'Alevines'
+  | 'Infantiles'
+  | 'Cadetes'
+  | 'Juveniles'
+  | 'Aficionados'
+  | 'Veteranos'
 
 /** Mirrors the backend `TeamDto`. */
 export interface Team {
@@ -35,11 +37,13 @@ export interface CreateTeamPayload {
 export const FOOTBALL_TYPES: FootballType[] = ['Football11', 'Football8', 'Futsal', 'BeachSoccer']
 export const DIVISIONS: Division[] = ['HonorDivision', 'RegionalLeague', 'First', 'Second']
 export const AGE_CATEGORIES: AgeCategory[] = [
-  'Under19',
-  'Under16',
-  'Under14',
-  'Under12',
-  'Under10',
-  'Under8',
-  'Under6',
+  'Chupetes',
+  'Prebenjamines',
+  'Benjamines',
+  'Alevines',
+  'Infantiles',
+  'Cadetes',
+  'Juveniles',
+  'Aficionados',
+  'Veteranos',
 ]

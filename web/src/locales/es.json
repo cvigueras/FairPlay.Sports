@@ -117,13 +117,15 @@
         "RegionalLeague": "Liga Regional",
         "First": "Primera",
         "Second": "Segunda",
-        "Under19": "Sub-19",
-        "Under16": "Sub-16",
-        "Under14": "Sub-14",
-        "Under12": "Sub-12",
-        "Under10": "Sub-10",
-        "Under8": "Sub-8",
-        "Under6": "Sub-6"
+        "Chupetes": "Chupetes",
+        "Prebenjamines": "Prebenjamines",
+        "Benjamines": "Benjamines",
+        "Alevines": "Alevines",
+        "Infantiles": "Infantiles",
+        "Cadetes": "Cadetes",
+        "Juveniles": "Juveniles",
+        "Aficionados": "Aficionados",
+        "Veteranos": "Veteranos"
       }
     }
   },

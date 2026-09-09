@@ -20,7 +20,7 @@ SELECT
     city,
     (ARRAY['Football11','Football11','Football11','Football8','Futsal','BeachSoccer'])[1 + (i % 6)],
     (ARRAY['HonorDivision','RegionalLeague','First','Second'])[1 + (i % 4)],
-    (ARRAY['Under19','Under16','Under14','Under12','Under10','Under8','Under6'])[1 + (i % 7)],
+    (ARRAY['Chupetes','Prebenjamines','Benjamines','Alevines','Infantiles','Cadetes','Juveniles','Aficionados','Veteranos'])[1 + (i % 9)],
     now() - ((i * 3) || ' days')::interval,
     (i % 4 <> 0)
 FROM (
@@ -83,7 +83,7 @@ SELECT
     town,
     (ARRAY['Football11','Football11','Football11','Football8','Futsal','BeachSoccer'])[1 + (i % 6)],
     (ARRAY['HonorDivision','RegionalLeague','First','Second'])[1 + (i % 4)],
-    (ARRAY['Under19','Under16','Under14','Under12','Under10','Under8','Under6'])[1 + (i % 7)],
+    (ARRAY['Chupetes','Prebenjamines','Benjamines','Alevines','Infantiles','Cadetes','Juveniles','Aficionados','Veteranos'])[1 + (i % 9)],
     now() - ((i * 2 + 5) || ' days')::interval,
     (i % 5 <> 0)
 FROM (

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiAccountGroupOutline, mdiMagnifyRemoveOutline } from '@mdi/js'
+import { mdiAccountGroupOutline, mdiMagnifyRemoveOutline, mdiAccountTieOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -105,11 +105,9 @@ watch([nameText, coachText, cityText], () => {
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
-/** Six fields laid out as two rows of three. */
+/** Fields laid out in a three-column grid (name and coach show by the crest). */
 function fields(team: Team) {
   return [
-    { label: t('teams.fields.name'), value: team.name },
-    { label: t('teams.fields.coach'), value: team.coach },
     { label: t('teams.fields.city'), value: team.city },
     { label: t('teams.fields.type'), value: t(`profile.team.enums.${team.type}`) },
     { label: t('teams.fields.division'), value: t(`profile.team.enums.${team.division}`) },
@@ -207,15 +205,23 @@ function fields(team: Team) {
             class="team-card mb-4 pa-4 pa-sm-6"
           >
             <div class="team-crest-col">
-              <TeamCrest :team="team" :size="72" />
-              <div class="member-since">
-                <div class="member-since-label text-medium-emphasis">
-                  {{ t('teams.fields.memberSince') }}
+              <div class="team-name text-h6 font-weight-bold">{{ team.name }}</div>
+              <div class="team-crest-row">
+                <TeamCrest :team="team" :size="72" />
+                <div class="member-since">
+                  <div class="member-since-label text-medium-emphasis">
+                    {{ t('teams.fields.memberSince') }}
+                  </div>
+                  <div class="member-since-bar"></div>
+                  <div class="member-since-value font-weight-medium">
+                    {{ formatLongDate(team.createdAt) }}
+                  </div>
                 </div>
-                <div class="member-since-bar"></div>
-                <div class="member-since-value font-weight-medium">
-                  {{ formatLongDate(team.createdAt) }}
-                </div>
+              </div>
+              <div class="team-coach">
+                <v-icon :icon="mdiAccountTieOutline" size="18" class="team-coach-icon" />
+                <span class="text-body-2 font-weight-medium">{{ team.coach }}</span>
+                <v-tooltip activator="parent" location="top" :text="t('teams.fields.coach')" />
               </div>
             </div>
 
@@ -317,8 +323,31 @@ function fields(team: Team) {
 .team-crest-col {
   flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.team-name {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.team-crest-row {
+  display: flex;
   align-items: center;
   gap: 0.85rem;
+}
+
+.team-coach {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.team-coach-icon {
+  flex: 0 0 auto;
+  opacity: 0.7;
 }
 
 .member-since {

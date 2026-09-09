@@ -23,7 +23,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     {
         var team = TeamMother.DomainTeam(
             city: "Sevilla", type: FootballType.BeachSoccer,
-            division: Division.HonorDivision, category: AgeCategory.Under12);
+            division: Division.HonorDivision, category: AgeCategory.Alevines);
 
         await using (var arrange = NewContext())
         {
@@ -43,7 +43,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
             Assert.That(persisted.City, Is.EqualTo("Sevilla"));
             Assert.That(persisted.Classification.Type, Is.EqualTo(FootballType.BeachSoccer));
             Assert.That(persisted.Classification.Division, Is.EqualTo(Division.HonorDivision));
-            Assert.That(persisted.Classification.Category, Is.EqualTo(AgeCategory.Under12));
+            Assert.That(persisted.Classification.Category, Is.EqualTo(AgeCategory.Alevines));
             Assert.That(persisted.HasCrest, Is.False);
             Assert.That(persisted.Active, Is.True);
             Assert.That(persisted.CreatedAt, Is.EqualTo(team.CreatedAt).Within(TimeSpan.FromMilliseconds(10)));
@@ -53,7 +53,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     [Test]
     public async Task EnumColumns_areStoredAsStrings()
     {
-        var team = TeamMother.DomainTeam(type: FootballType.Futsal, division: Division.RegionalLeague, category: AgeCategory.Under10);
+        var team = TeamMother.DomainTeam(type: FootballType.Futsal, division: Division.RegionalLeague, category: AgeCategory.Benjamines);
         await SeedAsync(team);
 
         await using var context = NewContext();
@@ -61,7 +61,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
             .SqlQuery<string>($"""SELECT CONCAT("Type", '|', "Division", '|', "Category") AS "Value" FROM "Teams" WHERE "Id" = {team.Id}""")
             .SingleAsync();
 
-        Assert.That(stored, Is.EqualTo("Futsal|RegionalLeague|Under10"));
+        Assert.That(stored, Is.EqualTo("Futsal|RegionalLeague|Benjamines"));
     }
 
     [Test]

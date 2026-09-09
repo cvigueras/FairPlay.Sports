@@ -8,26 +8,26 @@ public class TeamClassificationTests
     [Test]
     public void Ctor_KeepsTheThreeFacets()
     {
-        var classification = new TeamClassification(FootballType.BeachSoccer, Division.HonorDivision, AgeCategory.Under12);
+        var classification = new TeamClassification(FootballType.BeachSoccer, Division.HonorDivision, AgeCategory.Alevines);
 
         Assert.Multiple(() =>
         {
             Assert.That(classification.Type, Is.EqualTo(FootballType.BeachSoccer));
             Assert.That(classification.Division, Is.EqualTo(Division.HonorDivision));
-            Assert.That(classification.Category, Is.EqualTo(AgeCategory.Under12));
+            Assert.That(classification.Category, Is.EqualTo(AgeCategory.Alevines));
         });
     }
 
     [Test]
     public void Ctor_WithUndefinedType_Throws() =>
         Assert.That(
-            () => new TeamClassification((FootballType)99, Division.First, AgeCategory.Under19),
+            () => new TeamClassification((FootballType)99, Division.First, AgeCategory.Juveniles),
             Throws.ArgumentException);
 
     [Test]
     public void Ctor_WithUndefinedDivision_Throws() =>
         Assert.That(
-            () => new TeamClassification(FootballType.Futsal, (Division)99, AgeCategory.Under19),
+            () => new TeamClassification(FootballType.Futsal, (Division)99, AgeCategory.Juveniles),
             Throws.ArgumentException);
 
     [Test]
@@ -39,9 +39,9 @@ public class TeamClassificationTests
     [Test]
     public void Equality_IsByValue()
     {
-        var a = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Under19);
-        var b = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Under19);
-        var c = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Under16);
+        var a = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Juveniles);
+        var b = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Juveniles);
+        var c = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Cadetes);
 
         Assert.Multiple(() =>
         {
