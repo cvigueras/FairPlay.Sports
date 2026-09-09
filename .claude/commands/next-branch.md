@@ -1,6 +1,6 @@
 ---
 description: Vuelve a main, actualiza, crea la rama del siguiente número y borra las ramas locales de trabajo
-argument-hint: [slug opcional para la rama, p. ej. matches-pagination]
+argument-hint: [slug opcional; si no lo pasas te preguntaré qué se va a hacer]
 allowed-tools: Bash(git checkout:*), Bash(git switch:*), Bash(git pull:*), Bash(git fetch:*), Bash(git branch:*), Bash(git for-each-ref:*), Bash(git status:*), Bash(git rev-parse:*)
 ---
 
@@ -30,14 +30,22 @@ cuando ya has terminado con la rama anterior.
    nombre empiece por exactamente 6 dígitos, coge el mayor, súmale 1 y deja 6
    dígitos con ceros a la izquierda. Ej.: si la mayor es `000019-pagination` →
    `000020`.
-4. Nombre de la rama nueva: `<NNNNNN>` si no hay argumento, o
-   `<NNNNNN>-<slug>` si has pasado uno.
-5. `git checkout -b <nombre>`.
-6. **Borra todas las ramas locales de trabajo**: por cada rama local que NO sea
+4. **Determina el slug de la rama**:
+   - Si he pasado argumento, úsalo tal cual (ya viene en kebab-case).
+   - Si **no** hay argumento, **pregúntame** "¿Qué se va a hacer en esta rama?"
+     y espera mi respuesta. A partir de ella redacta una descripción
+     **brevísima en inglés**, en kebab-case, de 2 a 4 palabras, sin artículos
+     ni relleno (ej.: "voy a paginar los partidos" → `matches-pagination`;
+     "arreglar el login en móvil" → `fix-mobile-login`). Enséñame el slug
+     resultante antes de seguir.
+   - Si mi respuesta queda vacía o te digo que lo omitas, usa solo `<NNNNNN>`.
+5. Nombre de la rama nueva: `<NNNNNN>-<slug>`, o `<NNNNNN>` si no hay slug.
+6. `git checkout -b <nombre>`.
+7. **Borra todas las ramas locales de trabajo**: por cada rama local que NO sea
    `main` ni la recién creada, `git branch -D <rama>`. Lista las que borras.
    Es *force delete* a propósito: se asume que su trabajo ya está pusheado o
    mergeado; sus ramas remotas y sus PRs **no se tocan**.
-7. `git fetch --prune` para limpiar las refs de `origin` de ramas ya borradas
+8. `git fetch --prune` para limpiar las refs de `origin` de ramas ya borradas
    en el remoto.
 
 ## Cierre
