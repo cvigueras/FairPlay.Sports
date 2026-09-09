@@ -18,6 +18,8 @@
     "title": "Teams",
     "count": "{n} teams",
     "empty": "No teams yet.",
+    "noResults": "Your search returned no results.",
+    "filters": "Filters",
     "loadFailed": "Could not load the teams.",
     "fields": {
       "name": "Name",
@@ -116,13 +118,15 @@
         "RegionalLeague": "Regional League",
         "First": "First",
         "Second": "Second",
-        "Under19": "U19",
-        "Under16": "U16",
-        "Under14": "U14",
-        "Under12": "U12",
-        "Under10": "U10",
-        "Under8": "U8",
-        "Under6": "U6"
+        "Chupetes": "Toddlers",
+        "Prebenjamines": "Pre-Juniors",
+        "Benjamines": "Juniors",
+        "Alevines": "Pre-Teens",
+        "Infantiles": "Infants",
+        "Cadetes": "Cadets",
+        "Juveniles": "Youth",
+        "Aficionados": "Amateur",
+        "Veteranos": "Veterans"
       }
     }
   },

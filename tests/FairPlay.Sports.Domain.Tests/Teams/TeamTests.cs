@@ -10,7 +10,7 @@ public class TeamTests
     private static TeamClassification Classification(
         FootballType type = FootballType.Futsal,
         Division division = Division.First,
-        AgeCategory category = AgeCategory.Under19) =>
+        AgeCategory category = AgeCategory.Juveniles) =>
         new(type, division, category);
 
     private static Team Create(
@@ -19,7 +19,7 @@ public class TeamTests
         string city = "Sevilla",
         FootballType type = FootballType.Futsal,
         Division division = Division.First,
-        AgeCategory category = AgeCategory.Under19) =>
+        AgeCategory category = AgeCategory.Juveniles) =>
         Team.Create(Guid.NewGuid(), name, coach, city, Classification(type, division, category), Now);
 
     [Test]

@@ -20,6 +20,10 @@ export const teamsApi = {
   page: (query: TeamQuery = {}, token?: string | null) =>
     http.get<PagedResult<Team>>(`/api/Teams${toQueryString({ ...query })}`, { token }),
 
+  /** A single team by id (used to resolve the user's own team). */
+  byId: (id: string, token?: string | null) =>
+    http.get<Team>(`/api/Teams/${id}`, { token }),
+
   /**
    * All teams as a flat list, for the (small) team picker. Capped at the
    * backend max page size - swap for a server-side autocomplete if the roster

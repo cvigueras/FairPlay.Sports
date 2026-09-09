@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import {
+  mdiAccountGroupOutline,
+  mdiAccountTieOutline,
+  mdiFilterVariant,
+  mdiMagnifyRemoveOutline,
+} from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -19,7 +25,7 @@ import type { PagedResult } from '@/types/pagination'
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 12
 
 const page = ref(1)
 const result = ref<PagedResult<Team> | null>(null)
@@ -43,6 +49,19 @@ const asTextFilter = (text: string | null) => {
   const trimmed = (text ?? '').trim()
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
+
+// Filters start collapsed on every viewport; a button reveals them.
+const filtersOpen = ref(false)
+
+const hasActiveFilters = computed(
+  () =>
+    asTextFilter(nameText.value) !== undefined ||
+    asTextFilter(coachText.value) !== undefined ||
+    asTextFilter(cityText.value) !== undefined ||
+    type.value != null ||
+    division.value != null ||
+    category.value != null,
+)
 
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
@@ -94,11 +113,9 @@ watch([nameText, coachText, cityText], () => {
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
-/** Six fields laid out as two rows of three. */
+/** Fields laid out in a three-column grid (name and coach show by the crest). */
 function fields(team: Team) {
   return [
-    { label: t('teams.fields.name'), value: team.name },
-    { label: t('teams.fields.coach'), value: team.coach },
     { label: t('teams.fields.city'), value: team.city },
     { label: t('teams.fields.type'), value: t(`profile.team.enums.${team.type}`) },
     { label: t('teams.fields.division'), value: t(`profile.team.enums.${team.division}`) },
@@ -110,59 +127,74 @@ function fields(team: Team) {
 <template>
   <v-main>
     <div class="teams-page">
-      <div class="teams-filters">
-        <v-text-field
-          v-model="nameText"
-          :label="t('teams.fields.name')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-text-field
-          v-model="coachText"
-          :label="t('teams.fields.coach')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-text-field
-          v-model="cityText"
-          :label="t('teams.fields.city')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="type"
-          :items="typeItems"
-          :label="t('teams.fields.type')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="division"
-          :items="divisionItems"
-          :label="t('teams.fields.division')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="category"
-          :items="categoryItems"
-          :label="t('teams.fields.category')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
+      <div class="teams-filters-bar">
+        <v-btn
+          :prepend-icon="mdiFilterVariant"
+          :append-icon="filtersOpen ? '$collapse' : '$expand'"
+          variant="tonal"
+          size="small"
+          @click="filtersOpen = !filtersOpen"
+        >
+          {{ t('teams.filters') }}
+          <v-badge v-if="hasActiveFilters" color="primary" dot inline class="ms-2" />
+        </v-btn>
       </div>
+
+      <v-expand-transition>
+        <div v-show="filtersOpen" class="teams-filters">
+          <v-text-field
+            v-model="nameText"
+            :label="t('teams.fields.name')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-text-field
+            v-model="coachText"
+            :label="t('teams.fields.coach')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-text-field
+            v-model="cityText"
+            :label="t('teams.fields.city')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="type"
+            :items="typeItems"
+            :label="t('teams.fields.type')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="division"
+            :items="divisionItems"
+            :label="t('teams.fields.division')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="category"
+            :items="categoryItems"
+            :label="t('teams.fields.category')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+        </div>
+      </v-expand-transition>
 
       <div class="teams-list">
         <v-progress-circular
@@ -174,29 +206,48 @@ function fields(team: Team) {
         <v-alert v-else-if="error" type="error" variant="tonal">{{ error }}</v-alert>
 
         <template v-else-if="result">
-          <p v-if="result.items.length === 0" class="text-body-1 text-medium-emphasis">
-            {{ t('teams.empty') }}
-          </p>
+          <div
+            v-if="result.items.length === 0"
+            class="teams-empty text-medium-emphasis"
+          >
+            <v-icon
+              :icon="hasActiveFilters ? mdiMagnifyRemoveOutline : mdiAccountGroupOutline"
+              size="48"
+            />
+            <p class="text-body-1 mt-3">
+              {{ hasActiveFilters ? t('teams.noResults') : t('teams.empty') }}
+            </p>
+          </div>
 
+          <div class="teams-grid">
           <v-card
             v-for="team in result.items"
             :key="team.id"
             border
             flat
             rounded="xl"
-            class="team-card mb-4 pa-4 pa-sm-6"
+            class="team-card pa-4 pa-sm-6"
           >
             <div class="team-crest-col">
-              <TeamCrest :team="team" :size="72" />
-              <div class="member-since">
-                <div class="member-since-label text-medium-emphasis">
-                  {{ t('teams.fields.memberSince') }}
-                </div>
-                <div class="member-since-bar"></div>
-                <div class="member-since-value font-weight-medium">
-                  {{ formatLongDate(team.createdAt) }}
+              <div class="team-name text-h6 font-weight-bold">{{ team.name }}</div>
+              <div class="team-crest-row">
+                <TeamCrest :team="team" :size="72" />
+                <div class="member-since">
+                  <div class="member-since-label text-medium-emphasis">
+                    {{ t('teams.fields.memberSince') }}
+                  </div>
+                  <div class="member-since-bar"></div>
+                  <div class="member-since-value font-weight-medium">
+                    {{ formatLongDate(team.createdAt) }}
+                  </div>
                 </div>
               </div>
+              <div class="team-coach">
+                <v-icon :icon="mdiAccountTieOutline" size="18" class="team-coach-icon" />
+                <span class="text-body-2 font-weight-medium">{{ team.coach }}</span>
+                <v-tooltip activator="parent" location="top" :text="t('teams.fields.coach')" />
+              </div>
+              <v-divider class="team-coach-rule" />
             </div>
 
             <div class="team-fields">
@@ -207,6 +258,7 @@ function fields(team: Team) {
               </div>
             </div>
           </v-card>
+          </div>
         </template>
       </div>
 
@@ -240,6 +292,11 @@ function fields(team: Team) {
   padding: 1.5rem 1.5rem 0;
 }
 
+.teams-filters-bar {
+  flex: 0 0 auto;
+  padding-bottom: 0.75rem;
+}
+
 .teams-filters {
   flex: 0 0 auto;
   display: grid;
@@ -261,6 +318,14 @@ function fields(team: Team) {
   padding-bottom: 1rem;
 }
 
+.teams-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
 .teams-footer {
   position: relative;
   flex: 0 0 auto;
@@ -280,6 +345,12 @@ function fields(team: Team) {
   margin: 0;
 }
 
+.teams-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
 .team-card {
   display: flex;
   flex-direction: column;
@@ -289,8 +360,51 @@ function fields(team: Team) {
 .team-crest-col {
   flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  /* Very light blue panel that bleeds to the card edges, down to the rule. */
+  margin: -1rem -1rem 0;
+  padding: 1rem 1rem 0;
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.team-name {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.team-crest-row {
+  display: flex;
   align-items: center;
   gap: 0.85rem;
+}
+
+.team-coach {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.team-coach-icon {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+/* Full-bleed: cancel the card's padding (pa-4 / pa-sm-6) so it meets both edges. */
+.team-coach-rule {
+  align-self: stretch;
+  width: auto;
+  margin-inline: -1rem;
+}
+
+@media (min-width: 600px) {
+  .team-coach-rule {
+    margin-inline: -1.5rem;
+  }
 }
 
 .member-since {
@@ -336,12 +450,36 @@ function fields(team: Team) {
 
   .team-crest-col {
     width: 260px;
+    margin: -1.5rem 0 -1.5rem -1.5rem;
+    padding: 1.5rem;
   }
 }
 
 @media (min-width: 860px) {
   .team-fields {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Multiple teams per row: the cards are narrower, so stack their internals again. */
+@media (min-width: 1000px) {
+  .teams-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .team-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .team-crest-col {
+    width: auto;
+    margin: -1.5rem -1.5rem 0;
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .team-fields {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
