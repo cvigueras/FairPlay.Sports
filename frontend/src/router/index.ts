@@ -4,7 +4,12 @@ import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/profile' },
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('@/views/HomeView.vue'),
+      meta: { requiresAuth: true },
+    },
     {
       path: '/login',
       name: 'login',
@@ -23,6 +28,18 @@ const router = createRouter({
       component: () => import('@/views/ProfileView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/teams',
+      name: 'teams',
+      component: () => import('@/views/TeamsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/standings',
+      name: 'standings',
+      component: () => import('@/views/StandingsView.vue'),
+      meta: { requiresAuth: true },
+    },
     { path: '/dashboard', redirect: '/profile' },
   ],
 })
@@ -35,7 +52,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'profile' }
+    return { name: 'home' }
   }
 })
 

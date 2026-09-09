@@ -1,7 +1,18 @@
 {
   "common": {
     "appName": "FairPlay Sports",
-    "passwordPlaceholder": "••••••••"
+    "passwordPlaceholder": "••••••••",
+    "comingSoon": "Coming soon"
+  },
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "teams": "Teams",
+    "standings": "Standings"
+  },
+  "home": {
+    "greeting": "Hi, {name}",
+    "subtitle": "This is your FairPlay Sports hub. More coming soon."
   },
   "validation": {
     "userNameRequired": "Username is required.",
