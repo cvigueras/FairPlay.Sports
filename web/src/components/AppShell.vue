@@ -75,7 +75,7 @@ async function handleLogout(): Promise<void> {
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
 
-    <v-app-bar-title>{{ t('common.appName') }}</v-app-bar-title>
+    <v-spacer />
 
     <template #append>
       <v-menu>
