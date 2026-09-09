@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import TeamCrest from '@/components/TeamCrest.vue'
-import type { Team } from '@/types/team'
+import {
+  AGE_CATEGORIES,
+  DIVISIONS,
+  FOOTBALL_TYPES,
+  type AgeCategory,
+  type Division,
+  type FootballType,
+  type Team,
+} from '@/types/team'
 import type { PagedResult } from '@/types/pagination'
 
 const { t, locale } = useI18n()
@@ -18,12 +26,30 @@ const result = ref<PagedResult<Team> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
+// Filters: empty (null) means "no filter"; changing one re-queries immediately.
+const type = ref<FootballType | null>(null)
+const division = ref<Division | null>(null)
+const category = ref<AgeCategory | null>(null)
+
+const enumItems = <T extends string>(values: readonly T[]) =>
+  values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
+const typeItems = computed(() => enumItems(FOOTBALL_TYPES))
+const divisionItems = computed(() => enumItems(DIVISIONS))
+const categoryItems = computed(() => enumItems(AGE_CATEGORIES))
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
     result.value = await teamsApi.page(
-      { page: page.value, pageSize: PAGE_SIZE, sort: 'name' },
+      {
+        page: page.value,
+        pageSize: PAGE_SIZE,
+        sort: 'name',
+        type: type.value ?? undefined,
+        division: division.value ?? undefined,
+        category: category.value ?? undefined,
+      },
       auth.accessToken,
     )
   } catch (err) {
@@ -34,6 +60,12 @@ async function load() {
 }
 
 watch(page, load, { immediate: true })
+
+// A filter change goes back to the first page; reload directly if already there.
+watch([type, division, category], () => {
+  if (page.value === 1) load()
+  else page.value = 1
+})
 
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
@@ -60,6 +92,36 @@ function fields(team: Team) {
           {{ t('teams.count', { n: result.totalCount }) }}
         </p>
       </header>
+
+      <div class="teams-filters">
+        <v-select
+          v-model="type"
+          :items="typeItems"
+          :label="t('teams.fields.type')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-select
+          v-model="division"
+          :items="divisionItems"
+          :label="t('teams.fields.division')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-select
+          v-model="category"
+          :items="categoryItems"
+          :label="t('teams.fields.category')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+      </div>
 
       <div class="teams-list">
         <v-progress-circular
@@ -136,6 +198,20 @@ function fields(team: Team) {
 .teams-header {
   flex: 0 0 auto;
   padding-bottom: 1rem;
+}
+
+.teams-filters {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+}
+
+@media (min-width: 600px) {
+  .teams-filters {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .teams-list {
