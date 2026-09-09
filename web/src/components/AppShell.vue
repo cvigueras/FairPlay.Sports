@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
@@ -18,8 +18,29 @@ import logoUrl from '@/assets/logo.webp'
 
 const { t, locale } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const { mobile } = useDisplay()
+
+// Routes are flat, so every page is just "Home / <page>".
+const CRUMB_LABELS: Record<string, string> = {
+  home: 'nav.home',
+  profile: 'nav.profile',
+  teams: 'nav.teams',
+  standings: 'nav.standings',
+}
+
+const breadcrumbs = computed(() => {
+  const home = { title: t('nav.home'), to: '/', disabled: route.name === 'home' }
+  if (route.name === 'home' || !route.name) {
+    return [home]
+  }
+  const key = CRUMB_LABELS[String(route.name)]
+  return [
+    { ...home, disabled: false },
+    { title: key ? t(key) : String(route.name), to: route.path, disabled: true },
+  ]
+})
 
 const RAIL_STORAGE_KEY = 'fps_nav_rail'
 
@@ -75,6 +96,8 @@ async function handleLogout(): Promise<void> {
     <template #prepend>
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
+
+    <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs" />
 
     <v-spacer />
 
@@ -133,6 +156,11 @@ async function handleLogout(): Promise<void> {
 </template>
 
 <style scoped>
+.app-bar-crumbs {
+  padding-inline: 0.5rem;
+  min-width: 0;
+}
+
 .nav-brand {
   display: flex;
   align-items: center;
