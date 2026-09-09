@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
   mdiAccountTieOutline,
@@ -25,6 +26,7 @@ import type { PagedResult } from '@/types/pagination'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
+const { smAndDown } = useDisplay()
 
 const PAGE_SIZE = 20
 
@@ -291,7 +293,7 @@ function fields(team: Team) {
             v-if="result.totalPages > 1"
             v-model="page"
             :length="result.totalPages"
-            :total-visible="7"
+            :total-visible="smAndDown ? 3 : 7"
             rounded="circle"
             density="comfortable"
           />
