@@ -507,6 +507,22 @@ function fields(team: Team) {
   min-width: 0;
 }
 
+/* One card per row on phones: tighten the vertical rhythm. */
+@media (max-width: 599px) {
+  .team-card {
+    gap: 0.65rem;
+  }
+
+  .team-crest-col {
+    gap: 0.45rem;
+    padding-block: 0.75rem 0;
+  }
+
+  .team-fields {
+    gap: 0.6rem 1.5rem;
+  }
+}
+
 @media (min-width: 600px) {
   .team-card {
     flex-direction: row;
