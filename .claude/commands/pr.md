@@ -87,3 +87,6 @@ EOF
 
 - Muéstrame la URL de la PR.
 - **No hagas merge** (lo haré yo desde GitHub).
+- Recuérdame que, cuando termine con esta rama, `/next-branch` me deja en
+  `main` actualizado y con la rama del siguiente número (y limpia las ramas
+  locales de trabajo). No lo ejecutes tú.
