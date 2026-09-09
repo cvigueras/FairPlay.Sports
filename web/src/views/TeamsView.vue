@@ -316,6 +316,14 @@ function fields(team: Team) {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
+  /* Scrollable, but the scrollbar itself is hidden. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.teams-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .teams-empty {
