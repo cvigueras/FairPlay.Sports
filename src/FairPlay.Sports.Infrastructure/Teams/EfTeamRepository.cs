@@ -1,3 +1,4 @@
+using FairPlay.Sports.Application.Common.Querying;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Infrastructure.Persistence;
@@ -14,11 +15,16 @@ internal sealed class EfTeamRepository : ITeamRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Team>> GetAllAsync(CancellationToken cancellationToken = default) =>
-        await _context.Teams
-            .AsNoTracking()
-            .OrderBy(team => team.Name)
-            .ToListAsync(cancellationToken);
+    public Task<PagedResult<Team>> GetPageAsync(
+        IQueryFilter<Team> filter,
+        IQuerySort<Team> sort,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = sort.Apply(filter.Apply(_context.Teams.AsNoTracking()));
+        return query.ToPagedResultAsync(page, pageSize, cancellationToken);
+    }
 
     public Task<Team?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams
