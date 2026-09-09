@@ -34,12 +34,13 @@ const category = ref<AgeCategory | null>(null)
 // Free-text filters: only kick in once at least this many characters are typed.
 const TEXT_FILTER_MIN_CHARS = 3
 const TEXT_FILTER_DEBOUNCE_MS = 300
-const nameText = ref('')
-const coachText = ref('')
-const cityText = ref('')
+const nameText = ref<string | null>('')
+const coachText = ref<string | null>('')
+const cityText = ref<string | null>('')
 
-const asTextFilter = (text: string) => {
-  const trimmed = text.trim()
+const asTextFilter = (text: string | null) => {
+  // The clearable "X" sets the model to null, not ''.
+  const trimmed = (text ?? '').trim()
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
 
