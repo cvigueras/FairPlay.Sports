@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiAccountGroupOutline, mdiMagnifyRemoveOutline, mdiAccountTieOutline } from '@mdi/js'
+import {
+  mdiAccountGroupOutline,
+  mdiAccountTieOutline,
+  mdiFilterVariant,
+  mdiMagnifyRemoveOutline,
+} from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -44,6 +49,9 @@ const asTextFilter = (text: string | null) => {
   const trimmed = (text ?? '').trim()
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
+
+// Filters start collapsed on every viewport; a button reveals them.
+const filtersOpen = ref(false)
 
 const hasActiveFilters = computed(
   () =>
@@ -119,59 +127,74 @@ function fields(team: Team) {
 <template>
   <v-main>
     <div class="teams-page">
-      <div class="teams-filters">
-        <v-text-field
-          v-model="nameText"
-          :label="t('teams.fields.name')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-text-field
-          v-model="coachText"
-          :label="t('teams.fields.coach')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-text-field
-          v-model="cityText"
-          :label="t('teams.fields.city')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="type"
-          :items="typeItems"
-          :label="t('teams.fields.type')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="division"
-          :items="divisionItems"
-          :label="t('teams.fields.division')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
-        <v-select
-          v-model="category"
-          :items="categoryItems"
-          :label="t('teams.fields.category')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-        />
+      <div class="teams-filters-bar">
+        <v-btn
+          :prepend-icon="mdiFilterVariant"
+          :append-icon="filtersOpen ? '$collapse' : '$expand'"
+          variant="tonal"
+          size="small"
+          @click="filtersOpen = !filtersOpen"
+        >
+          {{ t('teams.filters') }}
+          <v-badge v-if="hasActiveFilters" color="primary" dot inline class="ms-2" />
+        </v-btn>
       </div>
+
+      <v-expand-transition>
+        <div v-show="filtersOpen" class="teams-filters">
+          <v-text-field
+            v-model="nameText"
+            :label="t('teams.fields.name')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-text-field
+            v-model="coachText"
+            :label="t('teams.fields.coach')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-text-field
+            v-model="cityText"
+            :label="t('teams.fields.city')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="type"
+            :items="typeItems"
+            :label="t('teams.fields.type')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="division"
+            :items="divisionItems"
+            :label="t('teams.fields.division')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+          <v-select
+            v-model="category"
+            :items="categoryItems"
+            :label="t('teams.fields.category')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+          />
+        </div>
+      </v-expand-transition>
 
       <div class="teams-list">
         <v-progress-circular
@@ -267,6 +290,11 @@ function fields(team: Team) {
   height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
   padding: 1.5rem 1.5rem 0;
+}
+
+.teams-filters-bar {
+  flex: 0 0 auto;
+  padding-bottom: 0.75rem;
 }
 
 .teams-filters {

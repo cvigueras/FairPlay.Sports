@@ -19,6 +19,7 @@
     "count": "{n} teams",
     "empty": "No teams yet.",
     "noResults": "Your search returned no results.",
+    "filters": "Filters",
     "loadFailed": "Could not load the teams.",
     "fields": {
       "name": "Name",
