@@ -196,13 +196,14 @@ function fields(team: Team) {
             </p>
           </div>
 
+          <div class="teams-grid">
           <v-card
             v-for="team in result.items"
             :key="team.id"
             border
             flat
             rounded="xl"
-            class="team-card mb-4 pa-4 pa-sm-6"
+            class="team-card pa-4 pa-sm-6"
           >
             <div class="team-crest-col">
               <div class="team-name text-h6 font-weight-bold">{{ team.name }}</div>
@@ -223,6 +224,7 @@ function fields(team: Team) {
                 <span class="text-body-2 font-weight-medium">{{ team.coach }}</span>
                 <v-tooltip activator="parent" location="top" :text="t('teams.fields.coach')" />
               </div>
+              <v-divider class="team-coach-rule" />
             </div>
 
             <div class="team-fields">
@@ -233,6 +235,7 @@ function fields(team: Team) {
               </div>
             </div>
           </v-card>
+          </div>
         </template>
       </div>
 
@@ -314,6 +317,12 @@ function fields(team: Team) {
   margin: 0;
 }
 
+.teams-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
 .team-card {
   display: flex;
   flex-direction: column;
@@ -324,7 +333,13 @@ function fields(team: Team) {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
+  text-align: center;
+  /* Very light blue panel that bleeds to the card edges, down to the rule. */
+  margin: -1rem -1rem 0;
+  padding: 1rem 1rem 0;
+  background: rgba(59, 130, 246, 0.04);
 }
 
 .team-name {
@@ -341,6 +356,7 @@ function fields(team: Team) {
 .team-coach {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   min-width: 0;
 }
@@ -348,6 +364,19 @@ function fields(team: Team) {
 .team-coach-icon {
   flex: 0 0 auto;
   opacity: 0.7;
+}
+
+/* Full-bleed: cancel the card's padding (pa-4 / pa-sm-6) so it meets both edges. */
+.team-coach-rule {
+  align-self: stretch;
+  width: auto;
+  margin-inline: -1rem;
+}
+
+@media (min-width: 600px) {
+  .team-coach-rule {
+    margin-inline: -1.5rem;
+  }
 }
 
 .member-since {
@@ -393,12 +422,36 @@ function fields(team: Team) {
 
   .team-crest-col {
     width: 260px;
+    margin: -1.5rem 0 -1.5rem -1.5rem;
+    padding: 1.5rem;
   }
 }
 
 @media (min-width: 860px) {
   .team-fields {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Two teams per row: the cards are narrower, so stack their internals again. */
+@media (min-width: 1000px) {
+  .teams-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .team-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .team-crest-col {
+    width: auto;
+    margin: -1.5rem -1.5rem 0;
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .team-fields {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
