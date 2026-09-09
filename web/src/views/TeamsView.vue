@@ -263,17 +263,19 @@ function fields(team: Team) {
       </div>
 
       <footer v-if="result" class="teams-footer">
-        <v-pagination
-          v-if="result.totalPages > 1"
-          v-model="page"
-          :length="result.totalPages"
-          :total-visible="7"
-          rounded="circle"
-          density="comfortable"
-        />
-        <p class="teams-count font-weight-bold">
-          {{ t('teams.count', { n: result.totalCount }) }}
-        </p>
+        <div class="teams-footer-inner">
+          <v-pagination
+            v-if="result.totalPages > 1"
+            v-model="page"
+            :length="result.totalPages"
+            :total-visible="7"
+            rounded="circle"
+            density="comfortable"
+          />
+          <p class="teams-count font-weight-bold">
+            {{ t('teams.count', { n: result.totalCount }) }}
+          </p>
+        </div>
       </footer>
     </div>
   </v-main>
@@ -285,11 +287,21 @@ function fields(team: Team) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1600px;
-  margin-inline: auto;
   height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
-  padding: 1.5rem 1.5rem 0;
+  padding-top: 1.5rem;
+}
+
+/* The page spans the whole content area so the footer rule runs edge to edge;
+   the actual content stays capped and centred. */
+.teams-filters-bar,
+.teams-filters,
+.teams-list,
+.teams-footer-inner {
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
 }
 
 .teams-filters-bar {
@@ -335,21 +347,24 @@ function fields(team: Team) {
 }
 
 .teams-footer {
-  position: relative;
   flex: 0 0 auto;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-background));
+}
+
+.teams-footer-inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 3rem;
-  padding: 0.75rem 0 1rem;
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-background));
+  padding-block: 0.75rem 1rem;
 }
 
 /* Pinned to the far right, on the same line as the (centred) pager. */
 .teams-count {
   position: absolute;
-  right: 0;
+  right: 1.5rem;
   margin: 0;
 }
 
