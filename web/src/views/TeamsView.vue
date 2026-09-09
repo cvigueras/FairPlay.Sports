@@ -26,10 +26,22 @@ const result = ref<PagedResult<Team> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Filters: empty (null) means "no filter"; changing one re-queries immediately.
+// Dropdown filters: empty (null) means "no filter"; changing one re-queries immediately.
 const type = ref<FootballType | null>(null)
 const division = ref<Division | null>(null)
 const category = ref<AgeCategory | null>(null)
+
+// Free-text filters: only kick in once at least this many characters are typed.
+const TEXT_FILTER_MIN_CHARS = 3
+const TEXT_FILTER_DEBOUNCE_MS = 300
+const nameText = ref('')
+const coachText = ref('')
+const cityText = ref('')
+
+const asTextFilter = (text: string) => {
+  const trimmed = text.trim()
+  return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
+}
 
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
@@ -46,6 +58,9 @@ async function load() {
         page: page.value,
         pageSize: PAGE_SIZE,
         sort: 'name',
+        name: asTextFilter(nameText.value),
+        coach: asTextFilter(coachText.value),
+        city: asTextFilter(cityText.value),
         type: type.value ?? undefined,
         division: division.value ?? undefined,
         category: category.value ?? undefined,
@@ -59,12 +74,20 @@ async function load() {
   }
 }
 
-watch(page, load, { immediate: true })
-
 // A filter change goes back to the first page; reload directly if already there.
-watch([type, division, category], () => {
+function reload() {
   if (page.value === 1) load()
   else page.value = 1
+}
+
+watch(page, load, { immediate: true })
+watch([type, division, category], reload)
+
+// Text filters are debounced so we query once the user pauses, not per keystroke.
+let textFilterTimer: ReturnType<typeof setTimeout> | undefined
+watch([nameText, coachText, cityText], () => {
+  clearTimeout(textFilterTimer)
+  textFilterTimer = setTimeout(reload, TEXT_FILTER_DEBOUNCE_MS)
 })
 
 const formatLongDate = (iso: string) =>
@@ -94,6 +117,30 @@ function fields(team: Team) {
       </header>
 
       <div class="teams-filters">
+        <v-text-field
+          v-model="nameText"
+          :label="t('teams.fields.name')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-text-field
+          v-model="coachText"
+          :label="t('teams.fields.coach')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-text-field
+          v-model="cityText"
+          :label="t('teams.fields.city')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
         <v-select
           v-model="type"
           :items="typeItems"

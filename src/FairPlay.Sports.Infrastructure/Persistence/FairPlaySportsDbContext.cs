@@ -1,3 +1,4 @@
+using FairPlay.Sports.Application.Common.Querying;
 using FairPlay.Sports.Domain.Auth;
 using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Domain.Users;
@@ -25,6 +26,13 @@ public sealed class FairPlaySportsDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("unaccent");
+
+        // Accent-insensitive text search: map SqlFunctions.Unaccent onto the extension's function.
+        modelBuilder
+            .HasDbFunction(typeof(SqlFunctions).GetMethod(nameof(SqlFunctions.Unaccent), [typeof(string)])!)
+            .HasName("unaccent");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FairPlaySportsDbContext).Assembly);
     }
 }

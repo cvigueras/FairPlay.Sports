@@ -35,6 +35,7 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             new TeamFilter(
                 request.Name,
                 request.City,
+                request.Coach,
                 request.Type,
                 request.Division,
                 request.Category,

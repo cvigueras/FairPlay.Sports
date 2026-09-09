@@ -4,6 +4,7 @@ import { toQueryString, type PageParams, type PagedResult } from '@/types/pagina
 
 export interface TeamFilters {
   name?: string
+  coach?: string
   city?: string
   type?: FootballType
   division?: Division

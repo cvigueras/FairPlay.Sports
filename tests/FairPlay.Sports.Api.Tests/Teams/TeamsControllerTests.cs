@@ -63,6 +63,7 @@ public class TeamsControllerTests
             PageSize = 5,
             Sort = "-createdAt",
             Name = "sev",
+            Coach = "rios",
             Type = FootballType.Futsal,
             Active = true
         };
@@ -78,6 +79,7 @@ public class TeamsControllerTests
                 query.PageSize == 5 &&
                 query.Sort == "-createdAt" &&
                 query.Filter.Name == "sev" &&
+                query.Filter.Coach == "rios" &&
                 query.Filter.Type == FootballType.Futsal &&
                 query.Filter.Active == true),
             cancellationTokenSource.Token);

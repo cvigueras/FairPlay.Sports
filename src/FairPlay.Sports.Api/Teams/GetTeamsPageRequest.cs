@@ -15,6 +15,8 @@ public sealed record GetTeamsPageRequest
 
     public string? City { get; init; }
 
+    public string? Coach { get; init; }
+
     public FootballType? Type { get; init; }
 
     public Division? Division { get; init; }

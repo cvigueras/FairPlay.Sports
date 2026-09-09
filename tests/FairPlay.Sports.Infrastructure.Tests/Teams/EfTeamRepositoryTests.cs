@@ -243,6 +243,33 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task GetPageAsync_filtersByCoachContains_caseInsensitively()
+    {
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Real Betis", coach: "Manuel Pellegrini"),
+            TeamMother.DomainTeam(name: "Sevilla FC", coach: "Garcia Pimienta"));
+
+        var page = await GetPageAsync(page: 1, pageSize: 10, filter: new TeamFilter(Coach: "pELLEGRINI"));
+
+        Assert.That(page.TotalCount, Is.EqualTo(1));
+        Assert.That(page.Items.Single().Name, Is.EqualTo("Real Betis"));
+    }
+
+    [Test]
+    public async Task GetPageAsync_textFilters_ignoreAccents()
+    {
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Adra CF", coach: "Diego Martínez", city: "Almería"),
+            TeamMother.DomainTeam(name: "Sevilla FC", coach: "Garcia Pimienta", city: "Sevilla"));
+
+        var page = await GetPageAsync(
+            page: 1, pageSize: 10,
+            filter: new TeamFilter(Coach: "martinez", City: "almeria"));
+
+        Assert.That(page.Items.Select(t => t.Name), Is.EqualTo(new[] { "Adra CF" }));
+    }
+
+    [Test]
     public async Task GetPageAsync_filtersByActiveAndType()
     {
         await SeedAsync(

@@ -9,9 +9,9 @@ public class TeamFilterTests
 {
     private static IQueryable<Team> Teams() => new[]
     {
-        TeamMother.DomainTeam(name: "Real Betis", city: "Sevilla", type: FootballType.Football11, active: true),
-        TeamMother.DomainTeam(name: "Sevilla FC", city: "Sevilla", type: FootballType.Futsal, active: false),
-        TeamMother.DomainTeam(name: "Cadiz CF", city: "Cadiz", type: FootballType.Football11, active: true)
+        TeamMother.DomainTeam(name: "Real Betis", coach: "Manuel Pellegrini", city: "Sevilla", type: FootballType.Football11, active: true),
+        TeamMother.DomainTeam(name: "Sevilla FC", coach: "Garcia Pimienta", city: "Sevilla", type: FootballType.Futsal, active: false),
+        TeamMother.DomainTeam(name: "Cadiz CF", coach: "Paco Lopez", city: "Cadiz", type: FootballType.Football11, active: true)
     }.AsQueryable();
 
     [Test]
@@ -36,6 +36,28 @@ public class TeamFilterTests
         var result = new TeamFilter(City: "sevilla").Apply(Teams());
 
         Assert.That(result.Select(t => t.Name), Is.EquivalentTo(new[] { "Real Betis", "Sevilla FC" }));
+    }
+
+    [Test]
+    public void Coach_matchesCaseInsensitiveContains()
+    {
+        var result = new TeamFilter(Coach: "PIMIENTA").Apply(Teams());
+
+        Assert.That(result.Select(t => t.Name), Is.EquivalentTo(new[] { "Sevilla FC" }));
+    }
+
+    [Test]
+    public void TextFilters_ignoreAccents()
+    {
+        var teams = new[]
+        {
+            TeamMother.DomainTeam(name: "Adra CF", coach: "Diego Martínez", city: "Almería"),
+            TeamMother.DomainTeam(name: "Sevilla FC", coach: "Garcia Pimienta", city: "Sevilla")
+        }.AsQueryable();
+
+        var result = new TeamFilter(Coach: "martinez", City: "almeria").Apply(teams);
+
+        Assert.That(result.Select(t => t.Name), Is.EquivalentTo(new[] { "Adra CF" }));
     }
 
     [Test]

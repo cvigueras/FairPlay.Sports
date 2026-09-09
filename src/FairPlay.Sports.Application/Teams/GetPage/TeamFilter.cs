@@ -6,6 +6,7 @@ namespace FairPlay.Sports.Application.Teams.GetPage;
 public sealed record TeamFilter(
     string? Name = null,
     string? City = null,
+    string? Coach = null,
     FootballType? Type = null,
     Division? Division = null,
     AgeCategory? Category = null,
@@ -15,16 +16,24 @@ public sealed record TeamFilter(
     {
         var query = source;
 
+        // Text filters are contains, case-insensitive and accent-insensitive
+        // (searching "Martinez" must find "Martínez").
         if (!string.IsNullOrWhiteSpace(Name))
         {
-            var name = Name.Trim().ToLower();
-            query = query.Where(team => team.Name.ToLower().Contains(name));
+            var name = SqlFunctions.Unaccent(Name.Trim().ToLower());
+            query = query.Where(team => SqlFunctions.Unaccent(team.Name.ToLower()).Contains(name));
         }
 
         if (!string.IsNullOrWhiteSpace(City))
         {
-            var city = City.Trim().ToLower();
-            query = query.Where(team => team.City.ToLower().Contains(city));
+            var city = SqlFunctions.Unaccent(City.Trim().ToLower());
+            query = query.Where(team => SqlFunctions.Unaccent(team.City.ToLower()).Contains(city));
+        }
+
+        if (!string.IsNullOrWhiteSpace(Coach))
+        {
+            var coach = SqlFunctions.Unaccent(Coach.Trim().ToLower());
+            query = query.Where(team => SqlFunctions.Unaccent(team.Coach.ToLower()).Contains(coach));
         }
 
         if (Type is not null)
