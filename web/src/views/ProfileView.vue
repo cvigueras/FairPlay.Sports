@@ -69,8 +69,11 @@ const teamError = ref('')
 
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 
-/** The team the user currently belongs to, resolved from the loaded list. */
-const myTeam = computed(() => teams.value.find((team) => team.id === user.value?.teamId) ?? null)
+/**
+ * The team the user currently belongs to. Fetched by id rather than looked up
+ * in `teams`, which is capped at the backend's max page size.
+ */
+const myTeam = ref<Team | null>(null)
 
 const teamDetails = computed(() => {
   const team = myTeam.value
@@ -99,7 +102,14 @@ onMounted(async () => {
   selectedTeamId.value = user.value?.teamId ?? null
   loadingTeams.value = true
   try {
-    teams.value = await teamsApi.list(auth.accessToken)
+    const [list, mine] = await Promise.all([
+      teamsApi.list(auth.accessToken),
+      user.value?.teamId
+        ? teamsApi.byId(user.value.teamId, auth.accessToken)
+        : Promise.resolve(null),
+    ])
+    teams.value = list
+    myTeam.value = mine
   } catch (error) {
     teamError.value = error instanceof ApiError ? error.message : t('profile.team.loadFailed')
   } finally {
@@ -114,6 +124,7 @@ async function saveTeam() {
   savingTeam.value = true
   try {
     await auth.setTeam(selectedTeamId.value)
+    myTeam.value = selectedTeam.value ?? myTeam.value
     teamSaved.value = true
   } catch (error) {
     teamError.value = error instanceof ApiError ? error.message : t('profile.team.saveFailed')

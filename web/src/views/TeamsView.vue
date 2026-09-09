@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { mdiAccountGroupOutline, mdiMagnifyRemoveOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -43,6 +44,16 @@ const asTextFilter = (text: string | null) => {
   const trimmed = (text ?? '').trim()
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
+
+const hasActiveFilters = computed(
+  () =>
+    asTextFilter(nameText.value) !== undefined ||
+    asTextFilter(coachText.value) !== undefined ||
+    asTextFilter(cityText.value) !== undefined ||
+    type.value != null ||
+    division.value != null ||
+    category.value != null,
+)
 
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
@@ -174,9 +185,18 @@ function fields(team: Team) {
         <v-alert v-else-if="error" type="error" variant="tonal">{{ error }}</v-alert>
 
         <template v-else-if="result">
-          <p v-if="result.items.length === 0" class="text-body-1 text-medium-emphasis">
-            {{ t('teams.empty') }}
-          </p>
+          <div
+            v-if="result.items.length === 0"
+            class="teams-empty text-medium-emphasis"
+          >
+            <v-icon
+              :icon="hasActiveFilters ? mdiMagnifyRemoveOutline : mdiAccountGroupOutline"
+              size="48"
+            />
+            <p class="text-body-1 mt-3">
+              {{ hasActiveFilters ? t('teams.noResults') : t('teams.empty') }}
+            </p>
+          </div>
 
           <v-card
             v-for="team in result.items"
@@ -259,6 +279,14 @@ function fields(team: Team) {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
+}
+
+.teams-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem;
 }
 
 .teams-footer {

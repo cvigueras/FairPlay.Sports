@@ -18,6 +18,7 @@
     "title": "Equipos",
     "count": "{n} equipos",
     "empty": "Todavía no hay equipos.",
+    "noResults": "La búsqueda no muestra resultados.",
     "loadFailed": "No se han podido cargar los equipos.",
     "fields": {
       "name": "Nombre",
