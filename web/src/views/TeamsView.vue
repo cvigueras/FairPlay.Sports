@@ -394,6 +394,18 @@ function fields(team: Team) {
   margin: 0;
 }
 
+/* Not enough room to pin the count beside the pager - stack them instead. */
+@media (max-width: 599px) {
+  .teams-footer-inner {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .teams-count {
+    position: static;
+  }
+}
+
 .teams-grid {
   display: grid;
   grid-template-columns: 1fr;
