@@ -39,7 +39,7 @@ tests/
   FairPlay.Sports.Application.Tests/
   FairPlay.Sports.Infrastructure.Tests/
   FairPlay.Sports.Api.Tests/       Controller unit tests + integration tests (WebApplicationFactory)
-frontend/                          Vue 3 + TypeScript + Vite + Pinia (dummy login/register)
+web/                               Vue 3 + TypeScript + Vite + Pinia (dummy login/register)
 ```
 
 ## Prerequisites
@@ -79,7 +79,7 @@ HTTP client) to try out the `api/users` endpoints without a browser.
 From the repository root:
 
 ```powershell
-cd frontend
+cd web
 
 # Install dependencies
 npm install
@@ -106,7 +106,7 @@ npm run build
 ## Opening in Visual Studio 2026
 
 Open `FairPlay.Sports.slnx` directly. The solution includes both the .NET projects (`src/`,
-`tests/`) and the frontend's JS/TS project (`frontend/fairplay-sports-web.esproj`),
+`tests/`) and the frontend's JS/TS project (`web/fairplay-sports-web.esproj`),
 with native Visual Studio support for running npm scripts (`dev`, `build`) from the IDE.
 
 ## Notes
