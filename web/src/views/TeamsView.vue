@@ -25,7 +25,7 @@ import type { PagedResult } from '@/types/pagination'
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 20
 
 const page = ref(1)
 const result = ref<PagedResult<Team> | null>(null)
@@ -285,7 +285,7 @@ function fields(team: Team) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1600px;
   margin-inline: auto;
   height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
@@ -464,7 +464,7 @@ function fields(team: Team) {
 /* Multiple teams per row: the cards are narrower, so stack their internals again. */
 @media (min-width: 1000px) {
   .teams-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .team-card {
