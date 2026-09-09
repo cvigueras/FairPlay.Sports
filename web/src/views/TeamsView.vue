@@ -404,6 +404,10 @@ function fields(team: Team) {
   .teams-count {
     position: static;
   }
+
+  .teams-footer-inner :deep(.v-pagination) {
+    margin-inline: 1.5rem;
+  }
 }
 
 .teams-grid {
