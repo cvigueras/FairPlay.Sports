@@ -14,6 +14,21 @@
     "greeting": "Hola, {name}",
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
   },
+  "teams": {
+    "title": "Equipos",
+    "count": "{n} equipos",
+    "empty": "Todavía no hay equipos.",
+    "loadFailed": "No se han podido cargar los equipos.",
+    "fields": {
+      "name": "Nombre",
+      "coach": "Entrenador",
+      "city": "Ciudad",
+      "type": "Modalidad",
+      "division": "División",
+      "category": "Categoría",
+      "memberSince": "Miembro desde"
+    }
+  },
   "validation": {
     "userNameRequired": "El nombre de usuario es obligatorio.",
     "emailRequired": "El email es obligatorio.",
