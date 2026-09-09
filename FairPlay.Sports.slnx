@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/frontend/">
-    <Project Path="frontend/fairplay-sports-web/fairplay-sports-web.esproj">
+    <Project Path="frontend/fairplay-sports-web.esproj">
       <Build />
       <Deploy />
     </Project>
