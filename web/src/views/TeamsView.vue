@@ -387,10 +387,10 @@ function fields(team: Team) {
   align-items: center;
   gap: 0.75rem;
   text-align: center;
-  /* Very light blue panel that bleeds to the card edges, down to the rule. */
+  /* Very light grey panel that bleeds to the card edges, down to the rule. */
   margin: -1rem -1rem 0;
   padding: 1rem 1rem 0;
-  background: rgba(59, 130, 246, 0.04);
+  background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .team-name {
