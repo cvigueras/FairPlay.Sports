@@ -3,11 +3,6 @@ using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Application.Teams.GetPage;
 
-/// <summary>
-/// The fields <c>GET /api/Teams</c> can be filtered by. Every property is
-/// optional; a null one adds no restriction. Name/City match case-insensitively
-/// as "contains"; the rest are exact.
-/// </summary>
 public sealed record TeamFilter(
     string? Name = null,
     string? City = null,

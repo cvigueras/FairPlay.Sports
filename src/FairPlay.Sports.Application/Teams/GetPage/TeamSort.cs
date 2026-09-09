@@ -3,13 +3,6 @@ using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Application.Teams.GetPage;
 
-/// <summary>
-/// Ordering for <c>GET /api/Teams</c>. Accepts <c>name</c>, <c>city</c>,
-/// <c>createdAt</c>, <c>active</c> and <c>type</c> (see
-/// <see cref="AllowedFields"/>); unknown fields are rejected by the validator.
-/// Falls back to <c>name</c> ascending, which is also the tie-breaker so paging
-/// stays deterministic.
-/// </summary>
 public sealed class TeamSort(string? sort) : IQuerySort<Team>
 {
     public static readonly IReadOnlySet<string> AllowedFields =

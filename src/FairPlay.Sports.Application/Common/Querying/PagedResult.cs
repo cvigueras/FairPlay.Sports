@@ -1,10 +1,5 @@
 namespace FairPlay.Sports.Application.Common.Querying;
 
-/// <summary>
-/// One page of results plus the metadata a client needs to page through the rest.
-/// <see cref="Map{TOut}"/> keeps that metadata while a handler projects the page
-/// (domain entities) to its DTOs.
-/// </summary>
 public sealed record PagedResult<T>(
     IReadOnlyList<T> Items,
     int Page,

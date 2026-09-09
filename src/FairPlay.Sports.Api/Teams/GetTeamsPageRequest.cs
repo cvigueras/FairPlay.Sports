@@ -3,11 +3,6 @@ using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Api.Teams;
 
-/// <summary>
-/// Query-string parameters for <c>GET /api/Teams</c>: paging, sorting and the
-/// optional team filters. Bound from the query string, mapped to
-/// <c>GetTeamsPageQuery</c> in the action.
-/// </summary>
 public sealed record GetTeamsPageRequest
 {
     public int Page { get; init; } = 1;
