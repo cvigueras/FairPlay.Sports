@@ -117,15 +117,15 @@
         "RegionalLeague": "Regional League",
         "First": "First",
         "Second": "Second",
-        "Chupetes": "Chupetes",
-        "Prebenjamines": "Prebenjamines",
-        "Benjamines": "Benjamines",
-        "Alevines": "Alevines",
-        "Infantiles": "Infantiles",
-        "Cadetes": "Cadetes",
-        "Juveniles": "Juveniles",
-        "Aficionados": "Aficionados",
-        "Veteranos": "Veteranos"
+        "Chupetes": "Toddlers",
+        "Prebenjamines": "Pre-Juniors",
+        "Benjamines": "Juniors",
+        "Alevines": "Pre-Teens",
+        "Infantiles": "Infants",
+        "Cadetes": "Cadets",
+        "Juveniles": "Youth",
+        "Aficionados": "Amateur",
+        "Veteranos": "Veterans"
       }
     }
   },
