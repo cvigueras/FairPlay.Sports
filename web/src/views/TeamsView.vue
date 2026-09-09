@@ -20,7 +20,7 @@ import type { PagedResult } from '@/types/pagination'
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 12
 
 const page = ref(1)
 const result = ref<PagedResult<Team> | null>(null)
@@ -433,10 +433,10 @@ function fields(team: Team) {
   }
 }
 
-/* Two teams per row: the cards are narrower, so stack their internals again. */
+/* Multiple teams per row: the cards are narrower, so stack their internals again. */
 @media (min-width: 1000px) {
   .teams-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .team-card {
