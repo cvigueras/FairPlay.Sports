@@ -14,6 +14,7 @@ import {
 } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
+import logoUrl from '@/assets/logo.webp'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -75,7 +76,7 @@ async function handleLogout(): Promise<void> {
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
 
-    <v-app-bar-title>{{ t('common.appName') }}</v-app-bar-title>
+    <v-spacer />
 
     <template #append>
       <v-menu>
@@ -99,6 +100,13 @@ async function handleLogout(): Promise<void> {
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" :rail="rail">
+    <v-divider />
+    <div class="nav-brand" :class="{ 'nav-brand--rail': rail }">
+      <img :src="logoUrl" :alt="t('common.appName')" class="nav-brand-logo" />
+      <span v-if="!rail" class="nav-brand-name">{{ t('common.appName') }}</span>
+    </div>
+    <v-divider />
+
     <v-list nav density="comfortable">
       <v-list-item
         v-for="item in navItems"
@@ -123,3 +131,30 @@ async function handleLogout(): Promise<void> {
 
   <slot />
 </template>
+
+<style scoped>
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  /* Very, very subtle blue. */
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.nav-brand--rail {
+  padding-inline: 0;
+  justify-content: center;
+}
+
+.nav-brand-logo {
+  flex: 0 0 auto;
+  height: 36px;
+  width: auto;
+}
+
+.nav-brand-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+</style>

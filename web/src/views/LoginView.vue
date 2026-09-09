@@ -6,7 +6,7 @@ import { mdiTranslate } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/components/AuthLayout.vue'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
-import logoUrl from '@/assets/logo.png'
+import logoUrl from '@/assets/logo.webp'
 
 const router = useRouter()
 const route = useRoute()

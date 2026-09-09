@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
   mdiAccountTieOutline,
+  mdiFilterRemoveOutline,
   mdiFilterVariant,
   mdiMagnifyRemoveOutline,
 } from '@mdi/js'
@@ -24,8 +26,9 @@ import type { PagedResult } from '@/types/pagination'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
+const { smAndDown } = useDisplay()
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 20
 
 const page = ref(1)
 const result = ref<PagedResult<Team> | null>(null)
@@ -110,6 +113,18 @@ watch([nameText, coachText, cityText], () => {
   textFilterTimer = setTimeout(reload, TEXT_FILTER_DEBOUNCE_MS)
 })
 
+function clearFilters() {
+  nameText.value = ''
+  coachText.value = ''
+  cityText.value = ''
+  type.value = null
+  division.value = null
+  category.value = null
+  filtersOpen.value = false
+  clearTimeout(textFilterTimer)
+  reload()
+}
+
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
@@ -137,6 +152,16 @@ function fields(team: Team) {
         >
           {{ t('teams.filters') }}
           <v-badge v-if="hasActiveFilters" color="primary" dot inline class="ms-2" />
+        </v-btn>
+        <v-btn
+          :prepend-icon="mdiFilterRemoveOutline"
+          :disabled="!hasActiveFilters"
+          color="error"
+          variant="tonal"
+          size="small"
+          @click="clearFilters"
+        >
+          {{ t('teams.clearFilters') }}
         </v-btn>
       </div>
 
@@ -263,17 +288,19 @@ function fields(team: Team) {
       </div>
 
       <footer v-if="result" class="teams-footer">
-        <v-pagination
-          v-if="result.totalPages > 1"
-          v-model="page"
-          :length="result.totalPages"
-          :total-visible="7"
-          rounded="circle"
-          density="comfortable"
-        />
-        <p class="teams-count font-weight-bold">
-          {{ t('teams.count', { n: result.totalCount }) }}
-        </p>
+        <div class="teams-footer-inner">
+          <v-pagination
+            v-if="result.totalPages > 1"
+            v-model="page"
+            :length="result.totalPages"
+            :total-visible="smAndDown ? 3 : 7"
+            rounded="circle"
+            density="comfortable"
+          />
+          <p class="teams-count font-weight-bold">
+            {{ t('teams.count', { n: result.totalCount }) }}
+          </p>
+        </div>
       </footer>
     </div>
   </v-main>
@@ -285,15 +312,28 @@ function fields(team: Team) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1200px;
-  margin-inline: auto;
   height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
-  padding: 1.5rem 1.5rem 0;
+  padding-top: 1.5rem;
+}
+
+/* The page spans the whole content area so the footer rule runs edge to edge;
+   the actual content stays capped and centred. */
+.teams-filters-bar,
+.teams-filters,
+.teams-list,
+.teams-footer-inner {
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
 }
 
 .teams-filters-bar {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding-bottom: 0.75rem;
 }
 
@@ -316,6 +356,14 @@ function fields(team: Team) {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
+  /* Scrollable, but the scrollbar itself is hidden. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.teams-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .teams-empty {
@@ -327,22 +375,42 @@ function fields(team: Team) {
 }
 
 .teams-footer {
-  position: relative;
   flex: 0 0 auto;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  /* Same colour as the app bar (Vuetify toolbars default to `surface`). */
+  background: rgb(var(--v-theme-surface));
+}
+
+.teams-footer-inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 3rem;
-  padding: 0.75rem 0 1rem;
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-background));
+  padding-block: 0.75rem 1rem;
 }
 
 /* Pinned to the far right, on the same line as the (centred) pager. */
 .teams-count {
   position: absolute;
-  right: 0;
+  right: 1.5rem;
   margin: 0;
+}
+
+/* Not enough room to pin the count beside the pager - stack them instead. */
+@media (max-width: 599px) {
+  .teams-footer-inner {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .teams-count {
+    position: static;
+  }
+
+  .teams-footer-inner :deep(.v-pagination) {
+    margin-inline: 1.5rem;
+  }
 }
 
 .teams-grid {
@@ -364,10 +432,10 @@ function fields(team: Team) {
   align-items: center;
   gap: 0.75rem;
   text-align: center;
-  /* Very light blue panel that bleeds to the card edges, down to the rule. */
+  /* Very light grey panel that bleeds to the card edges, down to the rule. */
   margin: -1rem -1rem 0;
   padding: 1rem 1rem 0;
-  background: rgba(59, 130, 246, 0.04);
+  background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .team-name {
@@ -442,6 +510,22 @@ function fields(team: Team) {
   min-width: 0;
 }
 
+/* One card per row on phones: tighten the vertical rhythm. */
+@media (max-width: 599px) {
+  .team-card {
+    gap: 0.65rem;
+  }
+
+  .team-crest-col {
+    gap: 0.45rem;
+    padding-block: 0.75rem 0;
+  }
+
+  .team-fields {
+    gap: 0.6rem 1.5rem;
+  }
+}
+
 @media (min-width: 600px) {
   .team-card {
     flex-direction: row;
@@ -464,7 +548,7 @@ function fields(team: Team) {
 /* Multiple teams per row: the cards are narrower, so stack their internals again. */
 @media (min-width: 1000px) {
   .teams-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .team-card {
