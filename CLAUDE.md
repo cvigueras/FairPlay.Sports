@@ -10,7 +10,7 @@ mirror its files across the four layers. **Teams** and **Auth** are the other
 two slices; Teams follows the same shape (plus binary crest upload/download),
 Auth is the one deliberate outlier (see the Api row below).
 
-Frontend (`frontend/`) is out of scope for these notes
+Frontend (`web/`) is out of scope for these notes
 unless the task explicitly targets it. When it does: Vue 3 + Vuetify 4
 (mdi-svg icons — pass icon paths, no runtime font), Pinia, vue-i18n
 (switch/persist the locale via `setLocale` in `src/plugins/i18n.ts`; it is
@@ -157,7 +157,7 @@ on a successful create). Inbound request DTOs are separate records in
   `5432`, `postgres`/`postgres`, db `FairPlaySports`). `Jwt:SigningKey` comes from
   `appsettings.Development.json` (dev only); running outside Development needs it set
   via env var / user-secrets or startup throws.
-- Frontend: `cd frontend && npm run dev` (Vite, pinned to
+- Frontend: `cd web && npm run dev` (Vite, pinned to
   `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks.
 
 ## Commits & PRs
