@@ -14,6 +14,7 @@ import {
 } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
+import logoUrl from '@/assets/logo.webp'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -75,6 +76,10 @@ async function handleLogout(): Promise<void> {
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
 
+    <RouterLink to="/" class="app-bar-brand">
+      <img :src="logoUrl" :alt="t('common.appName')" class="app-bar-logo" />
+    </RouterLink>
+
     <v-spacer />
 
     <template #append>
@@ -123,3 +128,17 @@ async function handleLogout(): Promise<void> {
 
   <slot />
 </template>
+
+<style scoped>
+.app-bar-brand {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+}
+
+.app-bar-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+</style>
