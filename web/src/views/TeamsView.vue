@@ -110,13 +110,6 @@ function fields(team: Team) {
 <template>
   <v-main>
     <div class="teams-page">
-      <header class="teams-header">
-        <h1 class="text-h4 font-weight-bold mb-1">{{ t('teams.title') }}</h1>
-        <p v-if="result" class="text-body-2 text-medium-emphasis">
-          {{ t('teams.count', { n: result.totalCount }) }}
-        </p>
-      </header>
-
       <div class="teams-filters">
         <v-text-field
           v-model="nameText"
@@ -217,14 +210,18 @@ function fields(team: Team) {
         </template>
       </div>
 
-      <footer v-if="result && result.totalPages > 1" class="teams-footer">
+      <footer v-if="result" class="teams-footer">
         <v-pagination
+          v-if="result.totalPages > 1"
           v-model="page"
           :length="result.totalPages"
           :total-visible="7"
           rounded="circle"
           density="comfortable"
         />
+        <p class="teams-count font-weight-bold">
+          {{ t('teams.count', { n: result.totalCount }) }}
+        </p>
       </footer>
     </div>
   </v-main>
@@ -241,11 +238,6 @@ function fields(team: Team) {
   height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
   padding: 1.5rem 1.5rem 0;
-}
-
-.teams-header {
-  flex: 0 0 auto;
-  padding-bottom: 1rem;
 }
 
 .teams-filters {
@@ -270,12 +262,22 @@ function fields(team: Team) {
 }
 
 .teams-footer {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-height: 3rem;
   padding: 0.75rem 0 1rem;
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   background: rgb(var(--v-theme-background));
+}
+
+/* Pinned to the far right, on the same line as the (centred) pager. */
+.teams-count {
+  position: absolute;
+  right: 0;
+  margin: 0;
 }
 
 .team-card {
