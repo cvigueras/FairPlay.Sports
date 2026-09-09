@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import {
   mdiAccountGroupOutline,
   mdiAccountTieOutline,
+  mdiFilterRemoveOutline,
   mdiFilterVariant,
   mdiMagnifyRemoveOutline,
 } from '@mdi/js'
@@ -110,6 +111,18 @@ watch([nameText, coachText, cityText], () => {
   textFilterTimer = setTimeout(reload, TEXT_FILTER_DEBOUNCE_MS)
 })
 
+function clearFilters() {
+  nameText.value = ''
+  coachText.value = ''
+  cityText.value = ''
+  type.value = null
+  division.value = null
+  category.value = null
+  filtersOpen.value = false
+  clearTimeout(textFilterTimer)
+  reload()
+}
+
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
@@ -137,6 +150,16 @@ function fields(team: Team) {
         >
           {{ t('teams.filters') }}
           <v-badge v-if="hasActiveFilters" color="primary" dot inline class="ms-2" />
+        </v-btn>
+        <v-btn
+          :prepend-icon="mdiFilterRemoveOutline"
+          :disabled="!hasActiveFilters"
+          color="error"
+          variant="tonal"
+          size="small"
+          @click="clearFilters"
+        >
+          {{ t('teams.clearFilters') }}
         </v-btn>
       </div>
 
@@ -306,6 +329,9 @@ function fields(team: Team) {
 
 .teams-filters-bar {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding-bottom: 0.75rem;
 }
 
