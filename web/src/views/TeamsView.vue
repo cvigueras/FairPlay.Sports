@@ -377,7 +377,8 @@ function fields(team: Team) {
 .teams-footer {
   flex: 0 0 auto;
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-background));
+  /* Same colour as the app bar (Vuetify toolbars default to `surface`). */
+  background: rgb(var(--v-theme-surface));
 }
 
 .teams-footer-inner {
