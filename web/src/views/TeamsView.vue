@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import TeamCrest from '@/components/TeamCrest.vue'
-import type { Team } from '@/types/team'
+import {
+  AGE_CATEGORIES,
+  DIVISIONS,
+  FOOTBALL_TYPES,
+  type AgeCategory,
+  type Division,
+  type FootballType,
+  type Team,
+} from '@/types/team'
 import type { PagedResult } from '@/types/pagination'
 
 const { t, locale } = useI18n()
@@ -18,12 +26,46 @@ const result = ref<PagedResult<Team> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
+// Dropdown filters: empty (null) means "no filter"; changing one re-queries immediately.
+const type = ref<FootballType | null>(null)
+const division = ref<Division | null>(null)
+const category = ref<AgeCategory | null>(null)
+
+// Free-text filters: only kick in once at least this many characters are typed.
+const TEXT_FILTER_MIN_CHARS = 3
+const TEXT_FILTER_DEBOUNCE_MS = 300
+const nameText = ref<string | null>('')
+const coachText = ref<string | null>('')
+const cityText = ref<string | null>('')
+
+const asTextFilter = (text: string | null) => {
+  // The clearable "X" sets the model to null, not ''.
+  const trimmed = (text ?? '').trim()
+  return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
+}
+
+const enumItems = <T extends string>(values: readonly T[]) =>
+  values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
+const typeItems = computed(() => enumItems(FOOTBALL_TYPES))
+const divisionItems = computed(() => enumItems(DIVISIONS))
+const categoryItems = computed(() => enumItems(AGE_CATEGORIES))
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
     result.value = await teamsApi.page(
-      { page: page.value, pageSize: PAGE_SIZE, sort: 'name' },
+      {
+        page: page.value,
+        pageSize: PAGE_SIZE,
+        sort: 'name',
+        name: asTextFilter(nameText.value),
+        coach: asTextFilter(coachText.value),
+        city: asTextFilter(cityText.value),
+        type: type.value ?? undefined,
+        division: division.value ?? undefined,
+        category: category.value ?? undefined,
+      },
       auth.accessToken,
     )
   } catch (err) {
@@ -33,7 +75,21 @@ async function load() {
   }
 }
 
+// A filter change goes back to the first page; reload directly if already there.
+function reload() {
+  if (page.value === 1) load()
+  else page.value = 1
+}
+
 watch(page, load, { immediate: true })
+watch([type, division, category], reload)
+
+// Text filters are debounced so we query once the user pauses, not per keystroke.
+let textFilterTimer: ReturnType<typeof setTimeout> | undefined
+watch([nameText, coachText, cityText], () => {
+  clearTimeout(textFilterTimer)
+  textFilterTimer = setTimeout(reload, TEXT_FILTER_DEBOUNCE_MS)
+})
 
 const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
@@ -54,12 +110,59 @@ function fields(team: Team) {
 <template>
   <v-main>
     <div class="teams-page">
-      <header class="teams-header">
-        <h1 class="text-h4 font-weight-bold mb-1">{{ t('teams.title') }}</h1>
-        <p v-if="result" class="text-body-2 text-medium-emphasis">
-          {{ t('teams.count', { n: result.totalCount }) }}
-        </p>
-      </header>
+      <div class="teams-filters">
+        <v-text-field
+          v-model="nameText"
+          :label="t('teams.fields.name')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-text-field
+          v-model="coachText"
+          :label="t('teams.fields.coach')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-text-field
+          v-model="cityText"
+          :label="t('teams.fields.city')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-select
+          v-model="type"
+          :items="typeItems"
+          :label="t('teams.fields.type')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-select
+          v-model="division"
+          :items="divisionItems"
+          :label="t('teams.fields.division')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+        <v-select
+          v-model="category"
+          :items="categoryItems"
+          :label="t('teams.fields.category')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+        />
+      </div>
 
       <div class="teams-list">
         <v-progress-circular
@@ -107,14 +210,18 @@ function fields(team: Team) {
         </template>
       </div>
 
-      <footer v-if="result && result.totalPages > 1" class="teams-footer">
+      <footer v-if="result" class="teams-footer">
         <v-pagination
+          v-if="result.totalPages > 1"
           v-model="page"
           :length="result.totalPages"
           :total-visible="7"
           rounded="circle"
           density="comfortable"
         />
+        <p class="teams-count font-weight-bold">
+          {{ t('teams.count', { n: result.totalCount }) }}
+        </p>
       </footer>
     </div>
   </v-main>
@@ -133,9 +240,18 @@ function fields(team: Team) {
   padding: 1.5rem 1.5rem 0;
 }
 
-.teams-header {
+.teams-filters {
   flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
   padding-bottom: 1rem;
+}
+
+@media (min-width: 600px) {
+  .teams-filters {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .teams-list {
@@ -146,12 +262,22 @@ function fields(team: Team) {
 }
 
 .teams-footer {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-height: 3rem;
   padding: 0.75rem 0 1rem;
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   background: rgb(var(--v-theme-background));
+}
+
+/* Pinned to the far right, on the same line as the (centred) pager. */
+.teams-count {
+  position: absolute;
+  right: 0;
+  margin: 0;
 }
 
 .team-card {
