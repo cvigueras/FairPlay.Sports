@@ -27,7 +27,8 @@ public static class TeamMother
         FootballType? type = null,
         Division? division = null,
         AgeCategory? category = null,
-        bool active = true)
+        bool active = true,
+        DateTime? createdAtUtc = null)
     {
         var team = Team.Create(
             id ?? Guid.NewGuid(),
@@ -38,7 +39,7 @@ public static class TeamMother
                 type ?? DefaultType,
                 division ?? DefaultDivision,
                 category ?? DefaultCategory),
-            DateTime.UtcNow);
+            createdAtUtc ?? DateTime.UtcNow);
 
         if (active)
             team.Activate();

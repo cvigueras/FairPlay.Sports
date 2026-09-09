@@ -1,11 +1,12 @@
 using FairPlay.Sports.Api.Common;
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Common.Querying;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Teams.Activate;
 using FairPlay.Sports.Application.Teams.Create;
-using FairPlay.Sports.Application.Teams.GetAll;
 using FairPlay.Sports.Application.Teams.GetById;
 using FairPlay.Sports.Application.Teams.GetCrest;
+using FairPlay.Sports.Application.Teams.GetPage;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -21,11 +22,26 @@ public sealed class TeamsController(ISender sender) : ControllerBase
     private readonly ISender _sender = sender;
 
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<TeamDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<TeamDto>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<TeamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<TeamDto>>> GetPage(
+        [FromQuery] GetTeamsPageRequest request,
+        CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new GetAllTeamsQuery(), cancellationToken);
-        return Ok(result.Value);
+        var query = new GetTeamsPageQuery(
+            request.Page,
+            request.PageSize,
+            request.Sort,
+            new TeamFilter(
+                request.Name,
+                request.City,
+                request.Type,
+                request.Division,
+                request.Category,
+                request.Active));
+
+        var result = await _sender.Send(query, cancellationToken);
+        return result.ToActionResult(this);
     }
 
     [HttpGet("{id:guid}")]

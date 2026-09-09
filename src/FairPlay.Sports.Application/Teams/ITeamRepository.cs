@@ -1,10 +1,16 @@
+using FairPlay.Sports.Application.Common.Querying;
 using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Application.Teams;
 
 public interface ITeamRepository
 {
-    Task<IReadOnlyList<Team>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<Team>> GetPageAsync(
+        IQueryFilter<Team> filter,
+        IQuerySort<Team> sort,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 
     Task<Team?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

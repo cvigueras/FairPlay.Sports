@@ -5,7 +5,9 @@ using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Teams.Activate;
 using FairPlay.Sports.Application.Teams.Create;
-using FairPlay.Sports.Application.Teams.GetAll;
+using FairPlay.Sports.Application.Common.Querying;
+using FairPlay.Sports.Application.Teams.GetPage;
+using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Application.Teams.GetById;
 using FairPlay.Sports.Application.Teams.GetCrest;
 using FairPlay.Sports.Application.Teams.UploadCrest;
@@ -49,18 +51,36 @@ public class TeamsControllerTests
     }
 
     [Test]
-    public async Task GetAll_DispatchesQuery_AndReturnsOkWithHandlerValue()
+    public async Task GetPage_MapsRequestToQuery_AndReturnsOkWithHandlerValue()
     {
-        var dtos = new List<TeamDto> { TeamMother.Dto() };
-        _sender.Send(Arg.Any<GetAllTeamsQuery>(), Arg.Any<CancellationToken>())
-            .Returns(Result<IReadOnlyList<TeamDto>>.Success(dtos));
+        var pageResult = new PagedResult<TeamDto>([TeamMother.Dto()], Page: 2, PageSize: 5, TotalCount: 11);
+        _sender.Send(Arg.Any<GetTeamsPageQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<PagedResult<TeamDto>>.Success(pageResult));
 
-        var response = await _controller.GetAll(cancellationTokenSource.Token);
+        var request = new GetTeamsPageRequest
+        {
+            Page = 2,
+            PageSize = 5,
+            Sort = "-createdAt",
+            Name = "sev",
+            Type = FootballType.Futsal,
+            Active = true
+        };
+
+        var response = await _controller.GetPage(request, cancellationTokenSource.Token);
 
         var okResult = response.Result as OkObjectResult;
         Assert.That(okResult, Is.Not.Null);
-        Assert.That(okResult!.Value, Is.SameAs(dtos));
-        await _sender.Received(1).Send(Arg.Any<GetAllTeamsQuery>(), cancellationTokenSource.Token);
+        Assert.That(okResult!.Value, Is.SameAs(pageResult));
+        await _sender.Received(1).Send(
+            Arg.Is<GetTeamsPageQuery>(query =>
+                query.Page == 2 &&
+                query.PageSize == 5 &&
+                query.Sort == "-createdAt" &&
+                query.Filter.Name == "sev" &&
+                query.Filter.Type == FootballType.Futsal &&
+                query.Filter.Active == true),
+            cancellationTokenSource.Token);
     }
 
     [Test]

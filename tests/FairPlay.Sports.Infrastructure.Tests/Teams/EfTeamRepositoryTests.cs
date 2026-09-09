@@ -1,3 +1,5 @@
+using FairPlay.Sports.Application.Common.Querying;
+using FairPlay.Sports.Application.Teams.GetPage;
 using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Infrastructure.Persistence;
 using FairPlay.Sports.Infrastructure.Teams;
@@ -169,26 +171,105 @@ public class EfTeamRepositoryTests : RepositoryTestBase
         Assert.That(await new EfTeamRepository(context).GetByIdAsync(Guid.NewGuid()), Is.Null);
     }
 
+    private static async Task<PagedResult<Team>> GetPageAsync(
+        int page, int pageSize, TeamFilter? filter = null, string? sort = null)
+    {
+        await using var context = NewContext();
+        return await new EfTeamRepository(context).GetPageAsync(
+            filter ?? new TeamFilter(), new TeamSort(sort), page, pageSize);
+    }
+
     [Test]
-    public async Task GetAllAsync_ordersByNameAscending()
+    public async Task GetPageAsync_defaultSort_ordersByNameAscending()
     {
         await SeedAsync(
             TeamMother.DomainTeam(name: "Charlie FC"),
             TeamMother.DomainTeam(name: "Alpha FC"),
             TeamMother.DomainTeam(name: "Bravo FC"));
 
-        await using var context = NewContext();
-        var all = await new EfTeamRepository(context).GetAllAsync();
+        var page = await GetPageAsync(page: 1, pageSize: 10);
 
-        Assert.That(all.Select(t => t.Name), Is.EqualTo(new[] { "Alpha FC", "Bravo FC", "Charlie FC" }));
+        Assert.That(page.Items.Select(t => t.Name), Is.EqualTo(new[] { "Alpha FC", "Bravo FC", "Charlie FC" }));
     }
 
     [Test]
-    public async Task GetAllAsync_whenEmpty_returnsEmptyList()
+    public async Task GetPageAsync_descendingSort_reversesOrder()
     {
-        await using var context = NewContext();
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Alpha FC"),
+            TeamMother.DomainTeam(name: "Bravo FC"),
+            TeamMother.DomainTeam(name: "Charlie FC"));
 
-        Assert.That(await new EfTeamRepository(context).GetAllAsync(), Is.Empty);
+        var page = await GetPageAsync(page: 1, pageSize: 10, sort: "-name");
+
+        Assert.That(page.Items.Select(t => t.Name), Is.EqualTo(new[] { "Charlie FC", "Bravo FC", "Alpha FC" }));
+    }
+
+    [Test]
+    public async Task GetPageAsync_appliesSkipTake_andReportsFullTotalCount()
+    {
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Team A"),
+            TeamMother.DomainTeam(name: "Team B"),
+            TeamMother.DomainTeam(name: "Team C"),
+            TeamMother.DomainTeam(name: "Team D"),
+            TeamMother.DomainTeam(name: "Team E"));
+
+        var page = await GetPageAsync(page: 2, pageSize: 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(page.Items.Select(t => t.Name), Is.EqualTo(new[] { "Team C", "Team D" }));
+            Assert.That(page.Page, Is.EqualTo(2));
+            Assert.That(page.PageSize, Is.EqualTo(2));
+            Assert.That(page.TotalCount, Is.EqualTo(5));
+            Assert.That(page.TotalPages, Is.EqualTo(3));
+            Assert.That(page.HasNext, Is.True);
+            Assert.That(page.HasPrevious, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task GetPageAsync_filtersByNameContains_caseInsensitively()
+    {
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Real Betis"),
+            TeamMother.DomainTeam(name: "Sevilla FC"));
+
+        var page = await GetPageAsync(page: 1, pageSize: 10, filter: new TeamFilter(Name: "betis"));
+
+        Assert.That(page.TotalCount, Is.EqualTo(1));
+        Assert.That(page.Items.Single().Name, Is.EqualTo("Real Betis"));
+    }
+
+    [Test]
+    public async Task GetPageAsync_filtersByActiveAndType()
+    {
+        await SeedAsync(
+            TeamMother.DomainTeam(name: "Active Futsal", type: FootballType.Futsal, active: true),
+            TeamMother.DomainTeam(name: "Inactive Futsal", type: FootballType.Futsal, active: false),
+            TeamMother.DomainTeam(name: "Active Football11", type: FootballType.Football11, active: true));
+
+        var page = await GetPageAsync(
+            page: 1, pageSize: 10,
+            filter: new TeamFilter(Type: FootballType.Futsal, Active: true));
+
+        Assert.That(page.Items.Select(t => t.Name), Is.EqualTo(new[] { "Active Futsal" }));
+    }
+
+    [Test]
+    public async Task GetPageAsync_whenEmpty_returnsEmptyPageWithZeroTotal()
+    {
+        var page = await GetPageAsync(page: 1, pageSize: 10);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(page.Items, Is.Empty);
+            Assert.That(page.TotalCount, Is.EqualTo(0));
+            Assert.That(page.TotalPages, Is.EqualTo(0));
+            Assert.That(page.HasNext, Is.False);
+            Assert.That(page.HasPrevious, Is.False);
+        });
     }
 
     [Test]

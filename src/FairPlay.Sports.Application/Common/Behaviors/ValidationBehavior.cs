@@ -3,14 +3,6 @@ using MediatR;
 
 namespace FairPlay.Sports.Application.Common.Behaviors;
 
-/// <summary>
-/// MediatR pipeline behavior that runs every FluentValidation validator registered for the
-/// incoming request before it reaches its handler. This keeps validation as a cross-cutting
-/// concern (one place, applied to every command/query) instead of being repeated inside each
-/// handler. On failure it short-circuits the pipeline and returns a failed
-/// <see cref="Result"/> / <see cref="Result{T}"/> - the same channel handlers use - rather than
-/// throwing, so the API layer keeps translating outcomes uniformly.
-/// </summary>
 public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {

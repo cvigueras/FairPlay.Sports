@@ -14,6 +14,21 @@
     "greeting": "Hi, {name}",
     "subtitle": "This is your FairPlay Sports hub. More coming soon."
   },
+  "teams": {
+    "title": "Teams",
+    "count": "{n} teams",
+    "empty": "No teams yet.",
+    "loadFailed": "Could not load the teams.",
+    "fields": {
+      "name": "Name",
+      "coach": "Coach",
+      "city": "City",
+      "type": "Modality",
+      "division": "Division",
+      "category": "Age category",
+      "memberSince": "Member since"
+    }
+  },
   "validation": {
     "userNameRequired": "Username is required.",
     "emailRequired": "Email is required.",
