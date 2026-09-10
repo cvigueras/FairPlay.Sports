@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { mdiCircle, mdiImageOutline, mdiLogout, mdiTranslate } from '@mdi/js'
+import { mdiImageOutline, mdiLogout, mdiTranslate } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
@@ -220,13 +220,6 @@ async function createTeam() {
 
 <template>
   <v-app-bar flat border="b" color="surface">
-    <v-app-bar-title>
-      <span class="d-inline-flex align-center ga-2 font-weight-bold">
-        <v-icon :icon="mdiCircle" color="primary" size="12" />
-        {{ t('common.appName') }}
-      </span>
-    </v-app-bar-title>
-
     <template #append>
       <v-menu>
         <template #activator="{ props }">
