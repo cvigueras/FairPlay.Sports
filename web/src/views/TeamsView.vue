@@ -514,6 +514,11 @@ function challengeTeam(_team: Team) {
   background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
+/* A rule between every two teams so consecutive rows read apart. */
+.teams-grid > .bkt:not(:last-child) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
 /* Club panel — shared visual language with the "My teams" screen: crest on
    the left, name + age category, colour-coded chips, coach / venue line, and
    the challenge / view-sheet actions stacked on the right. */
