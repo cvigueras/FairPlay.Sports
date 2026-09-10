@@ -248,12 +248,9 @@ function challengeTeam(_team: Team) {
           </div>
 
           <div class="teams-grid">
-            <v-card
+            <div
               v-for="team in result.items"
               :key="team.id"
-              border
-              flat
-              rounded="xl"
               class="bkt bkt2 px-4 py-3 px-md-6"
             >
               <div class="bkt-crest">
@@ -322,7 +319,7 @@ function challengeTeam(_team: Team) {
                   {{ t('profile.team.viewSheet') }}
                 </v-btn>
               </div>
-            </v-card>
+            </div>
           </div>
         </template>
       </div>
@@ -506,10 +503,15 @@ function challengeTeam(_team: Team) {
   }
 }
 
+/* Flush rows with alternating background - no gap, no rounded card. */
 .teams-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 0;
+}
+
+.teams-grid > .bkt:nth-child(even) {
+  background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 /* Club panel — shared visual language with the "My teams" screen: crest on
