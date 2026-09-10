@@ -6,7 +6,6 @@ import {
   mdiEyeOutline,
   mdiMapMarkerOutline,
   mdiPencilOutline,
-  mdiShieldOutline,
   mdiSoccerField,
   mdiSwordCross,
 } from '@mdi/js'
@@ -226,7 +225,7 @@ const venueMapsHref = computed(() => {
               border
               flat
               rounded="xl"
-              class="px-4 py-4 px-md-8 py-md-3 d-flex ga-4 ga-md-6 team-panel"
+              class="px-4 py-4 px-md-8 py-md-0 d-flex ga-4 ga-md-6 team-panel"
             >
               <div class="team-panel-actions">
                 <v-btn
@@ -240,10 +239,10 @@ const venueMapsHref = computed(() => {
               </div>
 
               <div
-                class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
+                class="d-flex flex-column align-center justify-center flex-shrink-0 ga-1 team-identity"
               >
                 <div class="team-name-row">
-                  <ModalityIcon :type="myTeam.type" :size="68" />
+                  <ModalityIcon :type="myTeam.type" :size="36" />
                   <div class="team-name-col">
                     <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
                     <span
@@ -254,14 +253,7 @@ const venueMapsHref = computed(() => {
                     </span>
                   </div>
                 </div>
-                <v-avatar size="88" rounded="0" color="transparent">
-                  <v-img
-                    v-if="myTeam.hasCrest"
-                    :src="teamsApi.crestUrl(myTeam.id)"
-                    :alt="myTeam.name"
-                  />
-                  <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
-                </v-avatar>
+                <div class="team-identity-rule"></div>
                 <div class="team-meta">
                   <div class="team-meta-division">
                     <div class="team-meta-label text-medium-emphasis">
@@ -279,29 +271,32 @@ const venueMapsHref = computed(() => {
               <v-divider vertical class="d-none d-md-block team-panel-divider" />
 
               <div class="flex-grow-1 team-detail-grid">
-                <div
-                  v-for="row in teamDetails"
-                  :key="row.label"
-                  class="team-detail-cell"
-                >
-                  <div class="d-flex align-center justify-space-between team-detail-head">
-                    <span class="text-caption text-medium-emphasis">{{ row.label }}</span>
-                    <v-btn
-                      :icon="detailIcon[row.kind]"
-                      variant="text"
-                      size="small"
-                      density="comfortable"
-                      :aria-label="t('profile.team.viewDetails')"
-                      @click="infoKind = row.kind"
-                    />
+                <div class="team-detail-cells">
+                  <div
+                    v-for="row in teamDetails"
+                    :key="row.label"
+                    class="team-detail-cell"
+                  >
+                    <div class="d-flex align-center justify-space-between team-detail-head">
+                      <span class="text-caption text-medium-emphasis">{{ row.label }}</span>
+                      <v-btn
+                        :icon="detailIcon[row.kind]"
+                        variant="text"
+                        size="x-small"
+                        density="comfortable"
+                        :aria-label="t('profile.team.viewDetails')"
+                        @click="infoKind = row.kind"
+                      />
+                    </div>
+                    <div class="text-body-1 font-weight-medium">{{ row.value }}</div>
                   </div>
-                  <div class="text-body-1 font-weight-medium">{{ row.value }}</div>
                 </div>
 
                 <div class="team-detail-side">
                   <v-btn
                     color="red"
                     variant="flat"
+                    size="small"
                     :prepend-icon="mdiSwordCross"
                     @click="challengeTeam"
                   >
@@ -310,6 +305,7 @@ const venueMapsHref = computed(() => {
                   <v-btn
                     color="blue"
                     variant="tonal"
+                    size="small"
                     :prepend-icon="mdiClipboardTextOutline"
                     @click="infoKind = 'sheet'"
                   >
@@ -319,7 +315,7 @@ const venueMapsHref = computed(() => {
               </div>
             </v-card>
 
-            <v-card v-else border flat rounded="xl" class="px-4 py-4 px-md-8 py-md-3">
+            <v-card v-else border flat rounded="xl" class="px-4 py-4 px-md-8 py-md-1">
               <v-progress-circular
                 indeterminate
                 color="primary"
@@ -607,26 +603,26 @@ const venueMapsHref = computed(() => {
 }
 
 .team-meta-label {
-  font-size: 0.9rem;
-  line-height: 1.2;
+  font-size: 0.8rem;
+  line-height: 1.15;
 }
 
 .team-meta-bar {
   height: 3px;
-  margin: 4px 0;
+  margin: 2px 0;
   border-radius: 2px;
   background: #86efac;
 }
 
 .team-meta-value {
-  font-size: 1rem;
-  line-height: 1.25;
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .team-meta-city {
   margin-left: auto;
-  font-size: 1rem;
-  line-height: 1.25;
+  font-size: 0.9rem;
+  line-height: 1.2;
   text-align: right;
 }
 
@@ -653,13 +649,21 @@ const venueMapsHref = computed(() => {
   background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
+/* White rule where the crest used to be - full-bleed across the shaded strip. */
+.team-identity-rule {
+  align-self: stretch;
+  height: 2px;
+  margin: 0.05rem -1rem;
+  background: rgb(var(--v-theme-surface));
+}
+
 .team-panel-divider {
   align-self: stretch;
   /* Let flex stretch size it so the negative margins add the card padding
      back on; Vuetify's own height/max-height would otherwise cap it. */
   height: auto;
   max-height: none;
-  margin-block: -0.75rem;
+  margin-block: 0;
 }
 
 .team-name {
@@ -685,6 +689,8 @@ const venueMapsHref = computed(() => {
   align-items: flex-end;
   text-align: right;
   gap: 2px;
+  /* Nudge the club name / category up to sit against the icon's top. */
+  margin-top: -0.35rem;
 }
 
 .team-name-row .team-name {
@@ -694,14 +700,31 @@ const venueMapsHref = computed(() => {
 .team-detail-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-content: center;
+}
+
+/* Coach + venue stacked as one block with collapsed shared borders. */
+.team-detail-cells {
+  display: flex;
+  flex-direction: column;
 }
 
 .team-detail-cell {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   border-radius: 12px;
-  padding: 0.65rem 0.9rem;
+  padding: 0.2rem 0.85rem;
+}
+
+.team-detail-cells .team-detail-cell + .team-detail-cell {
+  margin-top: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.team-detail-cells .team-detail-cell:first-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 /* Right-hand actions: "challenge" on top, "view sheet" below. */
@@ -713,8 +736,8 @@ const venueMapsHref = computed(() => {
 
 /* Label + info button share one line, so the buttons line up across cells. */
 .team-detail-head {
-  min-height: 24px;
-  margin: -2px -4px 2px 0;
+  min-height: 16px;
+  margin: -2px -4px 0 0;
 }
 
 .team-info-dl {
@@ -749,31 +772,39 @@ const venueMapsHref = computed(() => {
     flex-wrap: nowrap;
   }
 
+  .team-identity-rule {
+    margin-inline: -2rem;
+  }
+
   .team-identity {
     width: 264px;
     align-self: stretch;
     border-radius: 0;
     /* Bleed to the card's top / left / bottom edges and up to the divider
-       (card padding is 0.75rem block / 2rem inline; the right -1.5rem just
-       cancels the flex gap). */
-    margin: -0.75rem -1.5rem -0.75rem -2rem;
-    padding: 0.75rem 2rem;
+       (card block padding is 0 at md; the right -1.5rem just cancels the
+       flex gap). */
+    margin: 0 -1.5rem 0 -2rem;
+    padding: 0.15rem 2rem;
   }
 
   .team-detail-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .team-detail-cell {
+  .team-detail-cells {
     /* Stacked in the left half; the right column holds the actions. */
     grid-column: 1;
   }
 
   .team-detail-side {
     grid-column: 2;
-    grid-row: 1 / -1;
-    justify-content: space-between;
-    align-items: flex-end;
+    /* Centred against the coach/venue stack, which drives the row height. */
+    align-self: center;
+    justify-content: center;
+    align-items: center;
+    /* Top inset clears the absolute Edit button; the column is still
+       shorter than the cell stack so the card doesn't grow. */
+    padding: 1.75rem 0 0.25rem;
   }
 }
 </style>
