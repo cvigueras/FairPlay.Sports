@@ -6,6 +6,7 @@ import {
   mdiEyeOutline,
   mdiMapMarkerOutline,
   mdiPencilOutline,
+  mdiShieldOutline,
   mdiSoccerField,
   mdiSwordCross,
 } from '@mdi/js'
@@ -241,6 +242,14 @@ const venueMapsHref = computed(() => {
               <div
                 class="d-flex flex-column align-center justify-center flex-shrink-0 ga-1 team-identity"
               >
+                <v-avatar size="48" rounded="0" color="transparent" class="team-identity-crest">
+                  <v-img
+                    v-if="myTeam.hasCrest"
+                    :src="teamsApi.crestUrl(myTeam.id)"
+                    :alt="myTeam.name"
+                  />
+                  <v-icon v-else :icon="mdiShieldOutline" size="32" class="text-medium-emphasis" />
+                </v-avatar>
                 <div class="team-name-row">
                   <ModalityIcon :type="myTeam.type" :size="36" />
                   <div class="team-name-col">
@@ -645,9 +654,19 @@ const venueMapsHref = computed(() => {
 }
 
 .team-identity {
+  position: relative;
   border-radius: 12px;
-  padding: 1rem;
+  /* Extra left room for the crest, which is pinned to the left edge. */
+  padding: 0.75rem 1rem 0.75rem 4rem;
   background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+/* Club crest pinned to the left of the shaded strip, vertically centred. */
+.team-identity-crest {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* White rule where the crest used to be - full-bleed across the shaded strip. */
@@ -800,18 +819,26 @@ const venueMapsHref = computed(() => {
   }
 
   .team-identity-rule {
-    margin-inline: -2rem;
+    /* Keep the rule its original length - the strip got wider on the left
+       for the crest, but the white rule must not grow with it. */
+    align-self: center;
+    width: 264px;
+    margin-inline: 0;
   }
 
   .team-identity {
-    width: 264px;
+    width: 320px;
     align-self: stretch;
     border-radius: 0;
     /* Bleed to the card's top / left / bottom edges and up to the divider
        (card block padding is 0 at md; the right -1.5rem just cancels the
-       flex gap). */
+       flex gap). The wide left padding is the crest's lane. */
     margin: 0 -1.5rem 0 -2rem;
-    padding: 0.15rem 2rem;
+    padding: 0.15rem 2rem 0.15rem 5rem;
+  }
+
+  .team-identity-crest {
+    left: 1.5rem;
   }
 
   .team-detail-grid {
