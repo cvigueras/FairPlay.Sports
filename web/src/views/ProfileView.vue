@@ -21,19 +21,10 @@ const { t, locale } = useI18n()
 
 const user = computed(() => auth.currentUser)
 
-const memberSince = computed(() => {
-  if (!user.value) return ''
-  return new Date(user.value.createdAt).toLocaleDateString(locale.value, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-})
+const formatLongDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
-const details = computed(() => {
-  if (!user.value) return []
-  return [{ label: t('profile.fields.memberSince'), value: memberSince.value }]
-})
+const memberSince = computed(() => (user.value ? formatLongDate(user.value.createdAt) : ''))
 
 /* ---- My team ---------------------------------------------------------------- */
 
@@ -204,56 +195,80 @@ async function createTeam() {
       </v-alert>
 
       <!-- Has a team: profile on the left, the team's details on the right -->
-      <v-row v-if="user.teamId">
-        <v-col cols="12" md="6" class="d-flex flex-column ga-6">
-          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
-            <ProfileAvatar />
-            <div class="flex-grow-1 overflow-hidden ms-6">
-              <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
-              <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
-              <v-chip
-                :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'"
-                size="small"
-                variant="tonal"
-                class="mt-1"
-              >
-                {{ user.role }}
-              </v-chip>
-            </div>
-          </v-card>
+      <template v-if="user.teamId">
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
+              <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+                <ProfileAvatar />
+                <div class="member-since">
+                  <div class="member-since-label text-medium-emphasis">
+                    {{ t('profile.fields.memberSince') }}
+                  </div>
+                  <div class="member-since-bar"></div>
+                  <div class="member-since-value font-weight-medium">{{ memberSince }}</div>
+                </div>
+              </div>
+              <div class="flex-grow-1 overflow-hidden ms-6">
+                <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
+                <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
+                <v-chip
+                  :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'"
+                  size="small"
+                  variant="tonal"
+                  class="mt-1"
+                >
+                  {{ user.role }}
+                </v-chip>
+              </div>
+            </v-card>
+          </v-col>
 
-          <v-card border flat rounded="xl" class="flex-grow-1">
-            <v-list>
-              <template v-for="(row, index) in details" :key="row.label">
-                <v-divider v-if="index > 0" />
-                <v-list-item class="py-3">
-                  <template #subtitle>
-                    <span class="text-caption text-uppercase">{{ row.label }}</span>
-                  </template>
-                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-list>
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" md="6" class="d-flex flex-column ga-6">
-          <template v-if="myTeam">
-            <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
-              <v-avatar size="120" rounded="lg" class="flex-shrink-0">
-                <v-img
-                  v-if="myTeam.hasCrest"
-                  :src="teamsApi.crestUrl(myTeam.id)"
-                  :alt="myTeam.name"
-                />
-                <v-icon v-else :icon="mdiShieldOutline" size="56" class="text-medium-emphasis" />
-              </v-avatar>
+          <v-col cols="12" md="6">
+            <v-card
+              v-if="myTeam"
+              border
+              flat
+              rounded="xl"
+              class="pa-6 d-flex align-center ga-6 h-100"
+            >
+              <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+                <v-avatar size="120" rounded="lg">
+                  <v-img
+                    v-if="myTeam.hasCrest"
+                    :src="teamsApi.crestUrl(myTeam.id)"
+                    :alt="myTeam.name"
+                  />
+                  <v-icon v-else :icon="mdiShieldOutline" size="56" class="text-medium-emphasis" />
+                </v-avatar>
+                <div class="member-since">
+                  <div class="member-since-label text-medium-emphasis">
+                    {{ t('profile.fields.memberSince') }}
+                  </div>
+                  <div class="member-since-bar"></div>
+                  <div class="member-since-value font-weight-medium">
+                    {{ formatLongDate(myTeam.createdAt) }}
+                  </div>
+                </div>
+              </div>
               <div class="flex-grow-1 overflow-hidden ms-6">
                 <p class="text-h6 font-weight-bold text-truncate">{{ myTeam.name }}</p>
               </div>
             </v-card>
 
-            <v-card border flat rounded="xl" class="flex-grow-1">
+            <v-card v-else border flat rounded="xl" class="pa-6 h-100">
+              <v-progress-circular
+                indeterminate
+                color="primary"
+                class="d-block mx-auto my-10"
+              />
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <v-row v-if="myTeam">
+          <v-col cols="12" md="6" offset-md="6">
+            <v-card border flat rounded="xl">
               <v-list>
                 <template v-for="(row, index) in teamDetails" :key="row.label">
                   <v-divider v-if="index > 0" />
@@ -266,23 +281,24 @@ async function createTeam() {
                 </template>
               </v-list>
             </v-card>
-          </template>
-
-          <v-card v-else border flat rounded="xl" class="pa-6 flex-grow-1">
-            <v-progress-circular
-              indeterminate
-              color="primary"
-              class="d-block mx-auto my-10"
-            />
-          </v-card>
-        </v-col>
-      </v-row>
+          </v-col>
+        </v-row>
+      </template>
 
       <v-row v-if="!user.teamId">
         <!-- Top left: profile summary -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
-            <ProfileAvatar />
+            <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+              <ProfileAvatar />
+              <div class="member-since">
+                <div class="member-since-label text-medium-emphasis">
+                  {{ t('profile.fields.memberSince') }}
+                </div>
+                <div class="member-since-bar"></div>
+                <div class="member-since-value font-weight-medium">{{ memberSince }}</div>
+              </div>
+            </div>
             <div class="flex-grow-1 overflow-hidden ms-6">
               <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
               <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
@@ -363,25 +379,8 @@ async function createTeam() {
       </v-row>
 
       <v-row v-if="!user.teamId" class="mt-6">
-        <!-- Bottom left: profile details -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl">
-            <v-list>
-              <template v-for="(row, index) in details" :key="row.label">
-                <v-divider v-if="index > 0" />
-                <v-list-item class="py-3">
-                  <template #subtitle>
-                    <span class="text-caption text-uppercase">{{ row.label }}</span>
-                  </template>
-                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-list>
-          </v-card>
-        </v-col>
-
-        <!-- Bottom right: create a new team -->
-        <v-col cols="12" md="6">
+        <!-- Create a new team -->
+        <v-col cols="12" md="6" offset-md="6">
           <v-card border flat rounded="xl" class="pa-6">
             <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.createTitle') }}</h2>
 
@@ -463,3 +462,29 @@ async function createTeam() {
     </v-container>
   </v-main>
 </template>
+
+<style scoped>
+/* "Member since" block under the avatar, mirroring the Teams list card. */
+.member-since {
+  min-width: 0;
+  text-align: center;
+}
+
+.member-since-label {
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.member-since-bar {
+  width: 100%;
+  height: 3px;
+  margin: 4px 0;
+  border-radius: 2px;
+  background: #86efac;
+}
+
+.member-since-value {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+</style>
