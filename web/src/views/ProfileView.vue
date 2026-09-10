@@ -272,7 +272,7 @@ async function createTeam() {
                 </div>
               </div>
 
-              <v-divider vertical class="d-none d-sm-block" />
+              <v-divider vertical class="d-none d-sm-block team-panel-divider" />
 
               <div class="flex-grow-1 team-detail-grid">
                 <div
@@ -535,6 +535,7 @@ async function createTeam() {
   flex-direction: column;
   align-items: stretch;
   text-align: center;
+  min-width: 90px;
 }
 
 .team-meta-label {
@@ -561,9 +562,28 @@ async function createTeam() {
   text-align: right;
 }
 
-/* Team panel: name + crest + "member since" on the left, boxed details on the right. */
+/* Team panel: shaded identity strip on the left, boxed details on the right,
+   split by a rule that runs the full height of the card. */
+.team-panel {
+  overflow: hidden;
+}
+
 .team-identity {
-  width: 200px;
+  width: 248px;
+  align-self: stretch;
+  /* Bleed to the card's top / left / bottom edges and up to the divider. */
+  margin: -1.5rem;
+  padding: 1.5rem;
+  background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.team-panel-divider {
+  align-self: stretch;
+  /* Let flex stretch size it so the negative margins add the card padding
+     back on; Vuetify's own height/max-height would otherwise cap it. */
+  height: auto;
+  max-height: none;
+  margin-block: -1.5rem;
 }
 
 .team-name {
@@ -571,17 +591,23 @@ async function createTeam() {
   overflow-wrap: anywhere;
 }
 
-/* Club name + age category sit beside the modality icon, aligned to it. */
+/* Icon pinned left (in line with the division block); name/category
+   right-anchored so a longer club name grows leftwards, its right edge
+   lining up with the city value below. */
 .team-name-row {
+  align-self: stretch;
   display: flex;
   align-items: flex-start;
-  justify-content: center;
   gap: 0.6rem;
 }
 
 .team-name-col {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
   gap: 2px;
 }
 
@@ -614,6 +640,7 @@ async function createTeam() {
 
   .team-identity {
     width: 100%;
+    margin: -1.5rem -1.5rem 1.5rem;
   }
 
   .team-detail-grid {
