@@ -1,5 +1,5 @@
 export type FootballType = 'Football11' | 'Football8' | 'Futsal' | 'BeachSoccer'
-export type Division = 'HonorDivision' | 'RegionalLeague' | 'First' | 'Second'
+export type Division = 'HonorDivision' | 'RegionalLeague' | 'First' | 'Second' | 'Third'
 export type AgeCategory =
   | 'Chupetes'
   | 'Prebenjamines'
@@ -54,7 +54,7 @@ export type CreateTeamPayload = TeamCorePayload & TeamProfileFields
 export type UpdateTeamPayload = TeamCorePayload & TeamProfileFields
 
 export const FOOTBALL_TYPES: FootballType[] = ['Football11', 'Football8', 'Futsal', 'BeachSoccer']
-export const DIVISIONS: Division[] = ['HonorDivision', 'RegionalLeague', 'First', 'Second']
+export const DIVISIONS: Division[] = ['HonorDivision', 'RegionalLeague', 'First', 'Second', 'Third']
 export const AGE_CATEGORIES: AgeCategory[] = [
   'Chupetes',
   'Prebenjamines',

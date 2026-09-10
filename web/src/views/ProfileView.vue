@@ -6,14 +6,17 @@ import {
   mdiClipboardTextOutline,
   mdiMapMarkerOutline,
   mdiShieldOutline,
+  mdiSoccer,
   mdiSoccerField,
   mdiSwordCross,
+  mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import TeamForm from '@/components/TeamForm.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
+import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { useAuthStore } from '@/stores/auth'
 import type { CreateTeamPayload, Team } from '@/types/team'
@@ -213,10 +216,20 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
                   </span>
                 </div>
                 <div class="bkt-chips">
-                  <v-chip size="x-small" variant="tonal" :color="MODALITY_COLOR[myTeam.type]">
+                  <v-chip
+                    size="x-small"
+                    variant="tonal"
+                    :color="MODALITY_COLOR[myTeam.type]"
+                    :prepend-icon="mdiSoccer"
+                  >
                     {{ t(`profile.team.enums.${myTeam.type}`) }}
                   </v-chip>
-                  <v-chip size="x-small" variant="tonal">
+                  <v-chip
+                    size="x-small"
+                    variant="tonal"
+                    :color="DIVISION_COLOR[myTeam.division]"
+                    :prepend-icon="mdiTrophyOutline"
+                  >
                     {{ t(`profile.team.enums.${myTeam.division}`) }}
                   </v-chip>
                   <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
@@ -224,9 +237,13 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
                   </v-chip>
                 </div>
                 <div class="bkt-meta text-body-2 text-medium-emphasis">
-                  <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
+                  <span>
+                    <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
+                    {{ myTeam.coach }}
+                  </span>
                   <span v-if="myTeam.venueName">
-                    <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
+                    <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
+                    {{ myTeam.venueName }}
                   </span>
                 </div>
               </div>
