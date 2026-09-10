@@ -237,10 +237,10 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
 
               <div>
                 <p class="text-overline text-medium-emphasis mb-1">Boceto 2</p>
-                <v-card border flat rounded="xl" class="bkt px-4 py-3 px-md-6">
-                  <v-avatar size="52" rounded="0" color="transparent" class="bkt-crest">
+                <v-card border flat rounded="xl" class="bkt bkt2 px-4 py-3 px-md-6">
+                  <v-avatar size="76" rounded="0" color="transparent" class="bkt-crest">
                     <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
-                    <v-icon v-else :icon="mdiShieldOutline" size="34" class="text-medium-emphasis" />
+                    <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
                   </v-avatar>
                   <div class="bkt-body">
                     <div class="bkt-row1">
@@ -250,16 +250,22 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
                         {{ t(`profile.team.enums.${myTeam.category}`) }}
                       </span>
                     </div>
-                    <div class="bkt-line text-body-2 text-medium-emphasis">
-                      <ModalityIcon :type="myTeam.type" :size="16" />
-                      <span>
-                        {{ t(`profile.team.enums.${myTeam.type}`) }} ·
-                        {{ t(`profile.team.enums.${myTeam.division}`) }} · {{ myTeam.city }}
-                      </span>
+                    <div class="bkt-chips">
+                      <v-chip size="x-small" variant="tonal">
+                        {{ t(`profile.team.enums.${myTeam.type}`) }}
+                      </v-chip>
+                      <v-chip size="x-small" variant="tonal">
+                        {{ t(`profile.team.enums.${myTeam.division}`) }}
+                      </v-chip>
+                      <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
+                        {{ myTeam.city }}
+                      </v-chip>
                     </div>
-                    <div class="bkt-line text-body-2 text-medium-emphasis">
-                      <span>{{ t('profile.team.coach') }} {{ myTeam.coach }}</span>
-                      <span v-if="myTeam.venueName">· {{ t('profile.team.venueGroup') }} {{ myTeam.venueName }}</span>
+                    <div class="bkt-meta text-body-2 text-medium-emphasis">
+                      <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
+                      <span v-if="myTeam.venueName">
+                        <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
+                      </span>
                     </div>
                   </div>
                   <div class="bkt-actions">
@@ -538,6 +544,13 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
 }
 .bkt-crest {
   flex-shrink: 0;
+}
+.bkt2 .bkt-crest {
+  margin-right: 0.75rem;
+}
+/* Slightly larger chip text without growing the fixed x-small chip height. */
+.bkt2 .bkt-chips :deep(.v-chip) {
+  font-size: 0.75rem;
 }
 .bkt-body {
   flex: 1;
