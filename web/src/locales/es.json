@@ -69,6 +69,7 @@
   "profile": {
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión...",
+    "welcome": "Bienvenido, {name}",
     "activation": {
       "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },
@@ -78,9 +79,6 @@
       "uploadFailed": "No se ha podido subir la foto."
     },
     "fields": {
-      "userName": "Usuario",
-      "email": "Email",
-      "role": "Rol",
       "memberSince": "Miembro desde",
       "status": "Estado"
     },
@@ -89,7 +87,6 @@
       "inactive": "Inactivo"
     },
     "team": {
-      "title": "Mi equipo",
       "select": "Equipo",
       "selectPlaceholder": "Elige tu equipo",
       "noCrest": "Este equipo aún no tiene escudo.",

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { mdiImageOutline, mdiLogout, mdiTranslate } from '@mdi/js'
+import { mdiImageOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import { useAuthStore } from '@/stores/auth'
-import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -18,12 +16,10 @@ import {
   type Team,
 } from '@/types/team'
 
-const router = useRouter()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
 
 const user = computed(() => auth.currentUser)
-const isLoggingOut = ref(false)
 
 const memberSince = computed(() => {
   if (!user.value) return ''
@@ -37,9 +33,6 @@ const memberSince = computed(() => {
 const details = computed(() => {
   if (!user.value) return []
   return [
-    { label: t('profile.fields.userName'), value: user.value.userName },
-    { label: t('profile.fields.email'), value: user.value.email },
-    { label: t('profile.fields.role'), value: user.value.role },
     { label: t('profile.fields.memberSince'), value: memberSince.value },
     {
       label: t('profile.fields.status'),
@@ -47,16 +40,6 @@ const details = computed(() => {
     },
   ]
 })
-
-async function handleLogout() {
-  isLoggingOut.value = true
-  try {
-    await auth.logout()
-    await router.push('/login')
-  } finally {
-    isLoggingOut.value = false
-  }
-}
 
 /* ---- My team ---------------------------------------------------------------- */
 
@@ -219,46 +202,6 @@ async function createTeam() {
 </script>
 
 <template>
-  <v-app-bar flat border="b" color="surface">
-    <template #append>
-      <v-menu>
-        <template #activator="{ props }">
-          <v-btn
-            variant="text"
-            :prepend-icon="mdiTranslate"
-            :aria-label="t('language.label')"
-            v-bind="props"
-          >
-            {{ locale.toUpperCase() }}
-          </v-btn>
-        </template>
-        <v-list density="compact">
-          <v-list-item
-            v-for="code in SUPPORTED_LOCALES"
-            :key="code"
-            :active="code === locale"
-            @click="setLocale(code)"
-          >
-            <v-list-item-title>{{ t(`language.${code}`) }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-
-      <span v-if="user" class="text-body-2 text-medium-emphasis mx-3 d-none d-sm-inline">
-        {{ user.userName }}
-      </span>
-
-      <v-btn
-        variant="outlined"
-        :prepend-icon="mdiLogout"
-        :loading="isLoggingOut"
-        @click="handleLogout"
-      >
-        {{ isLoggingOut ? t('profile.loggingOut') : t('profile.logout') }}
-      </v-btn>
-    </template>
-  </v-app-bar>
-
   <v-main>
     <v-container v-if="user" class="py-10 profile-container">
       <v-alert
@@ -307,8 +250,6 @@ async function createTeam() {
 
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
-
             <template v-if="myTeam">
               <v-img
                 v-if="myTeam.hasCrest"
@@ -363,8 +304,6 @@ async function createTeam() {
         <!-- Top right: the team the user belongs to -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
-
             <v-select
               v-model="selectedTeamId"
               :items="teams"

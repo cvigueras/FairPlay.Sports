@@ -102,6 +102,13 @@ async function handleLogout(): Promise<void> {
     <v-spacer />
 
     <template #append>
+      <span
+        v-if="auth.currentUser"
+        class="text-body-2 font-weight-bold mx-3 d-none d-sm-inline"
+      >
+        {{ t('profile.welcome', { name: auth.currentUser.userName }) }}
+      </span>
+
       <v-menu>
         <template #activator="{ props }">
           <v-btn v-bind="props" :prepend-icon="mdiTranslate" variant="text">
