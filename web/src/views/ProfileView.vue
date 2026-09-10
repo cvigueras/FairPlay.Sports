@@ -50,13 +50,11 @@ const teamDetails = computed(() => {
   if (!team) return []
   return [
     { label: t('profile.team.coach'), value: team.coach },
-    { label: t('profile.team.city'), value: team.city },
     {
       label: t('profile.team.type'),
       value: t(`profile.team.enums.${team.type}`),
       modality: team.type,
     },
-    { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
   ]
 })
 
@@ -260,14 +258,17 @@ async function createTeam() {
                   />
                   <v-icon v-else :icon="mdiShieldOutline" size="56" class="text-medium-emphasis" />
                 </v-avatar>
-                <div class="member-since">
-                  <div class="member-since-label text-medium-emphasis">
-                    {{ t('profile.fields.memberSince') }}
+                <div class="team-meta">
+                  <div class="team-meta-division">
+                    <div class="team-meta-label text-medium-emphasis">
+                      {{ t('profile.team.division') }}
+                    </div>
+                    <div class="team-meta-bar"></div>
+                    <div class="team-meta-value font-weight-medium">
+                      {{ t(`profile.team.enums.${myTeam.division}`) }}
+                    </div>
                   </div>
-                  <div class="member-since-bar"></div>
-                  <div class="member-since-value font-weight-medium">
-                    {{ formatLongDate(myTeam.createdAt) }}
-                  </div>
+                  <span class="team-meta-city text-medium-emphasis">{{ myTeam.city }}</span>
                 </div>
               </div>
 
@@ -520,6 +521,46 @@ async function createTeam() {
   line-height: 1.25;
 }
 
+/* Division block (label + green rule + value) on the left, city on the right. */
+.team-meta {
+  align-self: stretch;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-meta-division {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: center;
+}
+
+.team-meta-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.team-meta-bar {
+  height: 3px;
+  margin: 4px 0;
+  border-radius: 2px;
+  background: #86efac;
+}
+
+.team-meta-value {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.team-meta-city {
+  margin-left: auto;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
 /* Team panel: name + crest + "member since" on the left, boxed details on the right. */
 .team-identity {
   width: 200px;
@@ -559,11 +600,6 @@ async function createTeam() {
   align-content: center;
 }
 
-/* The first field (coach) runs the full width, the rest form a tidy 2x2. */
-.team-detail-cell:first-child {
-  grid-column: 1 / -1;
-}
-
 .team-detail-cell {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   border-radius: 12px;
@@ -582,10 +618,6 @@ async function createTeam() {
 
   .team-detail-grid {
     grid-template-columns: 1fr;
-  }
-
-  .team-detail-cell:first-child {
-    grid-column: auto;
   }
 }
 </style>
