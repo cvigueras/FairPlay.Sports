@@ -230,9 +230,12 @@ async function createTeam() {
               border
               flat
               rounded="xl"
-              class="pa-6 d-flex align-center ga-6 h-100"
+              class="pa-6 d-flex ga-6 h-100 team-panel"
             >
-              <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+              <div
+                class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
+              >
+                <p class="text-h6 font-weight-bold text-center team-name">{{ myTeam.name }}</p>
                 <v-avatar size="120" rounded="lg">
                   <v-img
                     v-if="myTeam.hasCrest"
@@ -251,8 +254,18 @@ async function createTeam() {
                   </div>
                 </div>
               </div>
-              <div class="flex-grow-1 overflow-hidden ms-6">
-                <p class="text-h6 font-weight-bold text-truncate">{{ myTeam.name }}</p>
+
+              <v-divider vertical class="d-none d-sm-block" />
+
+              <div class="flex-grow-1 team-detail-grid">
+                <div
+                  v-for="row in teamDetails"
+                  :key="row.label"
+                  class="team-detail-cell"
+                >
+                  <div class="text-caption text-medium-emphasis">{{ row.label }}</div>
+                  <div class="text-body-1 font-weight-medium mt-1">{{ row.value }}</div>
+                </div>
               </div>
             </v-card>
 
@@ -262,24 +275,6 @@ async function createTeam() {
                 color="primary"
                 class="d-block mx-auto my-10"
               />
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <v-row v-if="myTeam">
-          <v-col cols="12" md="6" offset-md="6">
-            <v-card border flat rounded="xl">
-              <v-list>
-                <template v-for="(row, index) in teamDetails" :key="row.label">
-                  <v-divider v-if="index > 0" />
-                  <v-list-item class="py-3">
-                    <template #subtitle>
-                      <span class="text-caption text-uppercase">{{ row.label }}</span>
-                    </template>
-                    <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                  </v-list-item>
-                </template>
-              </v-list>
             </v-card>
           </v-col>
         </v-row>
@@ -486,5 +481,52 @@ async function createTeam() {
 .member-since-value {
   font-size: 0.75rem;
   line-height: 1.25;
+}
+
+/* Team panel: name + crest + "member since" on the left, boxed details on the right. */
+.team-identity {
+  width: 170px;
+}
+
+.team-name {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.team-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  align-content: center;
+}
+
+/* The first field (coach) runs the full width, the rest form a tidy 2x2. */
+.team-detail-cell:first-child {
+  grid-column: 1 / -1;
+}
+
+.team-detail-cell {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+}
+
+@media (max-width: 599px) {
+  .team-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .team-identity {
+    width: 100%;
+  }
+
+  .team-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-detail-cell:first-child {
+    grid-column: auto;
+  }
 }
 </style>
