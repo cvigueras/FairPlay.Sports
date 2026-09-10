@@ -1,16 +1,13 @@
+using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FluentValidation;
 
 namespace FairPlay.Sports.Application.Teams.Create;
 
 public sealed class CreateTeamValidator : AbstractValidator<CreateTeamCommand>
 {
-    public CreateTeamValidator()
+    public CreateTeamValidator(IClock clock)
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Coach).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.City).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Type).IsInEnum();
-        RuleFor(x => x.Division).IsInEnum();
-        RuleFor(x => x.Category).IsInEnum();
+        this.AddTeamWriteRules(clock.UtcNow.Year);
     }
 }

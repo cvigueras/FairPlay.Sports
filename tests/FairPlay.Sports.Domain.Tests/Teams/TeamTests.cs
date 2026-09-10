@@ -114,4 +114,121 @@ public class TeamTests
             Assert.That(team.CrestContentType, Is.EqualTo("image/webp"));
         });
     }
+
+    /* ---- Profile ("ficha") fields ------------------------------------------ */
+
+    private static TeamProfile FullProfile() =>
+        new(
+            ShortName: "  FPF  ",
+            FoundedYear: 1998,
+            HomeVenue: new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x"),
+            Colors: new KitColors("Blue", "White"),
+            ContactEmail: "  INFO@Club.Example  ",
+            ContactPhone: "  600 000 000  ",
+            Website: "  https://club.example  ");
+
+    [Test]
+    public void Create_WithoutProfile_LeavesFichaFieldsEmpty()
+    {
+        var team = Create();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.ShortName, Is.Null);
+            Assert.That(team.FoundedYear, Is.Null);
+            Assert.That(team.HomeVenue, Is.Null);
+            Assert.That(team.Colors, Is.Null);
+            Assert.That(team.ContactEmail, Is.Null);
+            Assert.That(team.ContactPhone, Is.Null);
+            Assert.That(team.Website, Is.Null);
+        });
+    }
+
+    [Test]
+    public void Create_WithProfile_TrimsAndNormalisesTheFichaFields()
+    {
+        var team = Team.Create(Guid.NewGuid(), "FairPlay FC", "Marta Rios", "Sevilla", Classification(), Now, FullProfile());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.ShortName, Is.EqualTo("FPF"));
+            Assert.That(team.FoundedYear, Is.EqualTo(1998));
+            Assert.That(team.HomeVenue, Is.EqualTo(new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x")));
+            Assert.That(team.Colors, Is.EqualTo(new KitColors("Blue", "White")));
+            Assert.That(team.ContactEmail, Is.EqualTo("info@club.example"));
+            Assert.That(team.ContactPhone, Is.EqualTo("600 000 000"));
+            Assert.That(team.Website, Is.EqualTo("https://club.example"));
+        });
+    }
+
+    [TestCase(1849)]
+    [TestCase(2027)]
+    public void Create_WithFoundedYearOutOfRange_Throws(int year) =>
+        Assert.That(
+            () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(FoundedYear: year)),
+            Throws.ArgumentException);
+
+    [Test]
+    public void Create_WithFoundedYearEqualToCreationYear_IsAccepted() =>
+        Assert.That(
+            Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(FoundedYear: Now.Year)).FoundedYear,
+            Is.EqualTo(Now.Year));
+
+    [Test]
+    public void Create_WithContactEmailWithoutAtSign_Throws() =>
+        Assert.That(
+            () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(ContactEmail: "not-an-email")),
+            Throws.ArgumentException);
+
+    [Test]
+    public void Create_WithNonHttpWebsite_Throws() =>
+        Assert.That(
+            () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(Website: "club.example")),
+            Throws.ArgumentException);
+
+    [Test]
+    public void Update_ReplacesCoreFieldsAndProfile()
+    {
+        var team = Create();
+
+        team.Update(
+            "Newcastle Local",
+            "New Coach",
+            "Cartagena",
+            Classification(FootballType.Football8, Division.Second, AgeCategory.Cadetes),
+            FullProfile());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.Name, Is.EqualTo("Newcastle Local"));
+            Assert.That(team.Coach, Is.EqualTo("New Coach"));
+            Assert.That(team.City, Is.EqualTo("Cartagena"));
+            Assert.That(team.Classification, Is.EqualTo(Classification(FootballType.Football8, Division.Second, AgeCategory.Cadetes)));
+            Assert.That(team.ShortName, Is.EqualTo("FPF"));
+            Assert.That(team.HomeVenue!.Surface, Is.EqualTo(PitchSurface.Indoor));
+            Assert.That(team.Colors!.Primary, Is.EqualTo("Blue"));
+        });
+    }
+
+    [Test]
+    public void Update_WithEmptyProfile_ClearsPreviouslySetFichaFields()
+    {
+        var team = Team.Create(Guid.NewGuid(), "FairPlay FC", "Marta Rios", "Sevilla", Classification(), Now, FullProfile());
+
+        team.Update("FairPlay FC", "Marta Rios", "Sevilla", Classification(), TeamProfile.Empty);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.ShortName, Is.Null);
+            Assert.That(team.HomeVenue, Is.Null);
+            Assert.That(team.Colors, Is.Null);
+            Assert.That(team.ContactEmail, Is.Null);
+        });
+    }
+
+    [Test]
+    public void Update_WithBlankName_Throws() =>
+        Assert.That(
+            () => Create().Update("  ", "c", "city", Classification(), TeamProfile.Empty),
+            Throws.ArgumentException);
 }

@@ -87,4 +87,35 @@ public class CreateTeamHandlerTests
 
         await _repository.Received(1).ExistsByNameAsync(TeamMother.Name, Arg.Any<CancellationToken>());
     }
+
+    [Test]
+    public async Task Handle_WithProfileFields_MapsThemOntoTheAggregateAndDto()
+    {
+        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        Team? persisted = null;
+        await _repository.AddAsync(Arg.Do<Team>(t => persisted = t), Arg.Any<CancellationToken>());
+
+        var result = await _handler.Handle(TeamMother.CommandWithProfile(), CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.ShortName, Is.EqualTo(TeamMother.ShortName));
+            Assert.That(result.Value!.FoundedYear, Is.EqualTo(TeamMother.FoundedYear));
+            Assert.That(result.Value!.VenueName, Is.EqualTo(TeamMother.VenueName));
+            Assert.That(result.Value!.VenueAddress, Is.EqualTo(TeamMother.VenueAddress));
+            Assert.That(result.Value!.VenueSurface, Is.EqualTo(TeamMother.VenueSurface));
+            Assert.That(result.Value!.VenueMapsUrl, Is.EqualTo(TeamMother.VenueMapsUrl));
+            Assert.That(result.Value!.ColorPrimary, Is.EqualTo(TeamMother.ColorPrimary));
+            Assert.That(result.Value!.ColorSecondary, Is.EqualTo(TeamMother.ColorSecondary));
+            Assert.That(result.Value!.ContactEmail, Is.EqualTo(TeamMother.ContactEmail));
+            Assert.That(result.Value!.ContactPhone, Is.EqualTo(TeamMother.ContactPhone));
+            Assert.That(result.Value!.Website, Is.EqualTo(TeamMother.Website));
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(persisted!.HomeVenue!.Surface, Is.EqualTo(TeamMother.VenueSurface));
+            Assert.That(persisted!.Colors!.Primary, Is.EqualTo(TeamMother.ColorPrimary));
+        });
+    }
 }

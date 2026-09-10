@@ -51,6 +51,73 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task AddAsync_thenCommit_roundTripsTheProfileFields()
+    {
+        var team = TeamMother.DomainTeamWithProfile();
+
+        await using (var arrange = NewContext())
+        {
+            var repository = new EfTeamRepository(arrange);
+            var unitOfWork = new UnitOfWork(arrange);
+            await repository.AddAsync(team);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Teams.AsNoTracking().SingleAsync(t => t.Id == team.Id);
+        Assert.Multiple(() =>
+        {
+            Assert.That(persisted.ShortName, Is.EqualTo(TeamMother.ShortName));
+            Assert.That(persisted.FoundedYear, Is.EqualTo(TeamMother.FoundedYear));
+            Assert.That(persisted.ContactEmail, Is.EqualTo(TeamMother.ContactEmail));
+            Assert.That(persisted.ContactPhone, Is.EqualTo(TeamMother.ContactPhone));
+            Assert.That(persisted.Website, Is.EqualTo(TeamMother.Website));
+            Assert.That(persisted.HomeVenue, Is.EqualTo(TeamMother.Venue()));
+            Assert.That(persisted.Colors, Is.EqualTo(TeamMother.Colors()));
+        });
+    }
+
+    [Test]
+    public async Task Update_thenCommit_clearsTheProfileWhenTheNewProfileIsEmpty()
+    {
+        var team = TeamMother.DomainTeamWithProfile();
+        await SeedAsync(team);
+
+        await using (var act = NewContext())
+        {
+            var repository = new EfTeamRepository(act);
+            var unitOfWork = new UnitOfWork(act);
+            var tracked = await repository.GetByIdForUpdateAsync(team.Id);
+            tracked!.Update(tracked.Name, tracked.Coach, tracked.City, tracked.Classification, TeamProfile.Empty);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Teams.AsNoTracking().SingleAsync(t => t.Id == team.Id);
+        Assert.Multiple(() =>
+        {
+            Assert.That(persisted.ShortName, Is.Null);
+            Assert.That(persisted.HomeVenue, Is.Null);
+            Assert.That(persisted.Colors, Is.Null);
+            Assert.That(persisted.ContactEmail, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task VenueSurface_isStoredAsAString()
+    {
+        var team = TeamMother.DomainTeamWithProfile();
+        await SeedAsync(team);
+
+        await using var context = NewContext();
+        var stored = await context.Database
+            .SqlQuery<string>($"""SELECT "VenueSurface" AS "Value" FROM "Teams" WHERE "Id" = {team.Id}""")
+            .SingleAsync();
+
+        Assert.That(stored, Is.EqualTo(nameof(PitchSurface.Indoor)));
+    }
+
+    [Test]
     public async Task EnumColumns_areStoredAsStrings()
     {
         var team = TeamMother.DomainTeam(type: FootballType.Futsal, division: Division.RegionalLeague, category: AgeCategory.Benjamines);

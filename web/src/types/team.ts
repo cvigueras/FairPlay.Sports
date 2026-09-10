@@ -10,9 +10,25 @@ export type AgeCategory =
   | 'Juveniles'
   | 'Aficionados'
   | 'Veteranos'
+export type PitchSurface = 'NaturalGrass' | 'ArtificialTurf' | 'Hybrid' | 'Earth' | 'Indoor'
+
+/** Optional "ficha" fields a team may carry, mirrored on create/update/DTO. */
+export interface TeamProfileFields {
+  shortName?: string | null
+  foundedYear?: number | null
+  venueName?: string | null
+  venueAddress?: string | null
+  venueSurface?: PitchSurface | null
+  venueMapsUrl?: string | null
+  colorPrimary?: string | null
+  colorSecondary?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  website?: string | null
+}
 
 /** Mirrors the backend `TeamDto`. */
-export interface Team {
+export interface Team extends TeamProfileFields {
   id: string
   name: string
   coach: string
@@ -25,7 +41,7 @@ export interface Team {
   active: boolean
 }
 
-export interface CreateTeamPayload {
+interface TeamCorePayload {
   name: string
   coach: string
   city: string
@@ -33,6 +49,9 @@ export interface CreateTeamPayload {
   division: Division
   category: AgeCategory
 }
+
+export type CreateTeamPayload = TeamCorePayload & TeamProfileFields
+export type UpdateTeamPayload = TeamCorePayload & TeamProfileFields
 
 export const FOOTBALL_TYPES: FootballType[] = ['Football11', 'Football8', 'Futsal', 'BeachSoccer']
 export const DIVISIONS: Division[] = ['HonorDivision', 'RegionalLeague', 'First', 'Second']
@@ -46,4 +65,11 @@ export const AGE_CATEGORIES: AgeCategory[] = [
   'Juveniles',
   'Aficionados',
   'Veteranos',
+]
+export const PITCH_SURFACES: PitchSurface[] = [
+  'NaturalGrass',
+  'ArtificialTurf',
+  'Hybrid',
+  'Earth',
+  'Indoor',
 ]

@@ -1,4 +1,5 @@
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Domain.Teams;
 using MediatR;
 
@@ -19,8 +20,9 @@ public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) 
             request.Name,
             request.Coach,
             request.City,
-            new TeamClassification(request.Type, request.Division, request.Category),
-            _clock.UtcNow);
+            request.ToClassification(),
+            _clock.UtcNow,
+            request.ToProfile());
 
         await _repository.AddAsync(team, cancellationToken);
 
