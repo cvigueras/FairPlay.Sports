@@ -56,7 +56,6 @@ const teamDetails = computed(() => {
       modality: team.type,
     },
     { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
-    { label: t('profile.team.category'), value: t(`profile.team.enums.${team.category}`) },
   ]
 })
 
@@ -241,8 +240,13 @@ async function createTeam() {
                 class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
               >
                 <div class="team-name-row">
-                  <ModalityIcon :type="myTeam.type" :size="60" />
-                  <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
+                  <ModalityIcon :type="myTeam.type" :size="68" />
+                  <div class="team-name-col">
+                    <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
+                    <span class="text-body-2 text-medium-emphasis">
+                      {{ t(`profile.team.enums.${myTeam.category}`) }}
+                    </span>
+                  </div>
                 </div>
                 <v-avatar size="120" rounded="lg">
                   <v-img
@@ -514,7 +518,7 @@ async function createTeam() {
 
 /* Team panel: name + crest + "member since" on the left, boxed details on the right. */
 .team-identity {
-  width: 176px;
+  width: 200px;
 }
 
 .team-name {
@@ -522,18 +526,22 @@ async function createTeam() {
   overflow-wrap: anywhere;
 }
 
-/* Keep the club name optically centred against the modality icon. */
+/* Club name + age category sit beside the modality icon, aligned to it. */
 .team-name-row {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
-/* Line the club name up with the top of the modality icon. */
+.team-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .team-name-row .team-name {
-  line-height: 1;
-  padding-top: 2px;
+  line-height: 1.05;
 }
 
 .detail-value span {
