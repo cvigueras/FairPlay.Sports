@@ -5,6 +5,7 @@ using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Teams.Activate;
 using FairPlay.Sports.Application.Teams.Create;
+using FairPlay.Sports.Application.Teams.Update;
 using FairPlay.Sports.Application.Common.Querying;
 using FairPlay.Sports.Application.Teams.GetPage;
 using FairPlay.Sports.Domain.Teams;
@@ -161,6 +162,68 @@ public class TeamsControllerTests
         var response = await _controller.Create(TeamRequestMother.CreateRequest(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task Create_MapsTheProfileFieldsOntoCommand()
+    {
+        var request = TeamRequestMother.CreateRequestWithProfile();
+        _sender.Send(Arg.Any<CreateTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamDto>.Success(TeamMother.Dto()));
+
+        await _controller.Create(request, CancellationToken.None);
+
+        await _sender.Received(1).Send(
+            Arg.Is<CreateTeamCommand>(command =>
+                command.ShortName == request.ShortName &&
+                command.FoundedYear == request.FoundedYear &&
+                command.VenueName == request.VenueName &&
+                command.VenueAddress == request.VenueAddress &&
+                command.VenueSurface == request.VenueSurface &&
+                command.VenueMapsUrl == request.VenueMapsUrl &&
+                command.ColorPrimary == request.ColorPrimary &&
+                command.ColorSecondary == request.ColorSecondary &&
+                command.ContactEmail == request.ContactEmail &&
+                command.ContactPhone == request.ContactPhone &&
+                command.Website == request.Website),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Update_MapsRouteIdAndRequestFieldsOntoCommand_AndReturnsOk()
+    {
+        var id = Guid.NewGuid();
+        var request = TeamRequestMother.UpdateRequest();
+        var dto = TeamMother.Dto(id);
+        _sender.Send(Arg.Any<UpdateTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamDto>.Success(dto));
+
+        var response = await _controller.Update(id, request, CancellationToken.None);
+
+        var okResult = response.Result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult!.Value, Is.SameAs(dto));
+        await _sender.Received(1).Send(
+            Arg.Is<UpdateTeamCommand>(command =>
+                command.Id == id &&
+                command.Name == request.Name &&
+                command.Coach == request.Coach &&
+                command.VenueSurface == request.VenueSurface &&
+                command.VenueMapsUrl == request.VenueMapsUrl &&
+                command.ColorPrimary == request.ColorPrimary),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Update_WhenHandlerReturnsNotFound_Returns404()
+    {
+        var id = Guid.NewGuid();
+        _sender.Send(Arg.Any<UpdateTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamDto>.NotFound($"Team '{id}' was not found."));
+
+        var response = await _controller.Update(id, TeamRequestMother.UpdateRequest(), CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
     }
 
     [Test]

@@ -1,14 +1,18 @@
+using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Domain.Teams;
+using MediatR;
 
-namespace FairPlay.Sports.Api.Teams;
+namespace FairPlay.Sports.Application.Teams.Update;
 
-public sealed record CreateTeamRequest(
+public sealed record UpdateTeamCommand(
+    Guid Id,
     string Name,
     string Coach,
     string City,
-    FootballType Type = default,
-    Division Division = default,
-    AgeCategory Category = default,
+    FootballType Type,
+    Division Division,
+    AgeCategory Category,
     string? ShortName = null,
     int? FoundedYear = null,
     string? VenueName = null,
@@ -19,4 +23,4 @@ public sealed record CreateTeamRequest(
     string? ColorSecondary = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
-    string? Website = null);
+    string? Website = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;

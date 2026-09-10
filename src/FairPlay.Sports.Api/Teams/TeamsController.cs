@@ -7,6 +7,7 @@ using FairPlay.Sports.Application.Teams.Create;
 using FairPlay.Sports.Application.Teams.GetById;
 using FairPlay.Sports.Application.Teams.GetCrest;
 using FairPlay.Sports.Application.Teams.GetPage;
+using FairPlay.Sports.Application.Teams.Update;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -65,7 +66,18 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.City,
             request.Type,
             request.Division,
-            request.Category);
+            request.Category,
+            request.ShortName,
+            request.FoundedYear,
+            request.VenueName,
+            request.VenueAddress,
+            request.VenueSurface,
+            request.VenueMapsUrl,
+            request.ColorPrimary,
+            request.ColorSecondary,
+            request.ContactEmail,
+            request.ContactPhone,
+            request.Website);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
@@ -74,6 +86,39 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(TeamDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TeamDto>> Update(
+        Guid id,
+        UpdateTeamRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateTeamCommand(
+            id,
+            request.Name,
+            request.Coach,
+            request.City,
+            request.Type,
+            request.Division,
+            request.Category,
+            request.ShortName,
+            request.FoundedYear,
+            request.VenueName,
+            request.VenueAddress,
+            request.VenueSurface,
+            request.VenueMapsUrl,
+            request.ColorPrimary,
+            request.ColorSecondary,
+            request.ContactEmail,
+            request.ContactPhone,
+            request.Website);
+
+        var result = await _sender.Send(command, cancellationToken);
+        return result.ToActionResult(this);
     }
 
     [HttpPost("{id:guid}/activate")]

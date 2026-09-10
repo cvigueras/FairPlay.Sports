@@ -2,7 +2,7 @@ using FairPlay.Sports.Domain.Teams;
 
 namespace FairPlay.Sports.Api.Teams;
 
-public sealed record CreateTeamRequest(
+public sealed record UpdateTeamRequest(
     string Name,
     string Coach,
     string City,

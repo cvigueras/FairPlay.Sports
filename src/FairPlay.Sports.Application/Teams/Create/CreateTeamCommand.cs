@@ -10,4 +10,15 @@ public sealed record CreateTeamCommand(
     string City,
     FootballType Type,
     Division Division,
-    AgeCategory Category) : IRequest<Result<TeamDto>>;
+    AgeCategory Category,
+    string? ShortName = null,
+    int? FoundedYear = null,
+    string? VenueName = null,
+    string? VenueAddress = null,
+    PitchSurface? VenueSurface = null,
+    string? VenueMapsUrl = null,
+    string? ColorPrimary = null,
+    string? ColorSecondary = null,
+    string? ContactEmail = null,
+    string? ContactPhone = null,
+    string? Website = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;

@@ -12,7 +12,18 @@ public sealed record TeamDto(
     AgeCategory Category,
     bool HasCrest,
     DateTime CreatedAt,
-    bool Active)
+    bool Active,
+    string? ShortName,
+    int? FoundedYear,
+    string? VenueName,
+    string? VenueAddress,
+    PitchSurface? VenueSurface,
+    string? VenueMapsUrl,
+    string? ColorPrimary,
+    string? ColorSecondary,
+    string? ContactEmail,
+    string? ContactPhone,
+    string? Website)
 {
     public static TeamDto FromDomain(Team team) =>
         new(
@@ -25,5 +36,16 @@ public sealed record TeamDto(
             team.Classification.Category,
             team.HasCrest,
             team.CreatedAt,
-            team.Active);
+            team.Active,
+            team.ShortName,
+            team.FoundedYear,
+            team.HomeVenue?.Name,
+            team.HomeVenue?.Address,
+            team.HomeVenue?.Surface,
+            team.HomeVenue?.MapsUrl,
+            team.Colors?.Primary,
+            team.Colors?.Secondary,
+            team.ContactEmail,
+            team.ContactPhone,
+            team.Website);
 }

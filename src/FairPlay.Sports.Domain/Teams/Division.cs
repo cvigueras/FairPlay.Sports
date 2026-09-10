@@ -14,5 +14,8 @@ public enum Division
     First,
 
     /// <summary>Segunda (Regional).</summary>
-    Second
+    Second,
+
+    /// <summary>Tercera (Regional).</summary>
+    Third
 }

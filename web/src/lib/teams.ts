@@ -1,5 +1,12 @@
 import { baseUrl, http } from '@/lib/http'
-import type { AgeCategory, CreateTeamPayload, Division, FootballType, Team } from '@/types/team'
+import type {
+  AgeCategory,
+  CreateTeamPayload,
+  Division,
+  FootballType,
+  Team,
+  UpdateTeamPayload,
+} from '@/types/team'
 import { toQueryString, type PageParams, type PagedResult } from '@/types/pagination'
 
 export interface TeamFilters {
@@ -34,6 +41,9 @@ export const teamsApi = {
 
   create: (payload: CreateTeamPayload, token?: string | null) =>
     http.post<Team>('/api/Teams', payload, { token }),
+
+  update: (id: string, payload: UpdateTeamPayload, token?: string | null) =>
+    http.put<Team>(`/api/Teams/${id}`, payload, { token }),
 
   uploadCrest: (teamId: string, file: File, token?: string | null) => {
     const form = new FormData()
