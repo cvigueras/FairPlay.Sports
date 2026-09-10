@@ -5,6 +5,7 @@ import { mdiImageOutline, mdiShieldOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
+import ModalityIcon from '@/components/ModalityIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   AGE_CATEGORIES,
@@ -49,7 +50,11 @@ const teamDetails = computed(() => {
   return [
     { label: t('profile.team.coach'), value: team.coach },
     { label: t('profile.team.city'), value: team.city },
-    { label: t('profile.team.type'), value: t(`profile.team.enums.${team.type}`) },
+    {
+      label: t('profile.team.type'),
+      value: t(`profile.team.enums.${team.type}`),
+      modality: team.type,
+    },
     { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
     { label: t('profile.team.category'), value: t(`profile.team.enums.${team.category}`) },
   ]
@@ -235,7 +240,10 @@ async function createTeam() {
               <div
                 class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
               >
-                <p class="text-h6 font-weight-bold text-center team-name">{{ myTeam.name }}</p>
+                <div class="team-name-row">
+                  <ModalityIcon :type="myTeam.type" :size="60" />
+                  <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
+                </div>
                 <v-avatar size="120" rounded="lg">
                   <v-img
                     v-if="myTeam.hasCrest"
@@ -264,7 +272,10 @@ async function createTeam() {
                   class="team-detail-cell"
                 >
                   <div class="text-caption text-medium-emphasis">{{ row.label }}</div>
-                  <div class="text-body-1 font-weight-medium mt-1">{{ row.value }}</div>
+                  <div class="text-body-1 font-weight-medium mt-1 d-flex align-center ga-2 detail-value">
+                    <ModalityIcon v-if="row.modality" :type="row.modality" :size="18" />
+                    <span>{{ row.value }}</span>
+                  </div>
                 </div>
               </div>
             </v-card>
@@ -275,6 +286,24 @@ async function createTeam() {
                 color="primary"
                 class="d-block mx-auto my-10"
               />
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- TEMP: preview of every modality icon -->
+        <v-row>
+          <v-col cols="12">
+            <v-card border flat rounded="xl" class="pa-6 d-flex flex-wrap justify-center ga-10">
+              <div
+                v-for="type in FOOTBALL_TYPES"
+                :key="type"
+                class="d-flex flex-column align-center ga-2"
+              >
+                <ModalityIcon :type="type" :size="56" />
+                <span class="text-caption text-medium-emphasis">
+                  {{ t(`profile.team.enums.${type}`) }}
+                </span>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -485,12 +514,30 @@ async function createTeam() {
 
 /* Team panel: name + crest + "member since" on the left, boxed details on the right. */
 .team-identity {
-  width: 170px;
+  width: 176px;
 }
 
 .team-name {
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+/* Keep the club name optically centred against the modality icon. */
+.team-name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Line the club name up with the top of the modality icon. */
+.team-name-row .team-name {
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.detail-value span {
+  white-space: nowrap;
 }
 
 .team-detail-grid {
