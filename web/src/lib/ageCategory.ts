@@ -8,7 +8,7 @@ import type { AgeCategory } from '@/types/team'
 export const AGE_CATEGORY_COLOR: Record<AgeCategory, string> = {
   Chupetes: '#00897B', // teal
   Prebenjamines: '#0277BD', // light blue
-  Benjamines: '#1565C0', // blue (shared with Futsal)
+  Benjamines: '#3949AB', // indigo
   Alevines: '#5E35B1', // deep purple
   Infantiles: '#8E24AA', // purple
   Cadetes: '#AD1457', // pink
