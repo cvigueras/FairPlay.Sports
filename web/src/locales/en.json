@@ -127,6 +127,8 @@
       "website": "Website",
       "directions": "Directions",
       "viewDetails": "View details",
+      "challenge": "Challenge",
+      "viewSheet": "View sheet",
       "surfaces": {
         "NaturalGrass": "Natural grass",
         "ArtificialTurf": "Artificial turf",

@@ -2,11 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
+  mdiClipboardTextOutline,
   mdiEyeOutline,
   mdiMapMarkerOutline,
   mdiPencilOutline,
   mdiShieldOutline,
   mdiSoccerField,
+  mdiSwordCross,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
@@ -62,14 +64,19 @@ const detailIcon: Record<TeamDetailKind, string> = {
   venue: mdiSoccerField,
 }
 
-/* Info modal for a single detail row. */
-const infoKind = ref<TeamDetailKind | null>(null)
+/* Info modal: a single detail row, or the whole club sheet. */
+type InfoKind = TeamDetailKind | 'sheet'
+const infoKind = ref<InfoKind | null>(null)
 const infoOpen = computed({
   get: () => infoKind.value !== null,
   set: (open: boolean) => {
     if (!open) infoKind.value = null
   },
 })
+
+function challengeTeam() {
+  // TODO: wire up the team-vs-team challenge flow.
+}
 
 onMounted(async () => {
   selectedTeamId.value = user.value?.teamId ?? null
@@ -290,6 +297,25 @@ const venueMapsHref = computed(() => {
                   </div>
                   <div class="text-body-1 font-weight-medium">{{ row.value }}</div>
                 </div>
+
+                <div class="team-detail-side">
+                  <v-btn
+                    color="red"
+                    variant="flat"
+                    :prepend-icon="mdiSwordCross"
+                    @click="challengeTeam"
+                  >
+                    {{ t('profile.team.challenge') }}
+                  </v-btn>
+                  <v-btn
+                    color="blue"
+                    variant="tonal"
+                    :prepend-icon="mdiClipboardTextOutline"
+                    @click="infoKind = 'sheet'"
+                  >
+                    {{ t('profile.team.viewSheet') }}
+                  </v-btn>
+                </div>
               </div>
             </v-card>
 
@@ -488,6 +514,48 @@ const venueMapsHref = computed(() => {
           </v-btn>
         </template>
 
+        <template v-else-if="infoKind === 'sheet'">
+          <h3 class="text-h6 font-weight-bold mb-3">
+            {{ myTeam.name }}<span v-if="myTeam.shortName"> · {{ myTeam.shortName }}</span>
+          </h3>
+          <dl class="team-info-dl">
+            <dt>{{ t('profile.team.category') }}</dt>
+            <dd>{{ t(`profile.team.enums.${myTeam.category}`) }}</dd>
+            <dt>{{ t('profile.team.type') }}</dt>
+            <dd>{{ t(`profile.team.enums.${myTeam.type}`) }}</dd>
+            <dt>{{ t('profile.team.division') }}</dt>
+            <dd>{{ t(`profile.team.enums.${myTeam.division}`) }}</dd>
+            <dt>{{ t('profile.team.city') }}</dt>
+            <dd>{{ myTeam.city }}</dd>
+            <dt>{{ t('profile.team.coach') }}</dt>
+            <dd>{{ myTeam.coach }}</dd>
+            <template v-if="myTeam.foundedYear">
+              <dt>{{ t('profile.team.foundedYear') }}</dt>
+              <dd>{{ myTeam.foundedYear }}</dd>
+            </template>
+            <template v-if="myTeam.venueName">
+              <dt>{{ t('profile.team.venueGroup') }}</dt>
+              <dd>{{ myTeam.venueName }}</dd>
+            </template>
+            <template v-if="myTeam.colorPrimary && myTeam.colorSecondary">
+              <dt>{{ t('profile.team.colorsGroup') }}</dt>
+              <dd>{{ myTeam.colorPrimary }} / {{ myTeam.colorSecondary }}</dd>
+            </template>
+            <template v-if="myTeam.contactEmail">
+              <dt>{{ t('profile.team.contactEmail') }}</dt>
+              <dd>{{ myTeam.contactEmail }}</dd>
+            </template>
+            <template v-if="myTeam.contactPhone">
+              <dt>{{ t('profile.team.contactPhone') }}</dt>
+              <dd>{{ myTeam.contactPhone }}</dd>
+            </template>
+            <template v-if="myTeam.website">
+              <dt>{{ t('profile.team.website') }}</dt>
+              <dd>{{ myTeam.website }}</dd>
+            </template>
+          </dl>
+        </template>
+
         <div class="d-flex justify-end mt-4">
           <v-btn variant="text" @click="infoKind = null">{{ t('common.close') }}</v-btn>
         </div>
@@ -636,6 +704,13 @@ const venueMapsHref = computed(() => {
   padding: 0.65rem 0.9rem;
 }
 
+/* Right-hand actions: "challenge" on top, "view sheet" below. */
+.team-detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 /* Label + info button share one line, so the buttons line up across cells. */
 .team-detail-head {
   min-height: 24px;
@@ -690,8 +765,15 @@ const venueMapsHref = computed(() => {
   }
 
   .team-detail-cell {
-    /* Stacked in the left half; the right column stays empty. */
+    /* Stacked in the left half; the right column holds the actions. */
     grid-column: 1;
+  }
+
+  .team-detail-side {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    justify-content: space-between;
+    align-items: flex-end;
   }
 }
 </style>

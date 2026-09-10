@@ -127,6 +127,8 @@
       "website": "Web",
       "directions": "Cómo llegar",
       "viewDetails": "Ver detalles",
+      "challenge": "Desafiar",
+      "viewSheet": "Ver ficha",
       "surfaces": {
         "NaturalGrass": "Césped natural",
         "ArtificialTurf": "Césped artificial",
