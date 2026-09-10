@@ -246,7 +246,7 @@ const venueMapsHref = computed(() => {
                   <div class="team-name-col">
                     <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
                     <span
-                      class="text-body-2 font-weight-bold"
+                      class="font-weight-bold team-category"
                       :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
                     >
                       {{ t(`profile.team.enums.${myTeam.category}`) }}
@@ -688,13 +688,20 @@ const venueMapsHref = computed(() => {
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
-  gap: 2px;
-  /* Nudge the club name / category up to sit against the icon's top. */
-  margin-top: -0.35rem;
+  gap: 0;
+  /* Nudge the club name / category up to sit against the icon's top and
+     raise the white rule level with the grey divider on the right. */
+  margin-top: -0.6rem;
 }
 
 .team-name-row .team-name {
-  line-height: 1.05;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.team-category {
+  font-size: 0.72rem;
+  line-height: 1.15;
 }
 
 .team-detail-grid {
@@ -715,15 +722,16 @@ const venueMapsHref = computed(() => {
   padding: 0.2rem 0.85rem;
 }
 
-/* Coach keeps only a bottom rule, venue only a top rule; the -1px pull
-   collapses the pair into one crisp divider between them. */
+/* Coach keeps only a bottom rule, venue only a top rule; the -2px pull
+   collapses the pair into one 2px divider - matching the white rule in
+   the identity strip so the two line up exactly. */
 .team-detail-cells .team-detail-cell:first-child {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-bottom: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .team-detail-cells .team-detail-cell + .team-detail-cell {
-  margin-top: -1px;
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  margin-top: -2px;
+  border-top: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 /* Right-hand actions: "challenge" on top, "view sheet" below. */
