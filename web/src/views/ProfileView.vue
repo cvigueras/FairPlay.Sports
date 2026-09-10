@@ -201,7 +201,7 @@ async function createTeam() {
       <template v-if="user.teamId">
         <v-row>
           <v-col cols="12" md="6">
-            <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
+            <v-card border flat rounded="xl" class="px-8 py-3 d-flex align-center ga-6 h-100">
               <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
                 <ProfileAvatar />
                 <div class="member-since">
@@ -233,7 +233,7 @@ async function createTeam() {
               border
               flat
               rounded="xl"
-              class="pa-6 d-flex ga-6 h-100 team-panel"
+              class="px-8 py-3 d-flex ga-6 h-100 team-panel"
             >
               <div
                 class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
@@ -289,7 +289,7 @@ async function createTeam() {
               </div>
             </v-card>
 
-            <v-card v-else border flat rounded="xl" class="pa-6 h-100">
+            <v-card v-else border flat rounded="xl" class="px-8 py-3 h-100">
               <v-progress-circular
                 indeterminate
                 color="primary"
@@ -569,11 +569,13 @@ async function createTeam() {
 }
 
 .team-identity {
-  width: 248px;
+  width: 264px;
   align-self: stretch;
-  /* Bleed to the card's top / left / bottom edges and up to the divider. */
-  margin: -1.5rem;
-  padding: 1.5rem;
+  /* Bleed to the card's top / left / bottom edges and up to the divider
+     (card padding is 0.75rem block / 2rem inline; the right -1.5rem just
+     cancels the flex gap). */
+  margin: -0.75rem -1.5rem -0.75rem -2rem;
+  padding: 0.75rem 2rem;
   background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
@@ -583,7 +585,7 @@ async function createTeam() {
      back on; Vuetify's own height/max-height would otherwise cap it. */
   height: auto;
   max-height: none;
-  margin-block: -1.5rem;
+  margin-block: -0.75rem;
 }
 
 .team-name {
@@ -640,7 +642,7 @@ async function createTeam() {
 
   .team-identity {
     width: 100%;
-    margin: -1.5rem -1.5rem 1.5rem;
+    margin: -0.75rem -2rem 0.75rem;
   }
 
   .team-detail-grid {
