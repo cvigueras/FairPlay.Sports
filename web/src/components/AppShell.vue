@@ -102,6 +102,13 @@ async function handleLogout(): Promise<void> {
     <v-spacer />
 
     <template #append>
+      <span
+        v-if="auth.currentUser"
+        class="text-body-2 font-weight-bold mx-3 d-none d-sm-inline"
+      >
+        {{ t('profile.welcome', { name: auth.currentUser.userName }) }}
+      </span>
+
       <v-menu>
         <template #activator="{ props }">
           <v-btn v-bind="props" :prepend-icon="mdiTranslate" variant="text">
@@ -141,14 +148,26 @@ async function handleLogout(): Promise<void> {
     </v-list>
 
     <template #append>
-      <v-list nav density="comfortable">
-        <v-list-item
-          :prepend-icon="mdiLogout"
-          :title="t('profile.logout')"
-          :disabled="isLoggingOut"
+      <div class="pa-2">
+        <v-btn
+          v-if="rail"
+          :icon="mdiLogout"
+          variant="outlined"
+          :loading="isLoggingOut"
+          :aria-label="t('profile.logout')"
           @click="handleLogout"
         />
-      </v-list>
+        <v-btn
+          v-else
+          block
+          variant="outlined"
+          :prepend-icon="mdiLogout"
+          :loading="isLoggingOut"
+          @click="handleLogout"
+        >
+          {{ isLoggingOut ? t('profile.loggingOut') : t('profile.logout') }}
+        </v-btn>
+      </div>
     </template>
   </v-navigation-drawer>
 

@@ -13,6 +13,7 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import TeamCrest from '@/components/TeamCrest.vue'
+import ModalityIcon from '@/components/ModalityIcon.vue'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -132,7 +133,11 @@ const formatLongDate = (iso: string) =>
 function fields(team: Team) {
   return [
     { label: t('teams.fields.city'), value: team.city },
-    { label: t('teams.fields.type'), value: t(`profile.team.enums.${team.type}`) },
+    {
+      label: t('teams.fields.type'),
+      value: t(`profile.team.enums.${team.type}`),
+      modality: team.type,
+    },
     { label: t('teams.fields.division'), value: t(`profile.team.enums.${team.division}`) },
     { label: t('teams.fields.category'), value: t(`profile.team.enums.${team.category}`) },
   ]
@@ -267,19 +272,22 @@ function fields(team: Team) {
                   </div>
                 </div>
               </div>
+              <v-divider class="team-coach-rule" />
               <div class="team-coach">
                 <v-icon :icon="mdiAccountTieOutline" size="18" class="team-coach-icon" />
                 <span class="text-body-2 font-weight-medium">{{ team.coach }}</span>
                 <v-tooltip activator="parent" location="top" :text="t('teams.fields.coach')" />
               </div>
-              <v-divider class="team-coach-rule" />
             </div>
 
             <div class="team-fields">
               <div v-for="field in fields(team)" :key="field.label" class="team-field">
                 <div class="text-caption text-medium-emphasis">{{ field.label }}</div>
                 <v-divider class="my-1" />
-                <div class="text-body-1 font-weight-medium">{{ field.value }}</div>
+                <div class="text-body-1 font-weight-medium d-flex align-center ga-2">
+                  <ModalityIcon v-if="field.modality" :type="field.modality" :size="20" />
+                  <span>{{ field.value }}</span>
+                </div>
               </div>
             </div>
           </v-card>
@@ -450,11 +458,15 @@ function fields(team: Team) {
 }
 
 .team-coach {
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   min-width: 0;
+  /* Cancel the column gap so the name hugs the rule above it. */
+  margin-top: -0.5rem;
+  line-height: 1.2;
 }
 
 .team-coach-icon {
@@ -535,35 +547,13 @@ function fields(team: Team) {
   .team-crest-col {
     width: 260px;
     margin: -1.5rem 0 -1.5rem -1.5rem;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 0.85rem;
   }
 }
 
 @media (min-width: 860px) {
   .team-fields {
     grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Multiple teams per row: the cards are narrower, so stack their internals again. */
-@media (min-width: 1000px) {
-  .teams-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .team-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .team-crest-col {
-    width: auto;
-    margin: -1.5rem -1.5rem 0;
-    padding: 1.5rem 1.5rem 0;
-  }
-
-  .team-fields {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

@@ -6,7 +6,7 @@
   },
   "nav": {
     "home": "Home",
-    "profile": "Profile",
+    "profile": "My teams",
     "teams": "Teams",
     "standings": "Standings"
   },
@@ -69,6 +69,7 @@
   "profile": {
     "logout": "Log out",
     "loggingOut": "Logging out...",
+    "welcome": "Welcome, {name}",
     "activation": {
       "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
     },
@@ -78,18 +79,9 @@
       "uploadFailed": "Could not upload the photo."
     },
     "fields": {
-      "userName": "Username",
-      "email": "Email",
-      "role": "Role",
-      "memberSince": "Member since",
-      "status": "Status"
-    },
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "memberSince": "Member since"
     },
     "team": {
-      "title": "My team",
       "select": "Team",
       "selectPlaceholder": "Pick your team",
       "noCrest": "This team has no crest yet.",

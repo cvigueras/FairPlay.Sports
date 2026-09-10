@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { mdiCircle, mdiImageOutline, mdiLogout, mdiTranslate } from '@mdi/js'
+import { mdiImageOutline, mdiShieldOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
+import ModalityIcon from '@/components/ModalityIcon.vue'
+import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { useAuthStore } from '@/stores/auth'
-import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -18,45 +18,15 @@ import {
   type Team,
 } from '@/types/team'
 
-const router = useRouter()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
 
 const user = computed(() => auth.currentUser)
-const isLoggingOut = ref(false)
 
-const memberSince = computed(() => {
-  if (!user.value) return ''
-  return new Date(user.value.createdAt).toLocaleDateString(locale.value, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-})
+const formatLongDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
-const details = computed(() => {
-  if (!user.value) return []
-  return [
-    { label: t('profile.fields.userName'), value: user.value.userName },
-    { label: t('profile.fields.email'), value: user.value.email },
-    { label: t('profile.fields.role'), value: user.value.role },
-    { label: t('profile.fields.memberSince'), value: memberSince.value },
-    {
-      label: t('profile.fields.status'),
-      value: user.value.active ? t('profile.status.active') : t('profile.status.inactive'),
-    },
-  ]
-})
-
-async function handleLogout() {
-  isLoggingOut.value = true
-  try {
-    await auth.logout()
-    await router.push('/login')
-  } finally {
-    isLoggingOut.value = false
-  }
-}
+const memberSince = computed(() => (user.value ? formatLongDate(user.value.createdAt) : ''))
 
 /* ---- My team ---------------------------------------------------------------- */
 
@@ -79,15 +49,11 @@ const teamDetails = computed(() => {
   const team = myTeam.value
   if (!team) return []
   return [
-    { label: t('profile.team.name'), value: team.name },
     { label: t('profile.team.coach'), value: team.coach },
-    { label: t('profile.team.city'), value: team.city },
-    { label: t('profile.team.type'), value: t(`profile.team.enums.${team.type}`) },
-    { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
-    { label: t('profile.team.category'), value: t(`profile.team.enums.${team.category}`) },
     {
-      label: t('profile.fields.status'),
-      value: team.active ? t('profile.status.active') : t('profile.status.inactive'),
+      label: t('profile.team.type'),
+      value: t(`profile.team.enums.${team.type}`),
+      modality: team.type,
     },
   ]
 })
@@ -219,53 +185,6 @@ async function createTeam() {
 </script>
 
 <template>
-  <v-app-bar flat border="b" color="surface">
-    <v-app-bar-title>
-      <span class="d-inline-flex align-center ga-2 font-weight-bold">
-        <v-icon :icon="mdiCircle" color="primary" size="12" />
-        {{ t('common.appName') }}
-      </span>
-    </v-app-bar-title>
-
-    <template #append>
-      <v-menu>
-        <template #activator="{ props }">
-          <v-btn
-            variant="text"
-            :prepend-icon="mdiTranslate"
-            :aria-label="t('language.label')"
-            v-bind="props"
-          >
-            {{ locale.toUpperCase() }}
-          </v-btn>
-        </template>
-        <v-list density="compact">
-          <v-list-item
-            v-for="code in SUPPORTED_LOCALES"
-            :key="code"
-            :active="code === locale"
-            @click="setLocale(code)"
-          >
-            <v-list-item-title>{{ t(`language.${code}`) }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-
-      <span v-if="user" class="text-body-2 text-medium-emphasis mx-3 d-none d-sm-inline">
-        {{ user.userName }}
-      </span>
-
-      <v-btn
-        variant="outlined"
-        :prepend-icon="mdiLogout"
-        :loading="isLoggingOut"
-        @click="handleLogout"
-      >
-        {{ isLoggingOut ? t('profile.loggingOut') : t('profile.logout') }}
-      </v-btn>
-    </template>
-  </v-app-bar>
-
   <v-main>
     <v-container v-if="user" class="py-10 profile-container">
       <v-alert
@@ -278,80 +197,141 @@ async function createTeam() {
         {{ t('profile.activation.needsTeam') }}
       </v-alert>
 
-      <!-- Has a team: profile on the left, the team's details on the right -->
-      <v-row v-if="user.teamId">
-        <v-col cols="12" md="6" class="d-flex flex-column ga-6">
-          <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
-            <ProfileAvatar />
-            <div class="flex-grow-1 overflow-hidden ms-6">
-              <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
-              <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
-              <v-chip
-                :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'"
-                size="small"
-                variant="tonal"
-                class="mt-1"
+      <!-- Has a team: the user's profile on top, the team's details below. -->
+      <template v-if="user.teamId">
+        <v-row>
+          <v-col cols="12">
+            <v-card border flat rounded="xl" class="px-8 py-3 d-flex align-center ga-6">
+              <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+                <ProfileAvatar />
+                <div class="member-since">
+                  <div class="member-since-label text-medium-emphasis">
+                    {{ t('profile.fields.memberSince') }}
+                  </div>
+                  <div class="member-since-bar"></div>
+                  <div class="member-since-value font-weight-medium">{{ memberSince }}</div>
+                </div>
+              </div>
+              <div class="flex-grow-1 overflow-hidden ms-6">
+                <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
+                <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
+                <v-chip
+                  :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'"
+                  size="small"
+                  variant="tonal"
+                  class="mt-1"
+                >
+                  {{ user.role }}
+                </v-chip>
+              </div>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12">
+            <v-card
+              v-if="myTeam"
+              border
+              flat
+              rounded="xl"
+              class="px-8 py-3 d-flex ga-6 team-panel"
+            >
+              <div
+                class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
               >
-                {{ user.role }}
-              </v-chip>
-            </div>
-          </v-card>
+                <div class="team-name-row">
+                  <ModalityIcon :type="myTeam.type" :size="68" />
+                  <div class="team-name-col">
+                    <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
+                    <span
+                      class="text-body-2 font-weight-bold"
+                      :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
+                    >
+                      {{ t(`profile.team.enums.${myTeam.category}`) }}
+                    </span>
+                  </div>
+                </div>
+                <v-avatar size="88" rounded="0" color="transparent">
+                  <v-img
+                    v-if="myTeam.hasCrest"
+                    :src="teamsApi.crestUrl(myTeam.id)"
+                    :alt="myTeam.name"
+                  />
+                  <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
+                </v-avatar>
+                <div class="team-meta">
+                  <div class="team-meta-division">
+                    <div class="team-meta-label text-medium-emphasis">
+                      {{ t('profile.team.division') }}
+                    </div>
+                    <div class="team-meta-bar"></div>
+                    <div class="team-meta-value font-weight-medium">
+                      {{ t(`profile.team.enums.${myTeam.division}`) }}
+                    </div>
+                  </div>
+                  <span class="team-meta-city text-medium-emphasis">{{ myTeam.city }}</span>
+                </div>
+              </div>
 
-          <v-card border flat rounded="xl" class="flex-grow-1">
-            <v-list>
-              <template v-for="(row, index) in details" :key="row.label">
-                <v-divider v-if="index > 0" />
-                <v-list-item class="py-3">
-                  <template #subtitle>
-                    <span class="text-caption text-uppercase">{{ row.label }}</span>
-                  </template>
-                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-list>
-          </v-card>
-        </v-col>
+              <v-divider vertical class="d-none d-sm-block team-panel-divider" />
 
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
+              <div class="flex-grow-1 team-detail-grid">
+                <div
+                  v-for="row in teamDetails"
+                  :key="row.label"
+                  class="team-detail-cell"
+                >
+                  <div class="text-caption text-medium-emphasis">{{ row.label }}</div>
+                  <div class="text-body-1 font-weight-medium mt-1 d-flex align-center ga-2 detail-value">
+                    <ModalityIcon v-if="row.modality" :type="row.modality" :size="18" />
+                    <span>{{ row.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </v-card>
 
-            <template v-if="myTeam">
-              <v-img
-                v-if="myTeam.hasCrest"
-                :src="teamsApi.crestUrl(myTeam.id)"
-                :alt="myTeam.name"
-                height="180"
-                class="mx-auto mb-4"
-                style="max-width: 220px"
+            <v-card v-else border flat rounded="xl" class="px-8 py-3">
+              <v-progress-circular
+                indeterminate
+                color="primary"
+                class="d-block mx-auto my-10"
               />
-              <v-list>
-                <template v-for="(row, index) in teamDetails" :key="row.label">
-                  <v-divider v-if="index > 0" />
-                  <v-list-item class="py-3">
-                    <template #subtitle>
-                      <span class="text-caption text-uppercase">{{ row.label }}</span>
-                    </template>
-                    <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                  </v-list-item>
-                </template>
-              </v-list>
-            </template>
-            <v-progress-circular
-              v-else
-              indeterminate
-              color="primary"
-              class="d-block mx-auto my-10"
-            />
-          </v-card>
-        </v-col>
-      </v-row>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- TEMP: preview of every modality icon -->
+        <v-row>
+          <v-col cols="12">
+            <v-card border flat rounded="xl" class="pa-6 d-flex flex-wrap justify-center ga-10">
+              <div
+                v-for="type in FOOTBALL_TYPES"
+                :key="type"
+                class="d-flex flex-column align-center ga-2"
+              >
+                <ModalityIcon :type="type" :size="56" />
+                <span class="text-caption text-medium-emphasis">
+                  {{ t(`profile.team.enums.${type}`) }}
+                </span>
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
+      </template>
 
       <v-row v-if="!user.teamId">
         <!-- Top left: profile summary -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6 h-100">
-            <ProfileAvatar />
+            <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
+              <ProfileAvatar />
+              <div class="member-since">
+                <div class="member-since-label text-medium-emphasis">
+                  {{ t('profile.fields.memberSince') }}
+                </div>
+                <div class="member-since-bar"></div>
+                <div class="member-since-value font-weight-medium">{{ memberSince }}</div>
+              </div>
+            </div>
             <div class="flex-grow-1 overflow-hidden ms-6">
               <p class="text-h6 font-weight-bold text-truncate">{{ user.userName }}</p>
               <p class="text-body-2 text-medium-emphasis text-truncate">{{ user.email }}</p>
@@ -370,8 +350,6 @@ async function createTeam() {
         <!-- Top right: the team the user belongs to -->
         <v-col cols="12" md="6">
           <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.title') }}</h2>
-
             <v-select
               v-model="selectedTeamId"
               :items="teams"
@@ -434,25 +412,8 @@ async function createTeam() {
       </v-row>
 
       <v-row v-if="!user.teamId" class="mt-6">
-        <!-- Bottom left: profile details -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl">
-            <v-list>
-              <template v-for="(row, index) in details" :key="row.label">
-                <v-divider v-if="index > 0" />
-                <v-list-item class="py-3">
-                  <template #subtitle>
-                    <span class="text-caption text-uppercase">{{ row.label }}</span>
-                  </template>
-                  <v-list-item-title class="font-weight-medium">{{ row.value }}</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-list>
-          </v-card>
-        </v-col>
-
-        <!-- Bottom right: create a new team -->
-        <v-col cols="12" md="6">
+        <!-- Create a new team -->
+        <v-col cols="12" md="6" offset-md="6">
           <v-card border flat rounded="xl" class="pa-6">
             <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.createTitle') }}</h2>
 
@@ -534,3 +495,159 @@ async function createTeam() {
     </v-container>
   </v-main>
 </template>
+
+<style scoped>
+/* "Member since" block under the avatar, mirroring the Teams list card. */
+.member-since {
+  min-width: 0;
+  text-align: center;
+}
+
+.member-since-label {
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.member-since-bar {
+  width: 100%;
+  height: 3px;
+  margin: 4px 0;
+  border-radius: 2px;
+  background: #86efac;
+}
+
+.member-since-value {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+/* Division block (label + green rule + value) on the left, city on the right. */
+.team-meta {
+  align-self: stretch;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-meta-division {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: center;
+  min-width: 90px;
+}
+
+.team-meta-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.team-meta-bar {
+  height: 3px;
+  margin: 4px 0;
+  border-radius: 2px;
+  background: #86efac;
+}
+
+.team-meta-value {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.team-meta-city {
+  margin-left: auto;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
+/* Team panel: shaded identity strip on the left, boxed details on the right,
+   split by a rule that runs the full height of the card. */
+.team-panel {
+  overflow: hidden;
+}
+
+.team-identity {
+  width: 264px;
+  align-self: stretch;
+  /* Bleed to the card's top / left / bottom edges and up to the divider
+     (card padding is 0.75rem block / 2rem inline; the right -1.5rem just
+     cancels the flex gap). */
+  margin: -0.75rem -1.5rem -0.75rem -2rem;
+  padding: 0.75rem 2rem;
+  background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.team-panel-divider {
+  align-self: stretch;
+  /* Let flex stretch size it so the negative margins add the card padding
+     back on; Vuetify's own height/max-height would otherwise cap it. */
+  height: auto;
+  max-height: none;
+  margin-block: -0.75rem;
+}
+
+.team-name {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* Icon pinned left (in line with the division block); name/category
+   right-anchored so a longer club name grows leftwards, its right edge
+   lining up with the city value below. */
+.team-name-row {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.team-name-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 2px;
+}
+
+.team-name-row .team-name {
+  line-height: 1.05;
+}
+
+.detail-value span {
+  white-space: nowrap;
+}
+
+.team-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  align-content: center;
+}
+
+.team-detail-cell {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+}
+
+@media (max-width: 599px) {
+  .team-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .team-identity {
+    /* Full-bleed: 100% + the two -2rem margins so it spans the whole card. */
+    width: calc(100% + 4rem);
+    margin: -0.75rem -2rem 0.75rem;
+  }
+
+  .team-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
