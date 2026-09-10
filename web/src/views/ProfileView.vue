@@ -711,20 +711,19 @@ const venueMapsHref = computed(() => {
 }
 
 .team-detail-cell {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  border-radius: 12px;
+  border: 0;
   padding: 0.2rem 0.85rem;
+}
+
+/* Coach keeps only a bottom rule, venue only a top rule; the -1px pull
+   collapses the pair into one crisp divider between them. */
+.team-detail-cells .team-detail-cell:first-child {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .team-detail-cells .team-detail-cell + .team-detail-cell {
   margin-top: -1px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.team-detail-cells .team-detail-cell:first-child {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 /* Right-hand actions: "challenge" on top, "view sheet" below. */
