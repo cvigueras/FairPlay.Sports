@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import ModalityIcon from '@/components/ModalityIcon.vue'
+import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { useAuthStore } from '@/stores/auth'
 import {
   AGE_CATEGORIES,
@@ -243,7 +244,10 @@ async function createTeam() {
                   <ModalityIcon :type="myTeam.type" :size="68" />
                   <div class="team-name-col">
                     <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
-                    <span class="text-body-2 text-medium-emphasis">
+                    <span
+                      class="text-body-2 font-weight-bold"
+                      :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
+                    >
                       {{ t(`profile.team.enums.${myTeam.category}`) }}
                     </span>
                   </div>
