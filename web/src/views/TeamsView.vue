@@ -4,16 +4,24 @@ import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
-  mdiAccountTieOutline,
+  mdiAccountOutline,
+  mdiClipboardTextOutline,
   mdiFilterRemoveOutline,
   mdiFilterVariant,
   mdiMagnifyRemoveOutline,
+  mdiMapMarkerOutline,
+  mdiSoccer,
+  mdiSoccerField,
+  mdiSwordCross,
+  mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import TeamCrest from '@/components/TeamCrest.vue'
-import ModalityIcon from '@/components/ModalityIcon.vue'
+import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
+import { DIVISION_COLOR } from '@/lib/division'
+import { MODALITY_COLOR } from '@/lib/modality'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -25,7 +33,7 @@ import {
 } from '@/types/team'
 import type { PagedResult } from '@/types/pagination'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const auth = useAuthStore()
 const { smAndDown } = useDisplay()
 
@@ -126,21 +134,11 @@ function clearFilters() {
   reload()
 }
 
-const formatLongDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
+/** The team whose full sheet is open in the modal, or null when closed. */
+const sheetTeam = ref<Team | null>(null)
 
-/** Fields laid out in a three-column grid (name and coach show by the crest). */
-function fields(team: Team) {
-  return [
-    { label: t('teams.fields.city'), value: team.city },
-    {
-      label: t('teams.fields.type'),
-      value: t(`profile.team.enums.${team.type}`),
-      modality: team.type,
-    },
-    { label: t('teams.fields.division'), value: t(`profile.team.enums.${team.division}`) },
-    { label: t('teams.fields.category'), value: t(`profile.team.enums.${team.category}`) },
-  ]
+function challengeTeam(_team: Team) {
+  // TODO: wire up the team-vs-team challenge flow.
 }
 </script>
 
@@ -250,47 +248,81 @@ function fields(team: Team) {
           </div>
 
           <div class="teams-grid">
-          <v-card
-            v-for="team in result.items"
-            :key="team.id"
-            border
-            flat
-            rounded="xl"
-            class="team-card pa-4 pa-sm-6"
-          >
-            <div class="team-crest-col">
-              <div class="team-name text-h6 font-weight-bold">{{ team.name }}</div>
-              <div class="team-crest-row">
-                <TeamCrest :team="team" :size="72" />
-                <div class="member-since">
-                  <div class="member-since-label text-medium-emphasis">
-                    {{ t('teams.fields.memberSince') }}
-                  </div>
-                  <div class="member-since-bar"></div>
-                  <div class="member-since-value font-weight-medium">
-                    {{ formatLongDate(team.createdAt) }}
-                  </div>
+            <v-card
+              v-for="team in result.items"
+              :key="team.id"
+              border
+              flat
+              rounded="xl"
+              class="bkt bkt2 px-4 py-3 px-md-6"
+            >
+              <div class="bkt-crest">
+                <TeamCrest :team="team" :size="76" />
+              </div>
+              <div class="bkt-body">
+                <div class="bkt-row1">
+                  <span class="text-subtitle-1 font-weight-bold">{{ team.name }}</span>
+                  <span class="text-disabled">·</span>
+                  <span
+                    class="text-subtitle-1 font-weight-bold"
+                    :style="{ color: AGE_CATEGORY_COLOR[team.category] }"
+                  >
+                    {{ t(`profile.team.enums.${team.category}`) }}
+                  </span>
+                </div>
+                <div class="bkt-chips">
+                  <v-chip
+                    size="x-small"
+                    variant="tonal"
+                    :color="MODALITY_COLOR[team.type]"
+                    :prepend-icon="mdiSoccer"
+                  >
+                    {{ t(`profile.team.enums.${team.type}`) }}
+                  </v-chip>
+                  <v-chip
+                    size="x-small"
+                    variant="tonal"
+                    :color="DIVISION_COLOR[team.division]"
+                    :prepend-icon="mdiTrophyOutline"
+                  >
+                    {{ t(`profile.team.enums.${team.division}`) }}
+                  </v-chip>
+                  <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
+                    {{ team.city }}
+                  </v-chip>
+                </div>
+                <div class="bkt-meta text-body-2 text-medium-emphasis">
+                  <span>
+                    <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
+                    {{ team.coach }}
+                  </span>
+                  <span v-if="team.venueName">
+                    <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
+                    {{ team.venueName }}
+                  </span>
                 </div>
               </div>
-              <v-divider class="team-coach-rule" />
-              <div class="team-coach">
-                <v-icon :icon="mdiAccountTieOutline" size="18" class="team-coach-icon" />
-                <span class="text-body-2 font-weight-medium">{{ team.coach }}</span>
-                <v-tooltip activator="parent" location="top" :text="t('teams.fields.coach')" />
+              <div class="bkt-actions">
+                <v-btn
+                  color="red"
+                  variant="outlined"
+                  size="small"
+                  :prepend-icon="mdiSwordCross"
+                  @click="challengeTeam(team)"
+                >
+                  {{ t('profile.team.challenge') }}
+                </v-btn>
+                <v-btn
+                  color="blue"
+                  variant="outlined"
+                  size="small"
+                  :prepend-icon="mdiClipboardTextOutline"
+                  @click="sheetTeam = team"
+                >
+                  {{ t('profile.team.viewSheet') }}
+                </v-btn>
               </div>
-            </div>
-
-            <div class="team-fields">
-              <div v-for="field in fields(team)" :key="field.label" class="team-field">
-                <div class="text-caption text-medium-emphasis">{{ field.label }}</div>
-                <v-divider class="my-1" />
-                <div class="text-body-1 font-weight-medium d-flex align-center ga-2">
-                  <ModalityIcon v-if="field.modality" :type="field.modality" :size="20" />
-                  <span>{{ field.value }}</span>
-                </div>
-              </div>
-            </div>
-          </v-card>
+            </v-card>
           </div>
         </template>
       </div>
@@ -311,6 +343,59 @@ function fields(team: Team) {
         </div>
       </footer>
     </div>
+
+    <!-- Full club-sheet modal ("view sheet" action) -->
+    <v-dialog
+      :model-value="sheetTeam !== null"
+      max-width="420"
+      @update:model-value="sheetTeam = null"
+    >
+      <v-card v-if="sheetTeam" border flat rounded="xl" class="pa-6">
+        <h3 class="text-h6 font-weight-bold mb-3">
+          {{ sheetTeam.name }}<span v-if="sheetTeam.shortName"> · {{ sheetTeam.shortName }}</span>
+        </h3>
+        <dl class="team-info-dl">
+          <dt>{{ t('profile.team.category') }}</dt>
+          <dd>{{ t(`profile.team.enums.${sheetTeam.category}`) }}</dd>
+          <dt>{{ t('profile.team.type') }}</dt>
+          <dd>{{ t(`profile.team.enums.${sheetTeam.type}`) }}</dd>
+          <dt>{{ t('profile.team.division') }}</dt>
+          <dd>{{ t(`profile.team.enums.${sheetTeam.division}`) }}</dd>
+          <dt>{{ t('profile.team.city') }}</dt>
+          <dd>{{ sheetTeam.city }}</dd>
+          <dt>{{ t('profile.team.coach') }}</dt>
+          <dd>{{ sheetTeam.coach }}</dd>
+          <template v-if="sheetTeam.foundedYear">
+            <dt>{{ t('profile.team.foundedYear') }}</dt>
+            <dd>{{ sheetTeam.foundedYear }}</dd>
+          </template>
+          <template v-if="sheetTeam.venueName">
+            <dt>{{ t('profile.team.venueGroup') }}</dt>
+            <dd>{{ sheetTeam.venueName }}</dd>
+          </template>
+          <template v-if="sheetTeam.colorPrimary && sheetTeam.colorSecondary">
+            <dt>{{ t('profile.team.colorsGroup') }}</dt>
+            <dd>{{ sheetTeam.colorPrimary }} / {{ sheetTeam.colorSecondary }}</dd>
+          </template>
+          <template v-if="sheetTeam.contactEmail">
+            <dt>{{ t('profile.team.contactEmail') }}</dt>
+            <dd>{{ sheetTeam.contactEmail }}</dd>
+          </template>
+          <template v-if="sheetTeam.contactPhone">
+            <dt>{{ t('profile.team.contactPhone') }}</dt>
+            <dd>{{ sheetTeam.contactPhone }}</dd>
+          </template>
+          <template v-if="sheetTeam.website">
+            <dt>{{ t('profile.team.website') }}</dt>
+            <dd>{{ sheetTeam.website }}</dd>
+          </template>
+        </dl>
+
+        <div class="d-flex justify-end mt-4">
+          <v-btn variant="text" @click="sheetTeam = null">{{ t('common.close') }}</v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
   </v-main>
 </template>
 
@@ -427,133 +512,91 @@ function fields(team: Team) {
   gap: 1rem;
 }
 
-.team-card {
+/* Club panel — shared visual language with the "My teams" screen: crest on
+   the left, name + age category, colour-coded chips, coach / venue line, and
+   the challenge / view-sheet actions stacked on the right. */
+.bkt {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 1.25rem;
+  overflow: hidden;
 }
-
-.team-crest-col {
-  flex: 0 0 auto;
+.bkt-crest {
+  flex-shrink: 0;
+}
+.bkt2 .bkt-crest {
+  margin-right: 0.75rem;
+}
+/* Slightly larger chip text without growing the fixed x-small chip height. */
+.bkt2 .bkt-chips :deep(.v-chip) {
+  font-size: 0.75rem;
+}
+.bkt-body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  text-align: center;
-  /* Very light grey panel that bleeds to the card edges, down to the rule. */
-  margin: -1rem -1rem 0;
-  padding: 1rem 1rem 0;
-  background: rgba(var(--v-theme-on-surface), 0.04);
-}
-
-.team-name {
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.team-crest-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.team-coach {
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.4rem;
-  min-width: 0;
-  /* Cancel the column gap so the name hugs the rule above it. */
-  margin-top: -0.5rem;
-  line-height: 1.2;
 }
-
-.team-coach-icon {
-  flex: 0 0 auto;
-  opacity: 0.7;
+.bkt-row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
-
-/* Full-bleed: cancel the card's padding (pa-4 / pa-sm-6) so it meets both edges. */
-.team-coach-rule {
-  align-self: stretch;
-  width: auto;
-  margin-inline: -1rem;
+.bkt-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
 }
-
-@media (min-width: 600px) {
-  .team-coach-rule {
-    margin-inline: -1.5rem;
-  }
+.bkt-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
-
-.member-since {
+.bkt-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   min-width: 0;
 }
-
-.member-since-label {
-  font-size: 0.68rem;
-  line-height: 1.2;
+.bkt-actions {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.member-since-bar {
-  width: 100%;
-  height: 3px;
-  margin: 4px 0;
-  border-radius: 2px;
-  background: #86efac;
-}
-
-.member-since-value {
-  font-size: 0.75rem;
-  line-height: 1.25;
-}
-
-.team-fields {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem 2rem;
-  align-content: center;
-}
-
-.team-field {
-  min-width: 0;
-}
-
-/* One card per row on phones: tighten the vertical rhythm. */
+/* Phones: let the actions drop below the body as a full-width row. */
 @media (max-width: 599px) {
-  .team-card {
-    gap: 0.65rem;
+  .bkt {
+    flex-wrap: wrap;
   }
-
-  .team-crest-col {
-    gap: 0.45rem;
-    padding-block: 0.75rem 0;
-  }
-
-  .team-fields {
-    gap: 0.6rem 1.5rem;
-  }
-}
-
-@media (min-width: 600px) {
-  .team-card {
+  .bkt-actions {
     flex-direction: row;
-    align-items: center;
+    width: 100%;
   }
-
-  .team-crest-col {
-    width: 260px;
-    margin: -1.5rem 0 -1.5rem -1.5rem;
-    padding: 1.5rem 1.5rem 0.85rem;
+  .bkt-actions :deep(.v-btn) {
+    flex: 1;
   }
 }
 
-@media (min-width: 860px) {
-  .team-fields {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.team-info-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 1rem;
+  row-gap: 0.35rem;
+  margin: 0;
+}
+
+.team-info-dl dt {
+  font-size: 0.75rem;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.team-info-dl dd {
+  margin: 0;
+  font-weight: 500;
 }
 </style>
