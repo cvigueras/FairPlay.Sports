@@ -282,8 +282,9 @@ const venueMapsHref = computed(() => {
                       <v-btn
                         :icon="detailIcon[row.kind]"
                         variant="text"
-                        size="x-small"
+                        size="small"
                         density="comfortable"
+                        class="team-detail-info-btn"
                         :aria-label="t('profile.team.viewDetails')"
                         @click="infoKind = row.kind"
                       />
@@ -718,10 +719,25 @@ const venueMapsHref = computed(() => {
 }
 
 .team-detail-cell {
+  position: relative;
   border: 0;
   /* Thin rule closing off the right edge of the coach / venue rows. */
   border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   padding: 0.2rem 0.85rem;
+}
+
+/* Pull the eye / pitch button out of the label row and centre it on the
+   cell's vertical midline, off the right rule. */
+.team-detail-info-btn {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.team-detail-info-btn :deep(.v-icon) {
+  font-size: 26px;
+  color: rgba(var(--v-theme-on-surface), 0.32);
 }
 
 /* Coach keeps only a bottom rule, venue only a top rule; the -2px pull
