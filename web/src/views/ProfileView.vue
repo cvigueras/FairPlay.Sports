@@ -788,11 +788,19 @@ const venueMapsHref = computed(() => {
 
   .team-detail-grid {
     grid-template-columns: repeat(2, 1fr);
+    /* Cancel the flex gap after the divider so the coach / venue rows
+       sit flush against the shaded identity strip. */
+    margin-left: -1.5rem;
   }
 
   .team-detail-cells {
     /* Stacked in the left half; the right column holds the actions. */
     grid-column: 1;
+  }
+
+  .team-detail-cell {
+    /* Flush left against the strip, just a hairline's clearance. */
+    padding-left: 0.5rem;
   }
 
   .team-detail-side {
