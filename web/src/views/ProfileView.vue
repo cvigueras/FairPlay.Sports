@@ -12,11 +12,11 @@ import {
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
-import ModalityIcon from '@/components/ModalityIcon.vue'
 import TeamForm from '@/components/TeamForm.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
+import { MODALITY_COLOR } from '@/lib/modality'
 import { useAuthStore } from '@/stores/auth'
-import { FOOTBALL_TYPES, type CreateTeamPayload, type Team } from '@/types/team'
+import type { CreateTeamPayload, Team } from '@/types/team'
 
 const auth = useAuthStore()
 const { t, locale } = useI18n()
@@ -190,95 +190,55 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
           </v-col>
 
           <v-col cols="12">
-            <!-- TEMP: club-panel design sketches (Boceto 1 + Boceto 2) -->
-            <div v-if="myTeam" class="d-flex flex-column ga-6">
-              <div>
-                <p class="text-overline text-medium-emphasis mb-1">Boceto 1</p>
-                <v-card border flat rounded="xl" class="bkt px-4 py-3 px-md-6">
-                  <v-avatar size="56" rounded="0" color="transparent" class="bkt-crest">
-                    <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
-                    <v-icon v-else :icon="mdiShieldOutline" size="36" class="text-medium-emphasis" />
-                  </v-avatar>
-                  <div class="bkt-body">
-                    <div class="bkt-row1">
-                      <span class="text-h6 font-weight-bold">{{ myTeam.name }}</span>
-                      <span class="bkt-cat" :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }">
-                        {{ t(`profile.team.enums.${myTeam.category}`) }}
-                      </span>
-                    </div>
-                    <div class="bkt-chips">
-                      <v-chip size="x-small" variant="tonal">
-                        {{ t(`profile.team.enums.${myTeam.type}`) }}
-                      </v-chip>
-                      <v-chip size="x-small" variant="tonal">
-                        {{ t(`profile.team.enums.${myTeam.division}`) }}
-                      </v-chip>
-                      <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                        {{ myTeam.city }}
-                      </v-chip>
-                    </div>
-                    <div class="bkt-meta text-body-2 text-medium-emphasis">
-                      <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
-                      <span v-if="myTeam.venueName">
-                        <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="bkt-actions">
-                    <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
-                      {{ t('profile.team.challenge') }}
-                    </v-btn>
-                    <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
-                      {{ t('profile.team.viewSheet') }}
-                    </v-btn>
-                  </div>
-                </v-card>
+            <v-card
+              v-if="myTeam"
+              border
+              flat
+              rounded="xl"
+              class="bkt bkt2 px-4 py-3 px-md-6"
+            >
+              <v-avatar size="76" rounded="0" color="transparent" class="bkt-crest">
+                <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
+                <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
+              </v-avatar>
+              <div class="bkt-body">
+                <div class="bkt-row1">
+                  <span class="text-subtitle-1 font-weight-bold">{{ myTeam.name }}</span>
+                  <span class="text-disabled">·</span>
+                  <span
+                    class="text-subtitle-1 font-weight-bold"
+                    :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
+                  >
+                    {{ t(`profile.team.enums.${myTeam.category}`) }}
+                  </span>
+                </div>
+                <div class="bkt-chips">
+                  <v-chip size="x-small" variant="tonal" :color="MODALITY_COLOR[myTeam.type]">
+                    {{ t(`profile.team.enums.${myTeam.type}`) }}
+                  </v-chip>
+                  <v-chip size="x-small" variant="tonal">
+                    {{ t(`profile.team.enums.${myTeam.division}`) }}
+                  </v-chip>
+                  <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
+                    {{ myTeam.city }}
+                  </v-chip>
+                </div>
+                <div class="bkt-meta text-body-2 text-medium-emphasis">
+                  <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
+                  <span v-if="myTeam.venueName">
+                    <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
+                  </span>
+                </div>
               </div>
-
-              <div>
-                <p class="text-overline text-medium-emphasis mb-1">Boceto 2</p>
-                <v-card border flat rounded="xl" class="bkt bkt2 px-4 py-3 px-md-6">
-                  <v-avatar size="76" rounded="0" color="transparent" class="bkt-crest">
-                    <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
-                    <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
-                  </v-avatar>
-                  <div class="bkt-body">
-                    <div class="bkt-row1">
-                      <span class="text-subtitle-1 font-weight-bold">{{ myTeam.name }}</span>
-                      <span class="text-disabled">·</span>
-                      <span class="text-subtitle-1 font-weight-bold" :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }">
-                        {{ t(`profile.team.enums.${myTeam.category}`) }}
-                      </span>
-                    </div>
-                    <div class="bkt-chips">
-                      <v-chip size="x-small" variant="tonal">
-                        {{ t(`profile.team.enums.${myTeam.type}`) }}
-                      </v-chip>
-                      <v-chip size="x-small" variant="tonal">
-                        {{ t(`profile.team.enums.${myTeam.division}`) }}
-                      </v-chip>
-                      <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                        {{ myTeam.city }}
-                      </v-chip>
-                    </div>
-                    <div class="bkt-meta text-body-2 text-medium-emphasis">
-                      <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
-                      <span v-if="myTeam.venueName">
-                        <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="bkt-actions">
-                    <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
-                      {{ t('profile.team.challenge') }}
-                    </v-btn>
-                    <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
-                      {{ t('profile.team.viewSheet') }}
-                    </v-btn>
-                  </div>
-                </v-card>
+              <div class="bkt-actions">
+                <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
+                  {{ t('profile.team.challenge') }}
+                </v-btn>
+                <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
+                  {{ t('profile.team.viewSheet') }}
+                </v-btn>
               </div>
-            </div>
+            </v-card>
 
             <v-card v-else border flat rounded="xl" class="px-4 py-4 px-md-8 py-md-1">
               <v-progress-circular
@@ -286,29 +246,6 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
                 color="primary"
                 class="d-block mx-auto my-10"
               />
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- TEMP: preview of every modality icon -->
-        <v-row>
-          <v-col cols="12">
-            <v-card
-              border
-              flat
-              rounded="xl"
-              class="pa-4 pa-sm-6 d-flex flex-wrap justify-center ga-6 ga-sm-10"
-            >
-              <div
-                v-for="type in FOOTBALL_TYPES"
-                :key="type"
-                class="d-flex flex-column align-center ga-2"
-              >
-                <ModalityIcon :type="type" :size="56" />
-                <span class="text-caption text-medium-emphasis">
-                  {{ t(`profile.team.enums.${type}`) }}
-                </span>
-              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -565,10 +502,6 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.bkt-cat {
-  font-size: 0.8rem;
-  font-weight: 700;
-}
 .bkt-chips {
   display: flex;
   gap: 0.35rem;
@@ -579,8 +512,7 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
   gap: 1.5rem;
   flex-wrap: wrap;
 }
-.bkt-meta span,
-.bkt-line {
+.bkt-meta span {
   display: flex;
   align-items: center;
   gap: 0.3rem;
