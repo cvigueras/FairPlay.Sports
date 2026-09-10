@@ -2,10 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
+  mdiAccountOutline,
   mdiClipboardTextOutline,
-  mdiEyeOutline,
   mdiMapMarkerOutline,
-  mdiPencilOutline,
   mdiShieldOutline,
   mdiSoccerField,
   mdiSwordCross,
@@ -46,27 +45,8 @@ const selectedTeam = computed(() => teams.value.find((team) => team.id === selec
  */
 const myTeam = ref<Team | null>(null)
 
-type TeamDetailKind = 'coach' | 'venue'
-
-const teamDetails = computed(() => {
-  const team = myTeam.value
-  if (!team) return []
-  const rows: { label: string; value: string; kind: TeamDetailKind }[] = [
-    { label: t('profile.team.coach'), value: team.coach, kind: 'coach' },
-  ]
-  if (team.venueName)
-    rows.push({ label: t('profile.team.venueGroup'), value: team.venueName, kind: 'venue' })
-  return rows
-})
-
-const detailIcon: Record<TeamDetailKind, string> = {
-  coach: mdiEyeOutline,
-  venue: mdiSoccerField,
-}
-
-/* Info modal: a single detail row, or the whole club sheet. */
-type InfoKind = TeamDetailKind | 'sheet'
-const infoKind = ref<InfoKind | null>(null)
+/* Full club-sheet modal, opened from the panel's "view sheet" action. */
+const infoKind = ref<'sheet' | null>(null)
 const infoOpen = computed({
   get: () => infoKind.value !== null,
   set: (open: boolean) => {
@@ -159,17 +139,6 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
     savingEdit.value = false
   }
 }
-
-/** "How to get there": the club's own maps link, else a maps search of the venue. */
-const venueMapsHref = computed(() => {
-  const team = myTeam.value
-  if (!team) return null
-  if (team.venueMapsUrl) return team.venueMapsUrl
-  const query = [team.venueName, team.venueAddress].filter(Boolean).join(', ')
-  return query
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
-    : null
-})
 </script>
 
 <template>
@@ -221,111 +190,89 @@ const venueMapsHref = computed(() => {
           </v-col>
 
           <v-col cols="12">
-            <v-card
-              v-if="myTeam"
-              border
-              flat
-              rounded="xl"
-              class="px-4 py-4 px-md-8 py-md-0 d-flex ga-4 ga-md-6 team-panel"
-            >
-              <div class="team-panel-actions">
-                <v-btn
-                  size="small"
-                  variant="text"
-                  :prepend-icon="mdiPencilOutline"
-                  @click="editOpen = true"
-                >
-                  {{ t('common.edit') }}
-                </v-btn>
-              </div>
-
-              <div
-                class="d-flex align-center flex-shrink-0 team-identity"
-              >
-                <v-avatar size="48" rounded="0" color="transparent" class="team-identity-crest">
-                  <v-img
-                    v-if="myTeam.hasCrest"
-                    :src="teamsApi.crestUrl(myTeam.id)"
-                    :alt="myTeam.name"
-                  />
-                  <v-icon v-else :icon="mdiShieldOutline" size="32" class="text-medium-emphasis" />
-                </v-avatar>
-                <div class="d-flex flex-column align-center justify-center ga-1 team-identity-body">
-                  <div class="team-name-row">
-                    <ModalityIcon :type="myTeam.type" :size="36" />
-                    <div class="team-name-col">
-                      <p class="text-h6 font-weight-bold team-name mb-0">{{ myTeam.name }}</p>
-                      <span
-                        class="font-weight-bold team-category"
-                        :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
-                      >
+            <!-- TEMP: club-panel design sketches (Boceto 1 + Boceto 2) -->
+            <div v-if="myTeam" class="d-flex flex-column ga-6">
+              <div>
+                <p class="text-overline text-medium-emphasis mb-1">Boceto 1</p>
+                <v-card border flat rounded="xl" class="bkt px-4 py-3 px-md-6">
+                  <v-avatar size="56" rounded="0" color="transparent" class="bkt-crest">
+                    <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
+                    <v-icon v-else :icon="mdiShieldOutline" size="36" class="text-medium-emphasis" />
+                  </v-avatar>
+                  <div class="bkt-body">
+                    <div class="bkt-row1">
+                      <span class="text-h6 font-weight-bold">{{ myTeam.name }}</span>
+                      <span class="bkt-cat" :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }">
                         {{ t(`profile.team.enums.${myTeam.category}`) }}
                       </span>
                     </div>
-                  </div>
-                  <div class="team-identity-rule"></div>
-                  <div class="team-meta">
-                    <div class="team-meta-division">
-                      <div class="team-meta-label text-medium-emphasis">
-                        {{ t('profile.team.division') }}
-                      </div>
-                      <div class="team-meta-bar"></div>
-                      <div class="team-meta-value font-weight-medium">
+                    <div class="bkt-chips">
+                      <v-chip size="x-small" variant="tonal">
+                        {{ t(`profile.team.enums.${myTeam.type}`) }}
+                      </v-chip>
+                      <v-chip size="x-small" variant="tonal">
                         {{ t(`profile.team.enums.${myTeam.division}`) }}
-                      </div>
+                      </v-chip>
+                      <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
+                        {{ myTeam.city }}
+                      </v-chip>
                     </div>
-                    <span class="team-meta-city text-medium-emphasis">{{ myTeam.city }}</span>
+                    <div class="bkt-meta text-body-2 text-medium-emphasis">
+                      <span><v-icon size="14" :icon="mdiAccountOutline" /> {{ myTeam.coach }}</span>
+                      <span v-if="myTeam.venueName">
+                        <v-icon size="14" :icon="mdiSoccerField" /> {{ myTeam.venueName }}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                  <div class="bkt-actions">
+                    <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
+                      {{ t('profile.team.challenge') }}
+                    </v-btn>
+                    <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
+                      {{ t('profile.team.viewSheet') }}
+                    </v-btn>
+                  </div>
+                </v-card>
               </div>
 
-              <v-divider vertical class="d-none d-md-block team-panel-divider" />
-
-              <div class="flex-grow-1 team-detail-grid">
-                <div class="team-detail-cells">
-                  <div
-                    v-for="row in teamDetails"
-                    :key="row.label"
-                    class="team-detail-cell"
-                  >
-                    <div class="d-flex align-center justify-space-between team-detail-head">
-                      <span class="text-caption text-medium-emphasis">{{ row.label }}</span>
-                      <v-btn
-                        :icon="detailIcon[row.kind]"
-                        variant="text"
-                        size="small"
-                        density="comfortable"
-                        class="team-detail-info-btn"
-                        :aria-label="t('profile.team.viewDetails')"
-                        @click="infoKind = row.kind"
-                      />
+              <div>
+                <p class="text-overline text-medium-emphasis mb-1">Boceto 2</p>
+                <v-card border flat rounded="xl" class="bkt px-4 py-3 px-md-6">
+                  <v-avatar size="52" rounded="0" color="transparent" class="bkt-crest">
+                    <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
+                    <v-icon v-else :icon="mdiShieldOutline" size="34" class="text-medium-emphasis" />
+                  </v-avatar>
+                  <div class="bkt-body">
+                    <div class="bkt-row1">
+                      <span class="text-subtitle-1 font-weight-bold">{{ myTeam.name }}</span>
+                      <span class="text-disabled">·</span>
+                      <span class="text-subtitle-1 font-weight-bold" :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }">
+                        {{ t(`profile.team.enums.${myTeam.category}`) }}
+                      </span>
                     </div>
-                    <div class="text-body-1 font-weight-medium">{{ row.value }}</div>
+                    <div class="bkt-line text-body-2 text-medium-emphasis">
+                      <ModalityIcon :type="myTeam.type" :size="16" />
+                      <span>
+                        {{ t(`profile.team.enums.${myTeam.type}`) }} ·
+                        {{ t(`profile.team.enums.${myTeam.division}`) }} · {{ myTeam.city }}
+                      </span>
+                    </div>
+                    <div class="bkt-line text-body-2 text-medium-emphasis">
+                      <span>{{ t('profile.team.coach') }} {{ myTeam.coach }}</span>
+                      <span v-if="myTeam.venueName">· {{ t('profile.team.venueGroup') }} {{ myTeam.venueName }}</span>
+                    </div>
                   </div>
-                </div>
-
-                <div class="team-detail-side">
-                  <v-btn
-                    color="red"
-                    variant="flat"
-                    size="small"
-                    :prepend-icon="mdiSwordCross"
-                    @click="challengeTeam"
-                  >
-                    {{ t('profile.team.challenge') }}
-                  </v-btn>
-                  <v-btn
-                    color="blue"
-                    variant="tonal"
-                    size="small"
-                    :prepend-icon="mdiClipboardTextOutline"
-                    @click="infoKind = 'sheet'"
-                  >
-                    {{ t('profile.team.viewSheet') }}
-                  </v-btn>
-                </div>
+                  <div class="bkt-actions">
+                    <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
+                      {{ t('profile.team.challenge') }}
+                    </v-btn>
+                    <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
+                      {{ t('profile.team.viewSheet') }}
+                    </v-btn>
+                  </div>
+                </v-card>
               </div>
-            </v-card>
+            </div>
 
             <v-card v-else border flat rounded="xl" class="px-4 py-4 px-md-8 py-md-1">
               <v-progress-circular
@@ -486,43 +433,10 @@ const venueMapsHref = computed(() => {
       </v-card>
     </v-dialog>
 
-    <!-- Detail info modal (eye / field buttons) -->
+    <!-- Full club-sheet modal ("view sheet" action) -->
     <v-dialog v-model="infoOpen" max-width="420">
       <v-card v-if="myTeam" border flat rounded="xl" class="pa-6">
-        <template v-if="infoKind === 'coach'">
-          <h3 class="text-h6 font-weight-bold mb-3">{{ t('profile.team.coach') }}</h3>
-          <p class="text-body-1">{{ myTeam.coach }}</p>
-        </template>
-
-        <template v-else-if="infoKind === 'venue'">
-          <h3 class="text-h6 font-weight-bold mb-3">{{ t('profile.team.venueGroup') }}</h3>
-          <dl class="team-info-dl">
-            <dt>{{ t('profile.team.venueName') }}</dt>
-            <dd>{{ myTeam.venueName }}</dd>
-            <template v-if="myTeam.venueAddress">
-              <dt>{{ t('profile.team.venueAddress') }}</dt>
-              <dd>{{ myTeam.venueAddress }}</dd>
-            </template>
-            <template v-if="myTeam.venueSurface">
-              <dt>{{ t('profile.team.venueSurface') }}</dt>
-              <dd>{{ t(`profile.team.surfaces.${myTeam.venueSurface}`) }}</dd>
-            </template>
-          </dl>
-          <v-btn
-            v-if="venueMapsHref"
-            :href="venueMapsHref"
-            target="_blank"
-            rel="noopener"
-            variant="tonal"
-            size="small"
-            :prepend-icon="mdiMapMarkerOutline"
-            class="mt-3"
-          >
-            {{ t('profile.team.directions') }}
-          </v-btn>
-        </template>
-
-        <template v-else-if="infoKind === 'sheet'">
+        <template v-if="infoKind === 'sheet'">
           <h3 class="text-h6 font-weight-bold mb-3">
             {{ myTeam.name }}<span v-if="myTeam.shortName"> · {{ myTeam.shortName }}</span>
           </h3>
@@ -597,198 +511,6 @@ const venueMapsHref = computed(() => {
   line-height: 1.25;
 }
 
-/* Division block (label + green rule + value) on the left, city on the right. */
-.team-meta {
-  align-self: stretch;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.team-meta-division {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  text-align: center;
-  min-width: 90px;
-}
-
-.team-meta-label {
-  font-size: 0.8rem;
-  line-height: 1.15;
-}
-
-.team-meta-bar {
-  height: 3px;
-  margin: 2px 0;
-  border-radius: 2px;
-  background: #86efac;
-}
-
-.team-meta-value {
-  font-size: 0.9rem;
-  line-height: 1.2;
-}
-
-.team-meta-city {
-  margin-left: auto;
-  font-size: 0.9rem;
-  line-height: 1.2;
-  text-align: right;
-}
-
-/* Team panel — mobile-first: the identity block and the details stack, each
-   full width. The side-by-side "shaded strip + rule + grid" layout kicks in
-   from the md breakpoint (see the media query at the end). */
-.team-panel {
-  overflow: hidden;
-  position: relative;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.team-panel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.25rem;
-}
-
-.team-identity {
-  justify-content: center;
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  background: rgba(var(--v-theme-on-surface), 0.04);
-}
-
-.team-identity-body {
-  min-width: 0;
-}
-
-/* Club crest on the left of the shaded strip, spaced off the name block. */
-.team-identity-crest {
-  flex-shrink: 0;
-  margin-right: 1rem;
-}
-
-/* White rule where the crest used to be - full-bleed across the shaded strip. */
-.team-identity-rule {
-  align-self: stretch;
-  height: 2px;
-  margin: 0.05rem -1rem;
-  background: rgb(var(--v-theme-surface));
-}
-
-.team-panel-divider {
-  align-self: stretch;
-  /* Let flex stretch size it so the negative margins add the card padding
-     back on; Vuetify's own height/max-height would otherwise cap it. */
-  height: auto;
-  max-height: none;
-  margin-block: 0;
-}
-
-.team-name {
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-/* Icon pinned left (in line with the division block); name/category
-   right-anchored so a longer club name grows leftwards, its right edge
-   lining up with the city value below. */
-.team-name-row {
-  align-self: stretch;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-}
-
-.team-name-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  gap: 0;
-  /* Nudge the club name / category up to sit against the icon's top and
-     raise the white rule level with the grey divider on the right. */
-  margin-top: -0.6rem;
-}
-
-.team-name-row .team-name {
-  font-size: 1.05rem;
-  line-height: 1;
-}
-
-.team-category {
-  font-size: 0.72rem;
-  line-height: 1.15;
-}
-
-.team-detail-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-  align-content: center;
-}
-
-/* Coach + venue stacked as one block with collapsed shared borders. */
-.team-detail-cells {
-  display: flex;
-  flex-direction: column;
-}
-
-.team-detail-cell {
-  position: relative;
-  border: 0;
-  /* Thin rule closing off the right edge of the coach / venue rows. */
-  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding: 0.2rem 0.85rem;
-}
-
-/* Pull the eye / pitch button out of the label row and centre it on the
-   cell's vertical midline, off the right rule. */
-.team-detail-info-btn {
-  position: absolute;
-  right: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.team-detail-info-btn :deep(.v-icon) {
-  font-size: 26px;
-  color: rgba(var(--v-theme-on-surface), 0.32);
-}
-
-/* Coach keeps only a bottom rule, venue only a top rule; the -2px pull
-   collapses the pair into one 2px divider - matching the white rule in
-   the identity strip so the two line up exactly. */
-.team-detail-cells .team-detail-cell:first-child {
-  border-bottom: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
-}
-
-.team-detail-cells .team-detail-cell + .team-detail-cell {
-  margin-top: -2px;
-  border-top: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
-}
-
-/* Right-hand actions: "challenge" on top, "view sheet" below. */
-.team-detail-side {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Label + info button share one line; both heads are justify-space-between
-   in equal-width cells, so the eye / pitch buttons line up across the two
-   rows. The small right margin keeps them off the cell's right border. */
-.team-detail-head {
-  min-height: 16px;
-  margin: -2px 0.35rem 0 0;
-}
-
 .team-info-dl {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -807,70 +529,55 @@ const venueMapsHref = computed(() => {
   font-weight: 500;
 }
 
-@media (min-width: 960px) {
-  .team-panel {
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .team-panel-actions {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.75rem;
-    z-index: 1;
-    flex-wrap: nowrap;
-  }
-
-  .team-identity-rule {
-    /* Span the name/meta block only - never wider than before. */
-    align-self: stretch;
-    width: auto;
-    margin-inline: 0;
-  }
-
-  .team-identity {
-    width: 320px;
-    align-self: stretch;
-    /* Crest hangs on the left; the name/meta block follows it. */
-    justify-content: flex-start;
-    border-radius: 0;
-    /* Bleed to the card's top / left / bottom edges and up to the divider
-       (card block padding is 0 at md; the right -1.5rem just cancels the
-       flex gap). */
-    margin: 0 -1.5rem 0 -2rem;
-    padding: 0.15rem 2rem;
-  }
-
-  .team-identity-crest {
-    margin-right: 1.5rem;
-  }
-
-  .team-detail-grid {
-    grid-template-columns: repeat(2, 1fr);
-    /* Cancel the flex gap after the divider so the coach / venue rows
-       sit flush against the shaded identity strip. */
-    margin-left: -1.5rem;
-  }
-
-  .team-detail-cells {
-    /* Stacked in the left half; the right column holds the actions. */
-    grid-column: 1;
-  }
-
-  .team-detail-cell {
-    /* Flush left against the strip, just a hairline's clearance. */
-    padding-left: 0.5rem;
-  }
-
-  .team-detail-side {
-    grid-column: 2;
-    /* Centred against the coach/venue stack, which drives the row height. */
-    align-self: center;
-    justify-content: center;
-    align-items: center;
-    /* Top inset clears the absolute Edit button; the column is still
-       shorter than the cell stack so the card doesn't grow. */
-    padding: 1.75rem 0 0.25rem;
-  }
+/* TEMP: club-panel design sketches ------------------------------------- */
+.bkt {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+.bkt-crest {
+  flex-shrink: 0;
+}
+.bkt-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.bkt-row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.bkt-cat {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.bkt-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.bkt-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.bkt-meta span,
+.bkt-line {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.bkt-actions {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>
