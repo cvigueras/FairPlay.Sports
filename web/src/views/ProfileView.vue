@@ -223,17 +223,6 @@ const venueMapsHref = computed(() => {
             >
               <div class="team-panel-actions">
                 <v-btn
-                  v-if="venueMapsHref"
-                  :href="venueMapsHref"
-                  target="_blank"
-                  rel="noopener"
-                  size="small"
-                  variant="tonal"
-                  :prepend-icon="mdiMapMarkerOutline"
-                >
-                  {{ t('profile.team.directions') }}
-                </v-btn>
-                <v-btn
                   size="small"
                   variant="text"
                   :prepend-icon="mdiPencilOutline"
