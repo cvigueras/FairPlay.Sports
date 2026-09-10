@@ -197,11 +197,11 @@ async function createTeam() {
         {{ t('profile.activation.needsTeam') }}
       </v-alert>
 
-      <!-- Has a team: profile on the left, the team's details on the right -->
+      <!-- Has a team: the user's profile on top, the team's details below. -->
       <template v-if="user.teamId">
         <v-row>
-          <v-col cols="12" md="6">
-            <v-card border flat rounded="xl" class="px-8 py-3 d-flex align-center ga-6 h-100">
+          <v-col cols="12">
+            <v-card border flat rounded="xl" class="px-8 py-3 d-flex align-center ga-6">
               <div class="d-flex flex-column align-center flex-shrink-0 ga-4">
                 <ProfileAvatar />
                 <div class="member-since">
@@ -227,13 +227,13 @@ async function createTeam() {
             </v-card>
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col cols="12">
             <v-card
               v-if="myTeam"
               border
               flat
               rounded="xl"
-              class="px-8 py-3 d-flex ga-6 h-100 team-panel"
+              class="px-8 py-3 d-flex ga-6 team-panel"
             >
               <div
                 class="d-flex flex-column align-center justify-center flex-shrink-0 ga-4 team-identity"
@@ -250,13 +250,13 @@ async function createTeam() {
                     </span>
                   </div>
                 </div>
-                <v-avatar size="120" rounded="lg">
+                <v-avatar size="88" rounded="0" color="transparent">
                   <v-img
                     v-if="myTeam.hasCrest"
                     :src="teamsApi.crestUrl(myTeam.id)"
                     :alt="myTeam.name"
                   />
-                  <v-icon v-else :icon="mdiShieldOutline" size="56" class="text-medium-emphasis" />
+                  <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
                 </v-avatar>
                 <div class="team-meta">
                   <div class="team-meta-division">
@@ -289,7 +289,7 @@ async function createTeam() {
               </div>
             </v-card>
 
-            <v-card v-else border flat rounded="xl" class="px-8 py-3 h-100">
+            <v-card v-else border flat rounded="xl" class="px-8 py-3">
               <v-progress-circular
                 indeterminate
                 color="primary"
@@ -641,7 +641,8 @@ async function createTeam() {
   }
 
   .team-identity {
-    width: 100%;
+    /* Full-bleed: 100% + the two -2rem margins so it spans the whole card. */
+    width: calc(100% + 4rem);
     margin: -0.75rem -2rem 0.75rem;
   }
 
