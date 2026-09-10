@@ -719,6 +719,8 @@ const venueMapsHref = computed(() => {
 
 .team-detail-cell {
   border: 0;
+  /* Thin rule closing off the right edge of the coach / venue rows. */
+  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   padding: 0.2rem 0.85rem;
 }
 
@@ -741,10 +743,12 @@ const venueMapsHref = computed(() => {
   gap: 0.5rem;
 }
 
-/* Label + info button share one line, so the buttons line up across cells. */
+/* Label + info button share one line; both heads are justify-space-between
+   in equal-width cells, so the eye / pitch buttons line up across the two
+   rows. The small right margin keeps them off the cell's right border. */
 .team-detail-head {
   min-height: 16px;
-  margin: -2px -4px 0 0;
+  margin: -2px 0.35rem 0 0;
 }
 
 .team-info-dl {
