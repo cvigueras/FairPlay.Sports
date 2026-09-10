@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiImageOutline } from '@mdi/js'
+import { mdiImageOutline, mdiShieldOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
@@ -32,13 +32,7 @@ const memberSince = computed(() => {
 
 const details = computed(() => {
   if (!user.value) return []
-  return [
-    { label: t('profile.fields.memberSince'), value: memberSince.value },
-    {
-      label: t('profile.fields.status'),
-      value: user.value.active ? t('profile.status.active') : t('profile.status.inactive'),
-    },
-  ]
+  return [{ label: t('profile.fields.memberSince'), value: memberSince.value }]
 })
 
 /* ---- My team ---------------------------------------------------------------- */
@@ -62,16 +56,11 @@ const teamDetails = computed(() => {
   const team = myTeam.value
   if (!team) return []
   return [
-    { label: t('profile.team.name'), value: team.name },
     { label: t('profile.team.coach'), value: team.coach },
     { label: t('profile.team.city'), value: team.city },
     { label: t('profile.team.type'), value: t(`profile.team.enums.${team.type}`) },
     { label: t('profile.team.division'), value: t(`profile.team.enums.${team.division}`) },
     { label: t('profile.team.category'), value: t(`profile.team.enums.${team.category}`) },
-    {
-      label: t('profile.fields.status'),
-      value: team.active ? t('profile.status.active') : t('profile.status.inactive'),
-    },
   ]
 })
 
@@ -248,17 +237,23 @@ async function createTeam() {
           </v-card>
         </v-col>
 
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <template v-if="myTeam">
-              <v-img
-                v-if="myTeam.hasCrest"
-                :src="teamsApi.crestUrl(myTeam.id)"
-                :alt="myTeam.name"
-                height="180"
-                class="mx-auto mb-4"
-                style="max-width: 220px"
-              />
+        <v-col cols="12" md="6" class="d-flex flex-column ga-6">
+          <template v-if="myTeam">
+            <v-card border flat rounded="xl" class="pa-6 d-flex align-center ga-6">
+              <v-avatar size="120" rounded="lg" class="flex-shrink-0">
+                <v-img
+                  v-if="myTeam.hasCrest"
+                  :src="teamsApi.crestUrl(myTeam.id)"
+                  :alt="myTeam.name"
+                />
+                <v-icon v-else :icon="mdiShieldOutline" size="56" class="text-medium-emphasis" />
+              </v-avatar>
+              <div class="flex-grow-1 overflow-hidden ms-6">
+                <p class="text-h6 font-weight-bold text-truncate">{{ myTeam.name }}</p>
+              </div>
+            </v-card>
+
+            <v-card border flat rounded="xl" class="flex-grow-1">
               <v-list>
                 <template v-for="(row, index) in teamDetails" :key="row.label">
                   <v-divider v-if="index > 0" />
@@ -270,9 +265,11 @@ async function createTeam() {
                   </v-list-item>
                 </template>
               </v-list>
-            </template>
+            </v-card>
+          </template>
+
+          <v-card v-else border flat rounded="xl" class="pa-6 flex-grow-1">
             <v-progress-circular
-              v-else
               indeterminate
               color="primary"
               class="d-block mx-auto my-10"

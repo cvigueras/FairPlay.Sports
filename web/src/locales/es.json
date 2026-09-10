@@ -79,12 +79,7 @@
       "uploadFailed": "No se ha podido subir la foto."
     },
     "fields": {
-      "memberSince": "Miembro desde",
-      "status": "Estado"
-    },
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo"
+      "memberSince": "Miembro desde"
     },
     "team": {
       "select": "Equipo",

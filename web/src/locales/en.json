@@ -79,12 +79,7 @@
       "uploadFailed": "Could not upload the photo."
     },
     "fields": {
-      "memberSince": "Member since",
-      "status": "Status"
-    },
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "memberSince": "Member since"
     },
     "team": {
       "select": "Team",
