@@ -206,28 +206,12 @@ function challengeTeam() {
 
             <div v-if="hasKit" class="team-sheet-kit">
               <span v-if="team.colorPrimary" class="team-sheet-kit-item">
-                <v-icon
-                  v-if="isHexColor(team.colorPrimary)"
-                  :icon="mdiTshirtCrew"
-                  :color="team.colorPrimary"
-                  size="40"
-                />
-                <span>
-                  <span class="team-sheet-kit-label">{{ t('profile.team.colorPrimary') }}</span>
-                  <span class="font-weight-bold d-block">{{ team.colorPrimary }}</span>
-                </span>
+                <v-icon v-if="isHexColor(team.colorPrimary)" :icon="mdiTshirtCrew" :color="team.colorPrimary" size="48" />
+                <span class="team-sheet-kit-label">{{ t('profile.team.colorPrimary') }}</span>
               </span>
               <span v-if="team.colorSecondary" class="team-sheet-kit-item">
-                <v-icon
-                  v-if="isHexColor(team.colorSecondary)"
-                  :icon="mdiTshirtCrew"
-                  :color="team.colorSecondary"
-                  size="40"
-                />
-                <span>
-                  <span class="team-sheet-kit-label">{{ t('profile.team.colorSecondary') }}</span>
-                  <span class="font-weight-bold d-block">{{ team.colorSecondary }}</span>
-                </span>
+                <v-icon v-if="isHexColor(team.colorSecondary)" :icon="mdiTshirtCrew" :color="team.colorSecondary" size="48" />
+                <span class="team-sheet-kit-label">{{ t('profile.team.colorSecondary') }}</span>
               </span>
             </div>
             <p v-else class="text-body-2 text-medium-emphasis">
@@ -420,7 +404,8 @@ function challengeTeam() {
 
 .team-sheet-kit-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 
