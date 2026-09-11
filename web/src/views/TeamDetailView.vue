@@ -26,6 +26,7 @@ import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
+import { SURFACE_COLOR } from '@/lib/pitchSurface'
 import type { Team } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
@@ -265,7 +266,9 @@ function challengeTeam() {
             </template>
             <template v-if="team.venueSurface">
               <dt><v-icon size="18" :icon="mdiGrass" />{{ t('profile.team.venueSurface') }}</dt>
-              <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
+              <dd :style="{ color: SURFACE_COLOR[team.venueSurface] }" class="font-weight-bold">
+                {{ t(`profile.team.surfaces.${team.venueSurface}`) }}
+              </dd>
             </template>
           </dl>
           <p v-else class="text-body-2 text-medium-emphasis">
