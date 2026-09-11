@@ -232,40 +232,40 @@ function challengeTeam() {
 
         <!-- Campo (home venue) -->
         <v-card border flat rounded="xl" class="pa-6 mb-6">
-          <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
-            <v-icon :icon="mdiSoccerField" color="#2E7D32" />
-            {{ t('profile.team.venueGroup') }}
-          </h2>
-
-          <template v-if="hasVenue">
-            <dl class="team-sheet-dl">
-              <template v-if="team.venueName">
-                <dt>{{ t('profile.team.venueName') }}</dt>
-                <dd>{{ team.venueName }}</dd>
-              </template>
-              <template v-if="team.venueAddress">
-                <dt>{{ t('profile.team.venueAddress') }}</dt>
-                <dd>{{ team.venueAddress }}</dd>
-              </template>
-              <template v-if="team.venueSurface">
-                <dt>{{ t('profile.team.venueSurface') }}</dt>
-                <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
-              </template>
-            </dl>
-
+          <div class="team-sheet-head mb-4">
+            <h2 class="text-subtitle-1 font-weight-bold d-flex align-center ga-2 team-sheet-name">
+              <v-icon :icon="mdiSoccerField" color="#2E7D32" />
+              {{ t('profile.team.venueGroup') }}
+            </h2>
             <v-btn
-              v-if="mapsHref"
+              v-if="hasVenue && mapsHref"
               :href="mapsHref"
               target="_blank"
               rel="noopener"
-              variant="tonal"
-              size="small"
+              color="#2E7D32"
+              variant="outlined"
+              size="large"
               :prepend-icon="mdiMapMarkerOutline"
-              class="mt-4"
+              class="team-sheet-challenge"
             >
               {{ t('profile.team.directions') }}
             </v-btn>
-          </template>
+          </div>
+
+          <dl v-if="hasVenue" class="team-sheet-dl">
+            <template v-if="team.venueName">
+              <dt>{{ t('profile.team.venueName') }}</dt>
+              <dd>{{ team.venueName }}</dd>
+            </template>
+            <template v-if="team.venueAddress">
+              <dt>{{ t('profile.team.venueAddress') }}</dt>
+              <dd>{{ team.venueAddress }}</dd>
+            </template>
+            <template v-if="team.venueSurface">
+              <dt>{{ t('profile.team.venueSurface') }}</dt>
+              <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
+            </template>
+          </dl>
           <p v-else class="text-body-2 text-medium-emphasis">
             {{ t('teams.detail.noVenue') }}
           </p>
