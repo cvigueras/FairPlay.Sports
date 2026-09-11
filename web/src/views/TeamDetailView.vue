@@ -7,10 +7,8 @@ import {
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
-  mdiSoccer,
   mdiSoccerField,
   mdiSwordCross,
-  mdiTrophyOutline,
   mdiWeb,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
@@ -132,13 +130,11 @@ function challengeTeam() {
 
             <dt>{{ t('profile.team.type') }}</dt>
             <dd :style="{ color: MODALITY_COLOR[team.type] }" class="font-weight-bold">
-              <v-icon size="16" :icon="mdiSoccer" :color="MODALITY_COLOR[team.type]" class="me-1" />
               {{ t(`profile.team.enums.${team.type}`) }}
             </dd>
 
             <dt>{{ t('profile.team.division') }}</dt>
             <dd :style="{ color: DIVISION_COLOR[team.division] }" class="font-weight-bold">
-              <v-icon size="16" :icon="mdiTrophyOutline" :color="DIVISION_COLOR[team.division]" class="me-1" />
               {{ t(`profile.team.enums.${team.division}`) }}
             </dd>
 
