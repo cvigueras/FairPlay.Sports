@@ -2,13 +2,18 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
+  mdiAccountOutline,
   mdiArrowLeft,
+  mdiCalendarOutline,
   mdiEmailOutline,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
+  mdiSoccer,
   mdiSoccerField,
   mdiSwordCross,
+  mdiTagOutline,
+  mdiTrophyOutline,
   mdiWeb,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
@@ -73,6 +78,10 @@ const hasVenue = computed(
 
 const hasKit = computed(() => !!team.value && !!(team.value.colorPrimary || team.value.colorSecondary))
 
+const hasContact = computed(
+  () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
+)
+
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
 const isHexColor = (value: string) => HEX_COLOR.test(value.trim())
 
@@ -122,48 +131,57 @@ function challengeTeam() {
             </h1>
           </div>
 
-          <dl class="team-sheet-dl">
-            <dt>{{ t('profile.team.category') }}</dt>
+          <dl class="team-sheet-dl team-sheet-dl--main">
+            <dt><v-icon size="18" :icon="mdiTagOutline" />{{ t('profile.team.category') }}</dt>
             <dd :style="{ color: AGE_CATEGORY_COLOR[team.category] }" class="font-weight-bold">
               {{ t(`profile.team.enums.${team.category}`) }}
             </dd>
 
-            <dt>{{ t('profile.team.type') }}</dt>
+            <dt><v-icon size="18" :icon="mdiSoccer" />{{ t('profile.team.type') }}</dt>
             <dd :style="{ color: MODALITY_COLOR[team.type] }" class="font-weight-bold">
               {{ t(`profile.team.enums.${team.type}`) }}
             </dd>
 
-            <dt>{{ t('profile.team.division') }}</dt>
+            <dt><v-icon size="18" :icon="mdiTrophyOutline" />{{ t('profile.team.division') }}</dt>
             <dd :style="{ color: DIVISION_COLOR[team.division] }" class="font-weight-bold">
               {{ t(`profile.team.enums.${team.division}`) }}
             </dd>
 
-            <dt>{{ t('profile.team.city') }}</dt>
+            <dt><v-icon size="18" :icon="mdiMapMarkerOutline" />{{ t('profile.team.city') }}</dt>
             <dd>{{ team.city }}</dd>
 
-            <dt>{{ t('profile.team.coach') }}</dt>
+            <dt><v-icon size="18" :icon="mdiAccountOutline" />{{ t('profile.team.coach') }}</dt>
             <dd>{{ team.coach }}</dd>
 
             <template v-if="team.foundedYear">
-              <dt>{{ t('profile.team.foundedYear') }}</dt>
+              <dt><v-icon size="18" :icon="mdiCalendarOutline" />{{ t('profile.team.foundedYear') }}</dt>
               <dd>{{ team.foundedYear }}</dd>
             </template>
-
-            <template v-if="team.contactEmail">
-              <dt><v-icon size="16" :icon="mdiEmailOutline" /> {{ t('profile.team.contactEmail') }}</dt>
-              <dd><a :href="`mailto:${team.contactEmail}`">{{ team.contactEmail }}</a></dd>
-            </template>
-            <template v-if="team.contactPhone">
-              <dt><v-icon size="16" :icon="mdiPhoneOutline" /> {{ t('profile.team.contactPhone') }}</dt>
-              <dd><a :href="`tel:${team.contactPhone}`">{{ team.contactPhone }}</a></dd>
-            </template>
-            <template v-if="team.website">
-              <dt><v-icon size="16" :icon="mdiWeb" /> {{ t('profile.team.website') }}</dt>
-              <dd>
-                <a :href="team.website" target="_blank" rel="noopener">{{ team.website }}</a>
-              </dd>
-            </template>
           </dl>
+
+          <template v-if="hasContact">
+            <v-divider class="mx-n6 mx-md-n8 mt-4" />
+            <div class="team-sheet-contact pt-4">
+              <a v-if="team.contactEmail" :href="`mailto:${team.contactEmail}`" class="team-sheet-contact-item">
+                <v-icon size="18" :icon="mdiEmailOutline" />
+                <span>{{ team.contactEmail }}</span>
+              </a>
+              <a v-if="team.contactPhone" :href="`tel:${team.contactPhone}`" class="team-sheet-contact-item">
+                <v-icon size="18" :icon="mdiPhoneOutline" />
+                <span>{{ team.contactPhone }}</span>
+              </a>
+              <a
+                v-if="team.website"
+                :href="team.website"
+                target="_blank"
+                rel="noopener"
+                class="team-sheet-contact-item"
+              >
+                <v-icon size="18" :icon="mdiWeb" />
+                <span>{{ team.website }}</span>
+              </a>
+            </div>
+          </template>
         </v-card>
 
         <!-- Equipación (kit colours) -->
@@ -290,7 +308,13 @@ function challengeTeam() {
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.4rem;
+}
+
+/* The main sheet's label column (category, type, division, city, coach,
+   founded year) reads a little larger than the venue section below it. */
+.team-sheet-dl--main dt {
+  font-size: 0.95rem;
 }
 
 .team-sheet-dl dd {
@@ -303,6 +327,28 @@ function challengeTeam() {
 }
 
 .team-sheet-dl dd a:hover {
+  text-decoration: underline;
+}
+
+.team-sheet-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.team-sheet-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.team-sheet-contact-item .v-icon {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.team-sheet-contact-item:hover {
   text-decoration: underline;
 }
 
