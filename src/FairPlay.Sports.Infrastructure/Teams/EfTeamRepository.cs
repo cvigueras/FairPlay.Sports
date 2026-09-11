@@ -31,6 +31,18 @@ internal sealed class EfTeamRepository : ITeamRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(team => team.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<Team>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids as ICollection<Guid> ?? ids.ToList();
+        if (idList.Count == 0)
+            return [];
+
+        return await _context.Teams
+            .AsNoTracking()
+            .Where(team => idList.Contains(team.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<Team?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams.FirstOrDefaultAsync(team => team.Id == id, cancellationToken);
 

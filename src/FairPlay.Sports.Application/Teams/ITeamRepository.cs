@@ -14,6 +14,9 @@ public interface ITeamRepository
 
     Task<Team?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Batch lookup for cross-slice DTO enrichment (e.g. Standings resolving team names).</summary>
+    Task<IReadOnlyList<Team>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+
     Task<Team?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default);

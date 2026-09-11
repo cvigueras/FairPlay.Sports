@@ -238,6 +238,28 @@ public class EfTeamRepositoryTests : RepositoryTestBase
         Assert.That(await new EfTeamRepository(context).GetByIdAsync(Guid.NewGuid()), Is.Null);
     }
 
+    [Test]
+    public async Task GetByIdsAsync_returnsOnlyTheMatchingTeams_untracked()
+    {
+        var wanted = TeamMother.DomainTeam(name: "Wanted FC");
+        var other = TeamMother.DomainTeam(name: "Other FC");
+        await SeedAsync(wanted, other);
+
+        await using var context = NewContext();
+        var found = await new EfTeamRepository(context).GetByIdsAsync([wanted.Id, Guid.NewGuid()]);
+
+        Assert.That(found.Select(team => team.Id), Is.EqualTo(new[] { wanted.Id }));
+        Assert.That(context.ChangeTracker.Entries<Team>(), Is.Empty);
+    }
+
+    [Test]
+    public async Task GetByIdsAsync_withNoIds_returnsEmpty_withoutQuerying()
+    {
+        await using var context = NewContext();
+
+        Assert.That(await new EfTeamRepository(context).GetByIdsAsync([]), Is.Empty);
+    }
+
     private static async Task<PagedResult<Team>> GetPageAsync(
         int page, int pageSize, TeamFilter? filter = null, string? sort = null)
     {
