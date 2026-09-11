@@ -125,10 +125,20 @@ function challengeTeam() {
             <div class="team-sheet-crest">
               <TeamCrest :team="team" :size="96" />
             </div>
-            <h1 class="text-h5 font-weight-bold">
+            <h1 class="text-h5 font-weight-bold team-sheet-name">
               {{ team.name }}
               <span v-if="team.shortName" class="text-medium-emphasis"> · {{ team.shortName }}</span>
             </h1>
+            <v-btn
+              color="red"
+              variant="outlined"
+              size="large"
+              :prepend-icon="mdiSwordCross"
+              class="team-sheet-challenge"
+              @click="challengeTeam"
+            >
+              {{ t('profile.team.challenge') }}
+            </v-btn>
           </div>
 
           <dl class="team-sheet-dl team-sheet-dl--main">
@@ -260,18 +270,6 @@ function challengeTeam() {
             {{ t('teams.detail.noVenue') }}
           </p>
         </v-card>
-
-        <div class="team-detail-challenge">
-          <v-btn
-            color="red"
-            variant="flat"
-            size="x-large"
-            :prepend-icon="mdiSwordCross"
-            @click="challengeTeam"
-          >
-            {{ t('profile.team.challenge') }}
-          </v-btn>
-        </div>
       </template>
     </v-container>
   </v-main>
@@ -292,6 +290,25 @@ function challengeTeam() {
 
 .team-sheet-crest {
   flex-shrink: 0;
+}
+
+.team-sheet-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.team-sheet-challenge {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
+/* Not enough room for crest, name and button on one line - stack the
+   button below instead of squeezing the club name. */
+@media (max-width: 599px) {
+  .team-sheet-challenge {
+    width: 100%;
+    margin-inline-start: 0;
+  }
 }
 
 .team-sheet-dl {
@@ -376,11 +393,5 @@ function challengeTeam() {
   height: 28px;
   border-radius: 50%;
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-}
-
-.team-detail-challenge {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
 }
 </style>
