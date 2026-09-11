@@ -5,14 +5,13 @@ import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
   mdiAccountOutline,
-  mdiClipboardTextOutline,
+  mdiCardAccountDetailsOutline,
   mdiFilterRemoveOutline,
   mdiFilterVariant,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
   mdiSoccer,
   mdiSoccerField,
-  mdiSwordCross,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
@@ -132,13 +131,6 @@ function clearFilters() {
   filtersOpen.value = false
   clearTimeout(textFilterTimer)
   reload()
-}
-
-/** The team whose full sheet is open in the modal, or null when closed. */
-const sheetTeam = ref<Team | null>(null)
-
-function challengeTeam(_team: Team) {
-  // TODO: wire up the team-vs-team challenge flow.
 }
 </script>
 
@@ -300,24 +292,30 @@ function challengeTeam(_team: Team) {
                 </div>
               </div>
               <div class="bkt-actions">
+                <!-- Mobile: a bigger, labelled button is an easier tap target. -->
                 <v-btn
-                  color="red"
-                  variant="outlined"
-                  size="small"
-                  :prepend-icon="mdiSwordCross"
-                  @click="challengeTeam(team)"
-                >
-                  {{ t('profile.team.challenge') }}
-                </v-btn>
-                <v-btn
+                  v-if="smAndDown"
+                  :to="{ name: 'team-detail', params: { id: team.id } }"
+                  :prepend-icon="mdiCardAccountDetailsOutline"
                   color="blue"
                   variant="outlined"
-                  size="small"
-                  :prepend-icon="mdiClipboardTextOutline"
-                  @click="sheetTeam = team"
+                  block
                 >
-                  {{ t('profile.team.viewSheet') }}
+                  {{ t('profile.team.viewDetails') }}
                 </v-btn>
+                <v-tooltip v-else :text="t('profile.team.viewDetails')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      :icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                      size="small"
+                      :aria-label="t('profile.team.viewDetails')"
+                    />
+                  </template>
+                </v-tooltip>
               </div>
             </div>
           </div>
@@ -340,59 +338,6 @@ function challengeTeam(_team: Team) {
         </div>
       </footer>
     </div>
-
-    <!-- Full club-sheet modal ("view sheet" action) -->
-    <v-dialog
-      :model-value="sheetTeam !== null"
-      max-width="420"
-      @update:model-value="sheetTeam = null"
-    >
-      <v-card v-if="sheetTeam" border flat rounded="xl" class="pa-6">
-        <h3 class="text-h6 font-weight-bold mb-3">
-          {{ sheetTeam.name }}<span v-if="sheetTeam.shortName"> · {{ sheetTeam.shortName }}</span>
-        </h3>
-        <dl class="team-info-dl">
-          <dt>{{ t('profile.team.category') }}</dt>
-          <dd>{{ t(`profile.team.enums.${sheetTeam.category}`) }}</dd>
-          <dt>{{ t('profile.team.type') }}</dt>
-          <dd>{{ t(`profile.team.enums.${sheetTeam.type}`) }}</dd>
-          <dt>{{ t('profile.team.division') }}</dt>
-          <dd>{{ t(`profile.team.enums.${sheetTeam.division}`) }}</dd>
-          <dt>{{ t('profile.team.city') }}</dt>
-          <dd>{{ sheetTeam.city }}</dd>
-          <dt>{{ t('profile.team.coach') }}</dt>
-          <dd>{{ sheetTeam.coach }}</dd>
-          <template v-if="sheetTeam.foundedYear">
-            <dt>{{ t('profile.team.foundedYear') }}</dt>
-            <dd>{{ sheetTeam.foundedYear }}</dd>
-          </template>
-          <template v-if="sheetTeam.venueName">
-            <dt>{{ t('profile.team.venueGroup') }}</dt>
-            <dd>{{ sheetTeam.venueName }}</dd>
-          </template>
-          <template v-if="sheetTeam.colorPrimary && sheetTeam.colorSecondary">
-            <dt>{{ t('profile.team.colorsGroup') }}</dt>
-            <dd>{{ sheetTeam.colorPrimary }} / {{ sheetTeam.colorSecondary }}</dd>
-          </template>
-          <template v-if="sheetTeam.contactEmail">
-            <dt>{{ t('profile.team.contactEmail') }}</dt>
-            <dd>{{ sheetTeam.contactEmail }}</dd>
-          </template>
-          <template v-if="sheetTeam.contactPhone">
-            <dt>{{ t('profile.team.contactPhone') }}</dt>
-            <dd>{{ sheetTeam.contactPhone }}</dd>
-          </template>
-          <template v-if="sheetTeam.website">
-            <dt>{{ t('profile.team.website') }}</dt>
-            <dd>{{ sheetTeam.website }}</dd>
-          </template>
-        </dl>
-
-        <div class="d-flex justify-end mt-4">
-          <v-btn variant="text" @click="sheetTeam = null">{{ t('common.close') }}</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
   </v-main>
 </template>
 
@@ -575,35 +520,14 @@ function challengeTeam(_team: Team) {
   gap: 0.5rem;
 }
 
-/* Phones: let the actions drop below the body as a full-width row. */
+/* Phones: let the action drop below the body as a full-width, centred row. */
 @media (max-width: 599px) {
   .bkt {
     flex-wrap: wrap;
   }
   .bkt-actions {
-    flex-direction: row;
     width: 100%;
+    justify-content: center;
   }
-  .bkt-actions :deep(.v-btn) {
-    flex: 1;
-  }
-}
-
-.team-info-dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 1rem;
-  row-gap: 0.35rem;
-  margin: 0;
-}
-
-.team-info-dl dt {
-  font-size: 0.75rem;
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-}
-
-.team-info-dl dd {
-  margin: 0;
-  font-weight: 500;
 }
 </style>

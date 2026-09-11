@@ -32,6 +32,12 @@
       "division": "División",
       "category": "Categoría",
       "memberSince": "Miembro desde"
+    },
+    "detail": {
+      "notFound": "No se ha encontrado este equipo.",
+      "loadFailed": "No se ha podido cargar este equipo.",
+      "noVenue": "Este equipo todavía no ha indicado su campo.",
+      "noProfile": "Este equipo todavía no ha añadido más datos de la ficha."
     }
   },
   "validation": {

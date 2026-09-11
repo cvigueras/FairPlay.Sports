@@ -32,6 +32,12 @@
       "division": "Division",
       "category": "Age category",
       "memberSince": "Member since"
+    },
+    "detail": {
+      "notFound": "This team could not be found.",
+      "loadFailed": "Could not load this team.",
+      "noVenue": "This team hasn't set up its home ground yet.",
+      "noProfile": "This team hasn't added any club details yet."
     }
   },
   "validation": {

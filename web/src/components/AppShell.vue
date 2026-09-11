@@ -13,6 +13,7 @@ import {
   mdiTrophyOutline,
 } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import logoUrl from '@/assets/logo.webp'
 
@@ -20,6 +21,7 @@ const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const ui = useUiStore()
 const { mobile } = useDisplay()
 
 // Routes are flat, so every page is just "Home / <page>".
@@ -34,6 +36,13 @@ const breadcrumbs = computed(() => {
   const home = { title: t('nav.home'), to: '/', disabled: route.name === 'home' }
   if (route.name === 'home' || !route.name) {
     return [home]
+  }
+  if (route.name === 'team-detail') {
+    return [
+      { ...home, disabled: false },
+      { title: t('nav.teams'), to: '/teams', disabled: false },
+      { title: ui.breadcrumbLabel ?? '…', to: route.path, disabled: true },
+    ]
   }
   const key = CRUMB_LABELS[String(route.name)]
   return [
@@ -178,6 +187,30 @@ async function handleLogout(): Promise<void> {
 .app-bar-crumbs {
   padding-inline: 0.5rem;
   min-width: 0;
+}
+
+/* Narrow screens: three levels ("Home / Teams / <team>") plus the language
+   button don't fit at full size - shrink the crumbs and let a long trailing
+   one (the team name) ellipsize instead of wrapping or overflowing. */
+@media (max-width: 599px) {
+  .app-bar-crumbs {
+    font-size: 0.75rem;
+    padding-inline: 0.25rem;
+  }
+  .app-bar-crumbs :deep(.v-breadcrumbs-item) {
+    padding-inline: 2px;
+  }
+  .app-bar-crumbs :deep(.v-breadcrumbs-divider) {
+    padding-inline: 2px;
+  }
+  .app-bar-crumbs :deep(.v-breadcrumbs-item--disabled) {
+    display: inline-block;
+    max-width: 32vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
 }
 
 .nav-brand {
