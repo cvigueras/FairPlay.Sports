@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import {
   mdiAccountOutline,
-  mdiClipboardTextOutline,
+  mdiCardAccountDetailsOutline,
   mdiMapMarkerOutline,
-  mdiShieldOutline,
   mdiSoccer,
   mdiSoccerField,
-  mdiSwordCross,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
+import TeamCrest from '@/components/TeamCrest.vue'
 import TeamForm from '@/components/TeamForm.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
@@ -23,6 +23,7 @@ import type { CreateTeamPayload, Team } from '@/types/team'
 
 const auth = useAuthStore()
 const { t, locale } = useI18n()
+const { smAndDown } = useDisplay()
 
 const user = computed(() => auth.currentUser)
 
@@ -47,19 +48,6 @@ const selectedTeam = computed(() => teams.value.find((team) => team.id === selec
  * in `teams`, which is capped at the backend's max page size.
  */
 const myTeam = ref<Team | null>(null)
-
-/* Full club-sheet modal, opened from the panel's "view sheet" action. */
-const infoKind = ref<'sheet' | null>(null)
-const infoOpen = computed({
-  get: () => infoKind.value !== null,
-  set: (open: boolean) => {
-    if (!open) infoKind.value = null
-  },
-})
-
-function challengeTeam() {
-  // TODO: wire up the team-vs-team challenge flow.
-}
 
 onMounted(async () => {
   selectedTeamId.value = user.value?.teamId ?? null
@@ -200,10 +188,9 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
               rounded="xl"
               class="bkt bkt2 px-4 py-3 px-md-6"
             >
-              <v-avatar size="76" rounded="0" color="transparent" class="bkt-crest">
-                <v-img v-if="myTeam.hasCrest" :src="teamsApi.crestUrl(myTeam.id)" :alt="myTeam.name" />
-                <v-icon v-else :icon="mdiShieldOutline" size="48" class="text-medium-emphasis" />
-              </v-avatar>
+              <div class="bkt-crest">
+                <TeamCrest :team="myTeam" :size="76" />
+              </div>
               <div class="bkt-body">
                 <div class="bkt-row1">
                   <span class="text-subtitle-1 font-weight-bold">{{ myTeam.name }}</span>
@@ -248,12 +235,30 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
                 </div>
               </div>
               <div class="bkt-actions">
-                <v-btn color="red" variant="outlined" size="small" :prepend-icon="mdiSwordCross" @click="challengeTeam">
-                  {{ t('profile.team.challenge') }}
+                <!-- Mobile: a bigger, labelled button is an easier tap target. -->
+                <v-btn
+                  v-if="smAndDown"
+                  :to="{ name: 'team-detail', params: { id: myTeam.id } }"
+                  :prepend-icon="mdiCardAccountDetailsOutline"
+                  color="blue"
+                  variant="outlined"
+                  block
+                >
+                  {{ t('profile.team.viewDetails') }}
                 </v-btn>
-                <v-btn color="blue" variant="outlined" size="small" :prepend-icon="mdiClipboardTextOutline" @click="infoKind = 'sheet'">
-                  {{ t('profile.team.viewSheet') }}
-                </v-btn>
+                <v-tooltip v-else :text="t('profile.team.viewDetails')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      :to="{ name: 'team-detail', params: { id: myTeam.id } }"
+                      :icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                      size="small"
+                      :aria-label="t('profile.team.viewDetails')"
+                    />
+                  </template>
+                </v-tooltip>
               </div>
             </v-card>
 
@@ -392,57 +397,6 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
         />
       </v-card>
     </v-dialog>
-
-    <!-- Full club-sheet modal ("view sheet" action) -->
-    <v-dialog v-model="infoOpen" max-width="420">
-      <v-card v-if="myTeam" border flat rounded="xl" class="pa-6">
-        <template v-if="infoKind === 'sheet'">
-          <h3 class="text-h6 font-weight-bold mb-3">
-            {{ myTeam.name }}<span v-if="myTeam.shortName"> · {{ myTeam.shortName }}</span>
-          </h3>
-          <dl class="team-info-dl">
-            <dt>{{ t('profile.team.category') }}</dt>
-            <dd>{{ t(`profile.team.enums.${myTeam.category}`) }}</dd>
-            <dt>{{ t('profile.team.type') }}</dt>
-            <dd>{{ t(`profile.team.enums.${myTeam.type}`) }}</dd>
-            <dt>{{ t('profile.team.division') }}</dt>
-            <dd>{{ t(`profile.team.enums.${myTeam.division}`) }}</dd>
-            <dt>{{ t('profile.team.city') }}</dt>
-            <dd>{{ myTeam.city }}</dd>
-            <dt>{{ t('profile.team.coach') }}</dt>
-            <dd>{{ myTeam.coach }}</dd>
-            <template v-if="myTeam.foundedYear">
-              <dt>{{ t('profile.team.foundedYear') }}</dt>
-              <dd>{{ myTeam.foundedYear }}</dd>
-            </template>
-            <template v-if="myTeam.venueName">
-              <dt>{{ t('profile.team.venueGroup') }}</dt>
-              <dd>{{ myTeam.venueName }}</dd>
-            </template>
-            <template v-if="myTeam.colorPrimary && myTeam.colorSecondary">
-              <dt>{{ t('profile.team.colorsGroup') }}</dt>
-              <dd>{{ myTeam.colorPrimary }} / {{ myTeam.colorSecondary }}</dd>
-            </template>
-            <template v-if="myTeam.contactEmail">
-              <dt>{{ t('profile.team.contactEmail') }}</dt>
-              <dd>{{ myTeam.contactEmail }}</dd>
-            </template>
-            <template v-if="myTeam.contactPhone">
-              <dt>{{ t('profile.team.contactPhone') }}</dt>
-              <dd>{{ myTeam.contactPhone }}</dd>
-            </template>
-            <template v-if="myTeam.website">
-              <dt>{{ t('profile.team.website') }}</dt>
-              <dd>{{ myTeam.website }}</dd>
-            </template>
-          </dl>
-        </template>
-
-        <div class="d-flex justify-end mt-4">
-          <v-btn variant="text" @click="infoKind = null">{{ t('common.close') }}</v-btn>
-        </div>
-      </v-card>
-    </v-dialog>
   </v-main>
 </template>
 
@@ -471,25 +425,7 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
   line-height: 1.25;
 }
 
-.team-info-dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 1rem;
-  row-gap: 0.35rem;
-  margin: 0;
-}
-
-.team-info-dl dt {
-  font-size: 0.75rem;
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-}
-
-.team-info-dl dd {
-  margin: 0;
-  font-weight: 500;
-}
-
-/* TEMP: club-panel design sketches ------------------------------------- */
+/* Club panel - shared visual language with the "Teams" list. */
 .bkt {
   display: flex;
   align-items: center;
@@ -541,5 +477,16 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Phones: let the action drop below the body as a full-width, centred row. */
+@media (max-width: 599px) {
+  .bkt {
+    flex-wrap: wrap;
+  }
+  .bkt-actions {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>
