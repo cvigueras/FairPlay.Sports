@@ -40,6 +40,24 @@
       "noProfile": "This team hasn't added any club details yet."
     }
   },
+  "standings": {
+    "title": "Standings",
+    "count": "{n} teams",
+    "empty": "No standings yet.",
+    "loadFailed": "Could not load the standings.",
+    "fields": {
+      "position": "#",
+      "club": "Club",
+      "points": "Pts",
+      "played": "P",
+      "won": "W",
+      "drawn": "D",
+      "lost": "L",
+      "goalsFor": "GF",
+      "goalsAgainst": "GA",
+      "goalDifference": "GD"
+    }
+  },
   "validation": {
     "userNameRequired": "Username is required.",
     "emailRequired": "Email is required.",

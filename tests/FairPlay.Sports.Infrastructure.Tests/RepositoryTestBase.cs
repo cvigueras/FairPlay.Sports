@@ -20,9 +20,10 @@ public abstract class RepositoryTestBase
     public async Task EmptyTables()
     {
         await using var context = NewContext();
-        // RefreshTokens first: it has an FK to Users.
+        // RefreshTokens and Standings first: they have an FK to Users / Teams.
         await context.RefreshTokens.ExecuteDeleteAsync();
         await context.Users.ExecuteDeleteAsync();
+        await context.Standings.ExecuteDeleteAsync();
         await context.Teams.ExecuteDeleteAsync();
     }
 }

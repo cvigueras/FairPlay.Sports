@@ -40,6 +40,24 @@
       "noProfile": "Este equipo todavía no ha añadido más datos de la ficha."
     }
   },
+  "standings": {
+    "title": "Clasificación",
+    "count": "{n} equipos",
+    "empty": "Todavía no hay clasificación.",
+    "loadFailed": "No se ha podido cargar la clasificación.",
+    "fields": {
+      "position": "#",
+      "club": "Club",
+      "points": "Pts",
+      "played": "J",
+      "won": "G",
+      "drawn": "E",
+      "lost": "P",
+      "goalsFor": "GF",
+      "goalsAgainst": "GC",
+      "goalDifference": "DG"
+    }
+  },
   "validation": {
     "userNameRequired": "El nombre de usuario es obligatorio.",
     "emailRequired": "El email es obligatorio.",
