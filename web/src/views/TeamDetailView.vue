@@ -3,12 +3,10 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
-  mdiCalendarOutline,
   mdiEmailOutline,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
-  mdiShieldOutline,
   mdiSoccer,
   mdiSoccerField,
   mdiSwordCross,
@@ -75,13 +73,7 @@ const hasVenue = computed(
   () => !!team.value && (team.value.venueName || team.value.venueAddress || team.value.venueSurface),
 )
 
-const hasColors = computed(
-  () => !!team.value && !!(team.value.colorPrimary || team.value.colorSecondary),
-)
-
-const hasContact = computed(
-  () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
-)
+const hasKit = computed(() => !!team.value && !!(team.value.colorPrimary || team.value.colorSecondary))
 
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
 const isHexColor = (value: string) => HEX_COLOR.test(value.trim())
@@ -120,156 +112,140 @@ function challengeTeam() {
       </v-alert>
 
       <template v-else-if="team">
-        <!-- Hero: crest, name, category/type/division/city, coach -->
-        <v-card border flat rounded="xl" class="pa-6 pa-md-8 mb-6 team-hero">
-          <div class="team-hero-crest">
-            <TeamCrest :team="team" :size="112" />
-          </div>
-          <div class="team-hero-info">
+        <!-- Club sheet: crest/name plus every field as a label - value row. -->
+        <v-card border flat rounded="xl" class="pa-6 pa-md-8 mb-6">
+          <div class="team-sheet-head">
+            <div class="team-sheet-crest">
+              <TeamCrest :team="team" :size="96" />
+            </div>
             <h1 class="text-h5 font-weight-bold">
               {{ team.name }}
               <span v-if="team.shortName" class="text-medium-emphasis"> · {{ team.shortName }}</span>
             </h1>
-            <div class="team-hero-chips">
-              <v-chip
-                size="small"
-                variant="tonal"
-                :style="{ color: AGE_CATEGORY_COLOR[team.category] }"
-              >
-                {{ t(`profile.team.enums.${team.category}`) }}
-              </v-chip>
-              <v-chip
-                size="small"
-                variant="tonal"
-                :color="MODALITY_COLOR[team.type]"
-                :prepend-icon="mdiSoccer"
-              >
-                {{ t(`profile.team.enums.${team.type}`) }}
-              </v-chip>
-              <v-chip
-                size="small"
-                variant="tonal"
-                :color="DIVISION_COLOR[team.division]"
-                :prepend-icon="mdiTrophyOutline"
-              >
-                {{ t(`profile.team.enums.${team.division}`) }}
-              </v-chip>
-              <v-chip size="small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                {{ team.city }}
-              </v-chip>
-            </div>
-            <p class="text-body-2 text-medium-emphasis mt-2 team-hero-meta">
-              <span>{{ team.coach }}</span>
-              <span v-if="team.foundedYear">
-                <v-icon size="14" :icon="mdiCalendarOutline" />
-                {{ t('profile.team.foundedYear') }}: {{ team.foundedYear }}
-              </span>
-            </p>
           </div>
+
+          <dl class="team-sheet-dl">
+            <dt>{{ t('profile.team.category') }}</dt>
+            <dd :style="{ color: AGE_CATEGORY_COLOR[team.category] }" class="font-weight-bold">
+              {{ t(`profile.team.enums.${team.category}`) }}
+            </dd>
+
+            <dt>{{ t('profile.team.type') }}</dt>
+            <dd :style="{ color: MODALITY_COLOR[team.type] }" class="font-weight-bold">
+              <v-icon size="16" :icon="mdiSoccer" :color="MODALITY_COLOR[team.type]" class="me-1" />
+              {{ t(`profile.team.enums.${team.type}`) }}
+            </dd>
+
+            <dt>{{ t('profile.team.division') }}</dt>
+            <dd :style="{ color: DIVISION_COLOR[team.division] }" class="font-weight-bold">
+              <v-icon size="16" :icon="mdiTrophyOutline" :color="DIVISION_COLOR[team.division]" class="me-1" />
+              {{ t(`profile.team.enums.${team.division}`) }}
+            </dd>
+
+            <dt>{{ t('profile.team.city') }}</dt>
+            <dd>{{ team.city }}</dd>
+
+            <dt>{{ t('profile.team.coach') }}</dt>
+            <dd>{{ team.coach }}</dd>
+
+            <template v-if="team.foundedYear">
+              <dt>{{ t('profile.team.foundedYear') }}</dt>
+              <dd>{{ team.foundedYear }}</dd>
+            </template>
+
+            <template v-if="team.contactEmail">
+              <dt><v-icon size="16" :icon="mdiEmailOutline" /> {{ t('profile.team.contactEmail') }}</dt>
+              <dd><a :href="`mailto:${team.contactEmail}`">{{ team.contactEmail }}</a></dd>
+            </template>
+            <template v-if="team.contactPhone">
+              <dt><v-icon size="16" :icon="mdiPhoneOutline" /> {{ t('profile.team.contactPhone') }}</dt>
+              <dd><a :href="`tel:${team.contactPhone}`">{{ team.contactPhone }}</a></dd>
+            </template>
+            <template v-if="team.website">
+              <dt><v-icon size="16" :icon="mdiWeb" /> {{ t('profile.team.website') }}</dt>
+              <dd>
+                <a :href="team.website" target="_blank" rel="noopener">{{ team.website }}</a>
+              </dd>
+            </template>
+          </dl>
         </v-card>
 
-        <v-row>
-          <!-- Venue -->
-          <v-col cols="12" md="6">
-            <v-card border flat rounded="xl" class="pa-6 h-100">
-              <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
-                <v-icon :icon="mdiSoccerField" color="#2E7D32" />
-                {{ t('profile.team.venueGroup') }}
-              </h2>
+        <!-- Equipación (kit colours) -->
+        <v-card border flat rounded="xl" class="pa-6 mb-6">
+          <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+            <v-icon :icon="mdiPaletteOutline" />
+            {{ t('profile.team.colorsGroup') }}
+          </h2>
 
-              <template v-if="hasVenue">
-                <dl class="team-detail-dl">
-                  <template v-if="team.venueName">
-                    <dt>{{ t('profile.team.venueName') }}</dt>
-                    <dd>{{ team.venueName }}</dd>
-                  </template>
-                  <template v-if="team.venueAddress">
-                    <dt>{{ t('profile.team.venueAddress') }}</dt>
-                    <dd>{{ team.venueAddress }}</dd>
-                  </template>
-                  <template v-if="team.venueSurface">
-                    <dt>{{ t('profile.team.venueSurface') }}</dt>
-                    <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
-                  </template>
-                </dl>
+          <div v-if="hasKit" class="team-sheet-kit">
+            <span v-if="team.colorPrimary" class="team-sheet-kit-item">
+              <i
+                v-if="isHexColor(team.colorPrimary)"
+                class="team-sheet-swatch"
+                :style="{ background: team.colorPrimary }"
+              />
+              <span>
+                <span class="team-sheet-kit-label">{{ t('profile.team.colorPrimary') }}</span>
+                <span class="font-weight-bold d-block">{{ team.colorPrimary }}</span>
+              </span>
+            </span>
+            <span v-if="team.colorSecondary" class="team-sheet-kit-item">
+              <i
+                v-if="isHexColor(team.colorSecondary)"
+                class="team-sheet-swatch"
+                :style="{ background: team.colorSecondary }"
+              />
+              <span>
+                <span class="team-sheet-kit-label">{{ t('profile.team.colorSecondary') }}</span>
+                <span class="font-weight-bold d-block">{{ team.colorSecondary }}</span>
+              </span>
+            </span>
+          </div>
+          <p v-else class="text-body-2 text-medium-emphasis">
+            {{ t('teams.detail.noProfile') }}
+          </p>
+        </v-card>
 
-                <v-btn
-                  v-if="mapsHref"
-                  :href="mapsHref"
-                  target="_blank"
-                  rel="noopener"
-                  variant="tonal"
-                  size="small"
-                  :prepend-icon="mdiMapMarkerOutline"
-                  class="mt-4"
-                >
-                  {{ t('profile.team.directions') }}
-                </v-btn>
+        <!-- Campo (home venue) -->
+        <v-card border flat rounded="xl" class="pa-6 mb-6">
+          <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+            <v-icon :icon="mdiSoccerField" color="#2E7D32" />
+            {{ t('profile.team.venueGroup') }}
+          </h2>
+
+          <template v-if="hasVenue">
+            <dl class="team-sheet-dl">
+              <template v-if="team.venueName">
+                <dt>{{ t('profile.team.venueName') }}</dt>
+                <dd>{{ team.venueName }}</dd>
               </template>
-              <p v-else class="text-body-2 text-medium-emphasis">
-                {{ t('teams.detail.noVenue') }}
-              </p>
-            </v-card>
-          </v-col>
-
-          <!-- Colors + contact -->
-          <v-col cols="12" md="6">
-            <v-card border flat rounded="xl" class="pa-6 h-100">
-              <template v-if="hasColors">
-                <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
-                  <v-icon :icon="mdiPaletteOutline" />
-                  {{ t('profile.team.colorsGroup') }}
-                </h2>
-                <div class="team-detail-colors mb-4">
-                  <span v-if="team.colorPrimary" class="team-detail-color">
-                    <i
-                      v-if="isHexColor(team.colorPrimary)"
-                      class="team-detail-swatch"
-                      :style="{ background: team.colorPrimary }"
-                    />
-                    {{ team.colorPrimary }}
-                  </span>
-                  <span v-if="team.colorSecondary" class="team-detail-color">
-                    <i
-                      v-if="isHexColor(team.colorSecondary)"
-                      class="team-detail-swatch"
-                      :style="{ background: team.colorSecondary }"
-                    />
-                    {{ team.colorSecondary }}
-                  </span>
-                </div>
+              <template v-if="team.venueAddress">
+                <dt>{{ t('profile.team.venueAddress') }}</dt>
+                <dd>{{ team.venueAddress }}</dd>
               </template>
-
-              <template v-if="hasContact">
-                <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
-                  <v-icon :icon="mdiEmailOutline" />
-                  {{ t('profile.team.contactGroup') }}
-                </h2>
-                <dl class="team-detail-dl">
-                  <template v-if="team.contactEmail">
-                    <dt><v-icon size="16" :icon="mdiEmailOutline" /></dt>
-                    <dd><a :href="`mailto:${team.contactEmail}`">{{ team.contactEmail }}</a></dd>
-                  </template>
-                  <template v-if="team.contactPhone">
-                    <dt><v-icon size="16" :icon="mdiPhoneOutline" /></dt>
-                    <dd><a :href="`tel:${team.contactPhone}`">{{ team.contactPhone }}</a></dd>
-                  </template>
-                  <template v-if="team.website">
-                    <dt><v-icon size="16" :icon="mdiWeb" /></dt>
-                    <dd>
-                      <a :href="team.website" target="_blank" rel="noopener">{{ team.website }}</a>
-                    </dd>
-                  </template>
-                </dl>
+              <template v-if="team.venueSurface">
+                <dt>{{ t('profile.team.venueSurface') }}</dt>
+                <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
               </template>
+            </dl>
 
-              <p v-if="!hasColors && !hasContact" class="text-body-2 text-medium-emphasis">
-                <v-icon :icon="mdiShieldOutline" size="18" class="me-1" />
-                {{ t('teams.detail.noProfile') }}
-              </p>
-            </v-card>
-          </v-col>
-        </v-row>
+            <v-btn
+              v-if="mapsHref"
+              :href="mapsHref"
+              target="_blank"
+              rel="noopener"
+              variant="tonal"
+              size="small"
+              :prepend-icon="mdiMapMarkerOutline"
+              class="mt-4"
+            >
+              {{ t('profile.team.directions') }}
+            </v-btn>
+          </template>
+          <p v-else class="text-body-2 text-medium-emphasis">
+            {{ t('teams.detail.noVenue') }}
+          </p>
+        </v-card>
 
         <div class="team-detail-challenge">
           <v-btn
@@ -289,92 +265,73 @@ function challengeTeam() {
 
 <style scoped>
 .team-detail-container {
-  max-width: 1100px;
+  max-width: 800px;
 }
 
-.team-hero {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.team-hero-crest {
-  flex-shrink: 0;
-}
-
-.team-hero-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.team-hero-chips {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-.team-hero-meta {
+.team-sheet-head {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
+  margin-bottom: 1.5rem;
 }
 
-.team-hero-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+.team-sheet-crest {
+  flex-shrink: 0;
 }
 
-.team-detail-dl {
+.team-sheet-dl {
   display: grid;
   grid-template-columns: auto 1fr;
-  column-gap: 1rem;
-  row-gap: 0.5rem;
+  column-gap: 1.5rem;
+  row-gap: 0.75rem;
   margin: 0;
   align-items: center;
 }
 
-.team-detail-dl dt {
-  font-size: 0.75rem;
+.team-sheet-dl dt {
+  font-size: 0.8rem;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   display: flex;
   align-items: center;
+  gap: 0.25rem;
 }
 
-.team-detail-dl dd {
+.team-sheet-dl dd {
   margin: 0;
-  font-weight: 500;
 }
 
-.team-detail-dl dd a {
+.team-sheet-dl dd a {
   color: rgb(var(--v-theme-primary));
   text-decoration: none;
 }
 
-.team-detail-dl dd a:hover {
+.team-sheet-dl dd a:hover {
   text-decoration: underline;
 }
 
-.team-detail-colors {
+.team-sheet-kit {
   display: flex;
-  gap: 1.25rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
-.team-detail-color {
+.team-sheet-kit-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-weight: 500;
+  gap: 0.75rem;
 }
 
-.team-detail-swatch {
+.team-sheet-kit-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.team-sheet-swatch {
   display: inline-block;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
@@ -382,6 +339,6 @@ function challengeTeam() {
 .team-detail-challenge {
   display: flex;
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 </style>
