@@ -21,8 +21,9 @@
     "count": "{n} equipos",
     "empty": "Todavía no hay equipos.",
     "noResults": "La búsqueda no muestra resultados.",
-    "filters": "Filtros",
     "clearFilters": "Limpiar filtros",
+    "searchPlaceholder": "Buscar equipo por nombre…",
+    "moreFilters": "Más filtros",
     "loadFailed": "No se han podido cargar los equipos.",
     "fields": {
       "name": "Nombre",
@@ -32,6 +33,12 @@
       "division": "División",
       "category": "Categoría",
       "memberSince": "Miembro desde"
+    },
+    "sort": {
+      "nameAsc": "Nombre (A-Z)",
+      "nameDesc": "Nombre (Z-A)",
+      "cityAsc": "Ciudad (A-Z)",
+      "recent": "Más recientes"
     },
     "detail": {
       "notFound": "No se ha encontrado este equipo.",

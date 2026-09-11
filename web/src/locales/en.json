@@ -21,8 +21,9 @@
     "count": "{n} teams",
     "empty": "No teams yet.",
     "noResults": "Your search returned no results.",
-    "filters": "Filters",
     "clearFilters": "Clear filters",
+    "searchPlaceholder": "Search teams by name…",
+    "moreFilters": "More filters",
     "loadFailed": "Could not load the teams.",
     "fields": {
       "name": "Name",
@@ -32,6 +33,12 @@
       "division": "Division",
       "category": "Age category",
       "memberSince": "Member since"
+    },
+    "sort": {
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "cityAsc": "City (A-Z)",
+      "recent": "Most recent"
     },
     "detail": {
       "notFound": "This team could not be found.",
