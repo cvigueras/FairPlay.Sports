@@ -6,11 +6,13 @@ import {
   mdiArrowLeft,
   mdiCalendarOutline,
   mdiEmailOutline,
+  mdiGrass,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
   mdiSoccer,
   mdiSoccerField,
+  mdiStadiumVariant,
   mdiSwordCross,
   mdiTagOutline,
   mdiTrophyOutline,
@@ -252,17 +254,17 @@ function challengeTeam() {
             </v-btn>
           </div>
 
-          <dl v-if="hasVenue" class="team-sheet-dl">
+          <dl v-if="hasVenue" class="team-sheet-dl team-sheet-dl--main">
             <template v-if="team.venueName">
-              <dt>{{ t('profile.team.venueName') }}</dt>
+              <dt><v-icon size="18" :icon="mdiStadiumVariant" />{{ t('profile.team.venueName') }}</dt>
               <dd>{{ team.venueName }}</dd>
             </template>
             <template v-if="team.venueAddress">
-              <dt>{{ t('profile.team.venueAddress') }}</dt>
+              <dt><v-icon size="18" :icon="mdiMapMarkerOutline" />{{ t('profile.team.venueAddress') }}</dt>
               <dd>{{ team.venueAddress }}</dd>
             </template>
             <template v-if="team.venueSurface">
-              <dt>{{ t('profile.team.venueSurface') }}</dt>
+              <dt><v-icon size="18" :icon="mdiGrass" />{{ t('profile.team.venueSurface') }}</dt>
               <dd>{{ t(`profile.team.surfaces.${team.venueSurface}`) }}</dd>
             </template>
           </dl>
@@ -299,6 +301,7 @@ function challengeTeam() {
 
 .team-sheet-challenge {
   flex-shrink: 0;
+  min-width: 12.5rem;
   margin-inline-start: auto;
 }
 
@@ -328,8 +331,8 @@ function challengeTeam() {
   gap: 0.4rem;
 }
 
-/* The main sheet's label column (category, type, division, city, coach,
-   founded year) reads a little larger than the venue section below it. */
+/* The primary label/value lists (club sheet, venue) read a little
+   larger than any secondary dl on the page. */
 .team-sheet-dl--main dt {
   font-size: 0.95rem;
 }
