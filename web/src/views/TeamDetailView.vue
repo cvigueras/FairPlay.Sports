@@ -206,11 +206,15 @@ function challengeTeam() {
 
             <div v-if="hasKit" class="team-sheet-kit">
               <span v-if="team.colorPrimary" class="team-sheet-kit-item">
-                <v-icon v-if="isHexColor(team.colorPrimary)" :icon="mdiTshirtCrew" :color="team.colorPrimary" size="48" />
+                <svg v-if="isHexColor(team.colorPrimary)" width="48" height="48" viewBox="0 0 24 24" class="team-sheet-jersey">
+                  <path :d="mdiTshirtCrew" :fill="team.colorPrimary" />
+                </svg>
                 <span class="team-sheet-kit-label">{{ t('profile.team.colorPrimary') }}</span>
               </span>
               <span v-if="team.colorSecondary" class="team-sheet-kit-item">
-                <v-icon v-if="isHexColor(team.colorSecondary)" :icon="mdiTshirtCrew" :color="team.colorSecondary" size="48" />
+                <svg v-if="isHexColor(team.colorSecondary)" width="48" height="48" viewBox="0 0 24 24" class="team-sheet-jersey">
+                  <path :d="mdiTshirtCrew" :fill="team.colorSecondary" />
+                </svg>
                 <span class="team-sheet-kit-label">{{ t('profile.team.colorSecondary') }}</span>
               </span>
             </div>
@@ -407,6 +411,14 @@ function challengeTeam() {
   font-size: 1rem;
   font-weight: 600;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+/* A thin outline on the jersey shape itself, so a near-white kit colour
+   still reads as a jersey instead of disappearing into the white card. */
+.team-sheet-jersey path {
+  stroke: rgba(var(--v-border-color), var(--v-border-opacity));
+  stroke-width: 0.75;
+  stroke-linejoin: round;
 }
 
 .team-sheet-head {
