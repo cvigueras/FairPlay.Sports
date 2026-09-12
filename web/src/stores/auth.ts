@@ -25,6 +25,8 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
   const currentUser = ref<User | null>(null)
   const isAuthenticated = computed(() => currentUser.value !== null)
+  /** Bumped on every photo upload so every avatar on screen refetches instead of using a cached image. */
+  const photoVersion = ref(0)
 
   function apply(response: AuthResponse): void {
     accessToken.value = response.accessToken
@@ -66,6 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser.value = await http.get<User>(`/api/users/${currentUser.value.id}`, {
       token: accessToken.value,
     })
+    photoVersion.value = Date.now()
   }
 
   /** Best-effort session restore from the refresh cookie. Never throws. */
@@ -91,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     currentUser,
     isAuthenticated,
+    photoVersion,
     login,
     register,
     setTeam,

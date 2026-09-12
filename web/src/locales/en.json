@@ -123,6 +123,9 @@
     "logout": "Log out",
     "loggingOut": "Logging out...",
     "welcome": "Hi, {name}",
+    "menu": {
+      "open": "View your profile"
+    },
     "activation": {
       "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
     },

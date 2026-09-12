@@ -13,9 +13,11 @@ import {
   mdiMenu,
   mdiTrophyOutline,
 } from '@mdi/js'
+import { baseUrl } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
+import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import logoUrl from '@/assets/logo.webp'
 
 const { t, locale } = useI18n()
@@ -26,6 +28,23 @@ const ui = useUiStore()
 const { mobile } = useDisplay()
 
 const userInitial = computed(() => auth.currentUser?.userName?.charAt(0).toUpperCase() ?? '')
+
+const userPhotoUrl = computed(() => {
+  const user = auth.currentUser
+  if (!user?.hasPhoto) return null
+  const bust = auth.photoVersion ? `?v=${auth.photoVersion}` : ''
+  return `${baseUrl}/api/users/${user.id}/photo${bust}`
+})
+
+const memberSince = computed(() => {
+  const user = auth.currentUser
+  if (!user) return ''
+  return new Date(user.createdAt).toLocaleDateString(locale.value, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+})
 
 // Routes are flat, so every page is just "Home / <page>".
 const CRUMB_LABELS: Record<string, string> = {
@@ -120,7 +139,47 @@ async function handleLogout(): Promise<void> {
     <template #append>
       <div class="app-bar-actions">
         <div v-if="auth.currentUser" class="app-bar-user d-none d-sm-flex">
-          <span class="app-bar-user__avatar">{{ userInitial }}</span>
+          <v-menu :close-on-content-click="false" location="bottom end" offset="10">
+            <template #activator="{ props }">
+              <button
+                type="button"
+                class="app-bar-user__avatar-btn"
+                :aria-label="t('profile.menu.open')"
+                v-bind="props"
+              >
+                <span class="app-bar-user__avatar">
+                  <img
+                    v-if="userPhotoUrl"
+                    :src="userPhotoUrl"
+                    :alt="t('profile.photo.alt')"
+                    class="app-bar-user__avatar-img"
+                  />
+                  <template v-else>{{ userInitial }}</template>
+                </span>
+              </button>
+            </template>
+
+            <v-card class="user-panel" flat>
+              <div class="user-panel__avatar">
+                <ProfileAvatar />
+              </div>
+              <p class="user-panel__name">{{ auth.currentUser.userName }}</p>
+              <p class="user-panel__email">{{ auth.currentUser.email }}</p>
+              <v-chip
+                :color="auth.currentUser.role === 'Admin' ? 'amber-darken-2' : 'primary'"
+                size="small"
+                variant="tonal"
+                class="mt-2"
+              >
+                {{ auth.currentUser.role }}
+              </v-chip>
+              <div class="user-panel__since">
+                <span class="text-medium-emphasis">{{ t('profile.fields.memberSince') }}</span>
+                <span class="font-weight-medium">{{ memberSince }}</span>
+              </div>
+            </v-card>
+          </v-menu>
+
           <span class="app-bar-user__name">{{ t('profile.welcome', { name: auth.currentUser.userName }) }}</span>
         </div>
 
@@ -247,6 +306,14 @@ async function handleLogout(): Promise<void> {
   gap: 10px;
 }
 
+.app-bar-user__avatar-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
 .app-bar-user__avatar {
   flex: 0 0 auto;
   width: 30px;
@@ -259,6 +326,53 @@ async function handleLogout(): Promise<void> {
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
+  overflow: hidden;
+}
+
+.app-bar-user__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-panel {
+  width: 280px;
+  padding: 1.25rem 1.375rem;
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.user-panel__avatar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.user-panel__name {
+  margin: 0;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.user-panel__email {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-panel__since {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.8125rem;
 }
 
 .app-bar-user__name {
