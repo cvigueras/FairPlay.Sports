@@ -309,13 +309,28 @@ function medalClass(position: number): string {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
-  scrollbar-width: none;
+  /* The table below is wider than the viewport on small/medium screens, so
+     this same element also scrolls horizontally (see .standings-table-wrap).
+     Keep the vertical scrollbar hidden (it's the page's main scroll, always
+     available) but show a slim horizontal one - it's the only hint on a
+     mouse/trackpad device that the grid can be swiped sideways. */
+  scrollbar-width: thin;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .standings-list::-webkit-scrollbar {
   width: 0;
-  height: 0;
+  height: 6px;
+}
+
+.standings-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.standings-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .standings-empty {
@@ -326,10 +341,15 @@ function medalClass(position: number): string {
   padding: 4rem 1rem;
 }
 
-/* Narrow screens can't fit ten columns - let the table itself scroll sideways
-   rather than squeezing every column unreadably thin. */
+/* Narrow screens can't fit ten columns - the table scrolls sideways rather
+   than squeezing every column unreadably thin. No overflow-x here: on any
+   ancestor between the sticky thead below and .standings-list, a non-visible
+   overflow (including hidden, and auto on just one axis - which forces the
+   other axis to auto too) becomes the thead's sticky containing block
+   instead of .standings-list, breaking the sticky header entirely. Setting
+   overflow-y: auto on .standings-list already makes it scroll both axes. */
 .standings-table-wrap {
-  overflow-x: auto;
+  overflow: visible;
 }
 
 /* One elevated card wrapping the table, instead of a bare table sitting
@@ -338,13 +358,14 @@ function medalClass(position: number): string {
    generic (black-based) theme tokens. The card spans the full width of the
    page (same as the header/footer above and Teams' own content), while the
    table itself stays capped and centred inside it - stretching every stat
-   column to fill 1600px would leave them swimming in dead space. */
+   column to fill 1600px would leave them swimming in dead space. No
+   overflow: hidden here either (see .standings-table-wrap above) - the
+   rounded corners are cut into the corner cells themselves instead. */
 .standings-card {
   width: 100%;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  overflow: hidden;
 }
 
 .standings-table {
@@ -357,6 +378,10 @@ function medalClass(position: number): string {
 .standings-table thead th {
   position: sticky;
   top: 0;
+  /* Above row content (team crests, medals) so it doesn't get painted over
+     while scrolling - siblings later in the DOM (tbody) would otherwise
+     stack above a z-index:auto sticky thead. */
+  z-index: 2;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   padding: 0.75rem 0.85rem;
@@ -373,6 +398,25 @@ function medalClass(position: number): string {
 .standings-table thead th.standings-col-club {
   text-align: left;
   padding-inline: 0.5rem;
+}
+
+/* .standings-card no longer clips its content (that broke the sticky
+   header below), so the corners that used to come from that clipping are
+   cut directly into the table's own corner cells instead. */
+.standings-table thead th:first-child {
+  border-top-left-radius: 16px;
+}
+
+.standings-table thead th:last-child {
+  border-top-right-radius: 16px;
+}
+
+.standings-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px;
+}
+
+.standings-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px;
 }
 
 .standings-table thead th.standings-col-stat {
@@ -533,6 +577,37 @@ function medalClass(position: number): string {
 
   .standings-footer-inner :deep(.v-pagination) {
     margin-inline: 1.5rem;
+  }
+
+  /* Tighter grid so a phone-width screen needs less horizontal scroll to
+     reach the last column. */
+  .standings-header,
+  .standings-list,
+  .standings-footer-inner {
+    padding-inline: 1rem;
+  }
+
+  .standings-table {
+    font-size: 0.8125rem;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .standings-col-club {
+    min-width: 160px;
+  }
+
+  .standings-col-stat {
+    width: 3rem;
+  }
+
+  .standings-medal {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.75rem;
   }
 }
 </style>
