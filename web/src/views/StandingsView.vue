@@ -557,6 +557,11 @@ function medalClass(position: number): string {
 @media (min-width: 1280px) {
   .standings-legend {
     display: block;
+    /* Pinned the same way as the table's own header row, against the same
+       scroll container (.standings-list) - it should stay put while the
+       rows scroll underneath, not travel up with them. */
+    position: sticky;
+    top: 0;
     flex: 0 0 300px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
