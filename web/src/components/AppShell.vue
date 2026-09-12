@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
@@ -28,6 +28,7 @@ const ui = useUiStore()
 const { mobile } = useDisplay()
 
 const userInitial = computed(() => auth.currentUser?.userName?.charAt(0).toUpperCase() ?? '')
+const userMenuOpen = ref(false)
 
 const userPhotoUrl = computed(() => {
   const user = auth.currentUser
@@ -104,7 +105,6 @@ function toggleNav(): void {
 
 const navItems = [
   { to: '/', icon: mdiHomeOutline, label: 'nav.home' },
-  { to: '/profile', icon: mdiAccountOutline, label: 'nav.profile' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
 ]
@@ -139,7 +139,7 @@ async function handleLogout(): Promise<void> {
     <template #append>
       <div class="app-bar-actions">
         <div v-if="auth.currentUser" class="app-bar-user d-none d-sm-flex">
-          <v-menu :close-on-content-click="false" location="bottom end" offset="10">
+          <v-menu v-model="userMenuOpen" :close-on-content-click="false" location="bottom end" offset="10">
             <template #activator="{ props }">
               <button
                 type="button"
@@ -177,6 +177,10 @@ async function handleLogout(): Promise<void> {
                 <span class="text-medium-emphasis">{{ t('profile.fields.memberSince') }}</span>
                 <span class="font-weight-medium">{{ memberSince }}</span>
               </div>
+              <RouterLink to="/profile" class="user-panel__link" @click="userMenuOpen = false">
+                {{ t('profile.menu.viewProfile') }}
+                <v-icon :icon="mdiChevronRight" size="16" />
+              </RouterLink>
             </v-card>
           </v-menu>
 
@@ -373,6 +377,25 @@ async function handleLogout(): Promise<void> {
   padding-top: 0.9rem;
   border-top: 1px solid #f1f5f9;
   font-size: 0.8125rem;
+}
+
+.user-panel__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #f1f5f9;
+  color: #16a34a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-panel__link:hover {
+  color: #15803d;
+  text-decoration: underline;
 }
 
 .app-bar-user__name {

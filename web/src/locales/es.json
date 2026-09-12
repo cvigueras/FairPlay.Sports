@@ -124,7 +124,8 @@
     "loggingOut": "Cerrando sesión...",
     "welcome": "Hola, {name}",
     "menu": {
-      "open": "Ver mi perfil"
+      "open": "Ver mi perfil",
+      "viewProfile": "Ver perfil"
     },
     "activation": {
       "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
