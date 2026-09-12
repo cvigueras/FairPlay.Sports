@@ -318,6 +318,12 @@ async function handleLogout(): Promise<void> {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* At this size the browser is shrinking the photo by a large ratio; a
+     plain raster scale looks muddier than the same photo at 120px on
+     /profile. Promoting the image to its own GPU layer makes Chromium use
+     its (better) compositor-side downscale path instead. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .user-panel {
@@ -349,6 +355,9 @@ async function handleLogout(): Promise<void> {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Same GPU-layer promotion as the header avatar - see its comment. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .user-panel__name {
