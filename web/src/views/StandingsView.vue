@@ -30,10 +30,11 @@ const result = ref<PagedResult<Standing> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Empty (null) means "no filter"; changing one re-queries from page 1.
-const type = ref<FootballType | null>(null)
-const division = ref<Division | null>(null)
-const category = ref<AgeCategory | null>(null)
+// Always has a value - the filters aren't clearable, only reassignable.
+// Changing one re-queries from page 1.
+const type = ref<FootballType>('Football11')
+const division = ref<Division>('Second')
+const category = ref<AgeCategory>('Infantiles')
 
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
@@ -87,9 +88,9 @@ async function load() {
         page: page.value,
         pageSize: PAGE_SIZE,
         sort: sort.value,
-        type: type.value ?? undefined,
-        division: division.value ?? undefined,
-        category: category.value ?? undefined,
+        type: type.value,
+        division: division.value,
+        category: category.value,
       },
       auth.accessToken,
     )
@@ -140,7 +141,6 @@ function medalClass(position: number): string {
             variant="outlined"
             density="comfortable"
             hide-details
-            clearable
             class="standings-filter-select"
           />
           <v-select
@@ -150,7 +150,6 @@ function medalClass(position: number): string {
             variant="outlined"
             density="comfortable"
             hide-details
-            clearable
             class="standings-filter-select"
           />
           <v-select
@@ -160,7 +159,6 @@ function medalClass(position: number): string {
             variant="outlined"
             density="comfortable"
             hide-details
-            clearable
             class="standings-filter-select"
           />
         </div>
