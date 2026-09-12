@@ -63,6 +63,17 @@
       "goalsFor": "GF",
       "goalsAgainst": "GA",
       "goalDifference": "GD"
+    },
+    "legend": {
+      "title": "Legend",
+      "points": "Points",
+      "played": "Matches played",
+      "won": "Matches won",
+      "drawn": "Matches drawn",
+      "lost": "Matches lost",
+      "goalsFor": "Goals for",
+      "goalsAgainst": "Goals against",
+      "goalDifference": "Goal difference"
     }
   },
   "validation": {

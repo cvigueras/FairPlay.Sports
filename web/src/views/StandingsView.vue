@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
-import { mdiArrowDown, mdiArrowUp, mdiTrophyOutline } from '@mdi/js'
+import { mdiArrowDown, mdiArrowUp, mdiInformationOutline, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { standingsApi } from '@/lib/standings'
 import { useAuthStore } from '@/stores/auth'
@@ -51,6 +51,18 @@ const COLUMNS = [
   { field: 'goalsfor', labelKey: 'standings.fields.goalsFor' },
   { field: 'goalsagainst', labelKey: 'standings.fields.goalsAgainst' },
   { field: 'goaldifference', labelKey: 'standings.fields.goalDifference' },
+] as const
+
+/** What each column abbreviation means, shown in the legend beside the grid. */
+const LEGEND_FIELDS = [
+  'points',
+  'played',
+  'won',
+  'drawn',
+  'lost',
+  'goalsFor',
+  'goalsAgainst',
+  'goalDifference',
 ] as const
 
 const sortField = ref<string>('points')
@@ -235,6 +247,21 @@ function medalClass(position: number): string {
                 </tbody>
               </table>
             </div>
+
+            <aside class="standings-legend">
+              <div class="standings-legend-title">
+                <v-icon :icon="mdiInformationOutline" size="16" color="#94a3b8" />
+                {{ t('standings.legend.title') }}
+              </div>
+              <div
+                v-for="field in LEGEND_FIELDS"
+                :key="field"
+                class="standings-legend-row"
+              >
+                <span class="standings-legend-chip">{{ t(`standings.fields.${field}`) }}</span>
+                <span class="standings-legend-text">{{ t(`standings.legend.${field}`) }}</span>
+              </div>
+            </aside>
           </div>
         </template>
       </div>
@@ -347,30 +374,33 @@ function medalClass(position: number): string {
    overflow (including hidden, and auto on just one axis - which forces the
    other axis to auto too) becomes the thead's sticky containing block
    instead of .standings-list, breaking the sticky header entirely. Setting
-   overflow-y: auto on .standings-list already makes it scroll both axes. */
+   overflow-y: auto on .standings-list already makes it scroll both axes.
+   The card and the legend sit side by side here; on narrow/medium screens
+   the legend is hidden altogether (see the min-width media query below), so
+   this row holds just the card. */
 .standings-table-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
   overflow: visible;
 }
 
 /* One elevated card wrapping the table, instead of a bare table sitting
    directly on the page background. Slate palette to match the rest of the
    app's redesigned screens (login, shell, teams) rather than Vuetify's
-   generic (black-based) theme tokens. The card spans the full width of the
-   page (same as the header/footer above and Teams' own content), while the
-   table itself stays capped and centred inside it - stretching every stat
-   column to fill 1600px would leave them swimming in dead space. No
+   generic (black-based) theme tokens. Sized to the table's own content
+   (not stretched to fill the row) so its right border sits right after the
+   last column instead of floating in whatever blank space is left over. No
    overflow: hidden here either (see .standings-table-wrap above) - the
    rounded corners are cut into the corner cells themselves instead. */
 .standings-card {
-  width: 100%;
+  flex: 0 0 auto;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
 }
 
 .standings-table {
-  width: 100%;
-  max-width: 1040px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -514,6 +544,64 @@ function medalClass(position: number): string {
 .standings-club-link:hover {
   color: #16a34a;
   text-decoration: underline;
+}
+
+/* Explains the column abbreviations in the space beside the grid. Hidden by
+   default - there's no room for it next to the table below desktop widths,
+   and the user asked for it to disappear entirely on small/mobile screens
+   rather than dropping below the table. */
+.standings-legend {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .standings-legend {
+    display: block;
+    flex: 0 0 300px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1.375rem;
+  }
+}
+
+.standings-legend-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.standings-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.standings-legend-row:not(:last-child) {
+  margin-bottom: 0.7rem;
+}
+
+.standings-legend-chip {
+  flex: 0 0 2.5rem;
+  text-align: center;
+  padding: 0.25rem 0;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.standings-legend-text {
+  font-size: 0.8125rem;
+  color: #475569;
 }
 
 .standings-footer {

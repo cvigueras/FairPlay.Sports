@@ -63,6 +63,17 @@
       "goalsFor": "GF",
       "goalsAgainst": "GC",
       "goalDifference": "DG"
+    },
+    "legend": {
+      "title": "Leyenda",
+      "points": "Puntos",
+      "played": "Partidos jugados",
+      "won": "Partidos ganados",
+      "drawn": "Partidos empatados",
+      "lost": "Partidos perdidos",
+      "goalsFor": "Goles a favor",
+      "goalsAgainst": "Goles en contra",
+      "goalDifference": "Diferencia de goles"
     }
   },
   "validation": {
