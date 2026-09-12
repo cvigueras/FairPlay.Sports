@@ -30,6 +30,12 @@ const submitError = ref('')
 function switchMode(next: 'login' | 'register') {
   mode.value = next
   submitError.value = ''
+  loginErrors.email = ''
+  loginErrors.password = ''
+  registerErrors.userName = ''
+  registerErrors.email = ''
+  registerErrors.password = ''
+  registerErrors.confirmPassword = ''
 }
 
 const loginForm = reactive({
