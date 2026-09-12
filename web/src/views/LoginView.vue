@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { mdiCalendarMonthOutline, mdiSwordCross, mdiTranslate, mdiTrophyOutline } from '@mdi/js'
+import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import logoUrl from '@/assets/logo.webp'
@@ -12,7 +13,10 @@ const route = useRoute()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
 
-const justRegistered = computed(() => route.query.registered === '1')
+// Login and register share this one screen (hero + panel); switching between
+// them is a local state flip, not a route change, so the hero never remounts.
+const mode = ref<'login' | 'register'>(route.name === 'register' ? 'register' : 'login')
+const justRegistered = ref(route.query.registered === '1')
 
 const heroFeatures = [
   { icon: mdiSwordCross, titleKey: 'login.feature1Title', bodyKey: 'login.feature1Body' },
@@ -20,38 +24,43 @@ const heroFeatures = [
   { icon: mdiTrophyOutline, titleKey: 'login.feature3Title', bodyKey: 'login.feature3Body' },
 ]
 
-const form = reactive({
-  email: '',
-  password: '',
-})
-
-const errors = reactive({
-  email: '',
-  password: '',
-})
-
 const isSubmitting = ref(false)
 const submitError = ref('')
 
-function validate(): boolean {
-  errors.email = !form.email
+function switchMode(next: 'login' | 'register') {
+  mode.value = next
+  submitError.value = ''
+}
+
+const loginForm = reactive({
+  email: '',
+  password: '',
+})
+
+const loginErrors = reactive({
+  email: '',
+  password: '',
+})
+
+function validateLogin(): boolean {
+  loginErrors.email = !loginForm.email
     ? t('validation.emailRequired')
-    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginForm.email)
       ? t('validation.emailInvalid')
       : ''
 
-  errors.password = !form.password ? t('validation.passwordRequired') : ''
+  loginErrors.password = !loginForm.password ? t('validation.passwordRequired') : ''
 
-  return !errors.email && !errors.password
+  return !loginErrors.email && !loginErrors.password
 }
 
-async function handleSubmit() {
+async function handleLoginSubmit() {
   submitError.value = ''
-  if (!validate()) return
+  if (!validateLogin()) return
 
   isSubmitting.value = true
   try {
-    await auth.login(form.email, form.password)
+    await auth.login(loginForm.email, loginForm.password)
   } catch {
     submitError.value = t('login.failed')
     return
@@ -62,6 +71,71 @@ async function handleSubmit() {
   // Navigate only after a successful sign-in; a router rejection here must not
   // surface as a "wrong credentials" message.
   await router.push('/profile')
+}
+
+const registerForm = reactive({
+  userName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+})
+
+const registerErrors = reactive({
+  userName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+})
+
+function validateRegister(): boolean {
+  registerErrors.userName = !registerForm.userName.trim() ? t('validation.userNameRequired') : ''
+
+  registerErrors.email = !registerForm.email
+    ? t('validation.emailRequired')
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)
+      ? t('validation.emailInvalid')
+      : ''
+
+  registerErrors.password = !registerForm.password
+    ? t('validation.passwordRequired')
+    : registerForm.password.length < 8
+      ? t('validation.passwordMinLength')
+      : ''
+
+  registerErrors.confirmPassword =
+    registerForm.confirmPassword !== registerForm.password ? t('validation.passwordsMismatch') : ''
+
+  return (
+    !registerErrors.userName &&
+    !registerErrors.email &&
+    !registerErrors.password &&
+    !registerErrors.confirmPassword
+  )
+}
+
+async function handleRegisterSubmit() {
+  submitError.value = ''
+  if (!validateRegister()) return
+
+  isSubmitting.value = true
+  try {
+    await auth.register({
+      userName: registerForm.userName.trim(),
+      email: registerForm.email,
+      password: registerForm.password,
+    })
+  } catch (error) {
+    submitError.value = error instanceof ApiError ? error.message : t('register.failed')
+    return
+  } finally {
+    isSubmitting.value = false
+  }
+
+  // The account was created but the user still needs to sign in; switch back
+  // to the login form in place rather than navigating.
+  loginForm.email = registerForm.email
+  justRegistered.value = true
+  switchMode('login')
 }
 </script>
 
@@ -121,11 +195,15 @@ async function handleSubmit() {
 
         <div class="login-panel__form">
           <div class="login-panel__heading">
-            <h2 class="text-h5 font-weight-bold">{{ t('login.title') }}</h2>
-            <p class="text-body-2 text-medium-emphasis mt-1">{{ t('login.subtitle') }}</p>
+            <h2 class="text-h5 font-weight-bold">
+              {{ mode === 'login' ? t('login.title') : t('register.title') }}
+            </h2>
+            <p class="text-body-2 text-medium-emphasis mt-1">
+              {{ mode === 'login' ? t('login.subtitle') : t('register.subtitle') }}
+            </p>
           </div>
 
-          <v-form novalidate @submit.prevent="handleSubmit">
+          <v-form v-if="mode === 'login'" novalidate @submit.prevent="handleLoginSubmit">
             <v-alert
               v-if="justRegistered"
               type="success"
@@ -137,22 +215,22 @@ async function handleSubmit() {
             </v-alert>
 
             <v-text-field
-              v-model="form.email"
+              v-model="loginForm.email"
               :label="t('register.email')"
               type="email"
               autocomplete="email"
               :placeholder="t('login.emailPlaceholder')"
-              :error-messages="errors.email"
+              :error-messages="loginErrors.email"
               class="mb-2"
             />
 
             <v-text-field
-              v-model="form.password"
+              v-model="loginForm.password"
               :label="t('register.password')"
               type="password"
               autocomplete="current-password"
               :placeholder="t('common.passwordPlaceholder')"
-              :error-messages="errors.password"
+              :error-messages="loginErrors.password"
               class="mb-2"
             />
 
@@ -165,11 +243,76 @@ async function handleSubmit() {
             </v-btn>
           </v-form>
 
+          <v-form v-else novalidate @submit.prevent="handleRegisterSubmit">
+            <v-text-field
+              v-model="registerForm.userName"
+              :label="t('register.userName')"
+              autocomplete="username"
+              :placeholder="t('register.userNamePlaceholder')"
+              :error-messages="registerErrors.userName"
+              class="mb-2"
+            />
+
+            <v-text-field
+              v-model="registerForm.email"
+              :label="t('register.email')"
+              type="email"
+              autocomplete="email"
+              :placeholder="t('register.emailPlaceholder')"
+              :error-messages="registerErrors.email"
+              class="mb-2"
+            />
+
+            <v-text-field
+              v-model="registerForm.password"
+              :label="t('register.password')"
+              type="password"
+              autocomplete="new-password"
+              :placeholder="t('common.passwordPlaceholder')"
+              :error-messages="registerErrors.password"
+              class="mb-2"
+            />
+
+            <v-text-field
+              v-model="registerForm.confirmPassword"
+              :label="t('register.confirmPassword')"
+              type="password"
+              autocomplete="new-password"
+              :placeholder="t('common.passwordPlaceholder')"
+              :error-messages="registerErrors.confirmPassword"
+              class="mb-2"
+            />
+
+            <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
+              {{ submitError }}
+            </v-alert>
+
+            <v-btn type="submit" block size="large" :loading="isSubmitting">
+              {{ isSubmitting ? t('register.submitting') : t('register.submit') }}
+            </v-btn>
+          </v-form>
+
           <p class="login-panel__footer text-body-2 text-medium-emphasis">
-            {{ t('login.noAccount') }}
-            <RouterLink to="/register" class="text-primary text-decoration-none font-weight-medium">
-              {{ t('login.goRegister') }}
-            </RouterLink>
+            <template v-if="mode === 'login'">
+              {{ t('login.noAccount') }}
+              <button
+                type="button"
+                class="login-panel__switch text-primary font-weight-medium"
+                @click="switchMode('register')"
+              >
+                {{ t('login.goRegister') }}
+              </button>
+            </template>
+            <template v-else>
+              {{ t('register.haveAccount') }}
+              <button
+                type="button"
+                class="login-panel__switch text-primary font-weight-medium"
+                @click="switchMode('login')"
+              >
+                {{ t('register.goLogin') }}
+              </button>
+            </template>
           </p>
         </div>
       </section>
@@ -322,6 +465,15 @@ async function handleSubmit() {
 .login-panel__footer {
   margin: 0;
   text-align: center;
+}
+
+.login-panel__switch {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 @media (max-width: 899px) {
