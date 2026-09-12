@@ -21,6 +21,7 @@ const initials = computed(() =>
 <template>
   <v-img
     v-if="team.hasCrest"
+    eager
     :src="teamsApi.crestUrl(team.id)"
     :alt="team.name"
     :width="dimension"

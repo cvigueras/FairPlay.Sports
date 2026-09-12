@@ -333,17 +333,23 @@ function medalClass(position: number): string {
 }
 
 /* One elevated card wrapping the table, instead of a bare table sitting
-   directly on the page background. */
+   directly on the page background. Slate palette to match the rest of the
+   app's redesigned screens (login, shell, teams) rather than Vuetify's
+   generic (black-based) theme tokens. The card spans the full width of the
+   page (same as the header/footer above and Teams' own content), while the
+   table itself stays capped and centred inside it - stretching every stat
+   column to fill 1600px would leave them swimming in dead space. */
 .standings-card {
-  max-width: 1040px;
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
 }
 
 .standings-table {
   width: 100%;
+  max-width: 1040px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -351,13 +357,13 @@ function medalClass(position: number): string {
 .standings-table thead th {
   position: sticky;
   top: 0;
-  background: rgb(var(--v-theme-background));
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding: 0.75rem 0.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 0.85rem;
   text-align: center;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: rgba(var(--v-theme-on-surface), 0.65);
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -366,6 +372,7 @@ function medalClass(position: number): string {
 
 .standings-table thead th.standings-col-club {
   text-align: left;
+  padding-inline: 0.5rem;
 }
 
 .standings-table thead th.standings-col-stat {
@@ -379,19 +386,23 @@ function medalClass(position: number): string {
 }
 
 .standings-col-stat--active {
-  color: rgb(var(--v-theme-primary));
+  color: #15803d;
 }
 
 .standings-table tbody tr:not(:last-child) td {
-  border-bottom: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.6));
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .standings-table td {
-  padding: 0.7rem 0.5rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.standings-table td.standings-col-club {
+  padding-inline: 0.5rem;
 }
 
 .standings-col-position {
-  width: 2.75rem;
+  width: 3.5rem;
   text-align: center;
 }
 
@@ -402,8 +413,8 @@ function medalClass(position: number): string {
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  background: rgba(var(--v-theme-on-surface), 0.06);
-  color: rgba(var(--v-theme-on-surface), 0.65);
+  background: #f1f5f9;
+  color: #64748b;
   font-weight: 700;
   font-size: 0.8125rem;
 }
@@ -428,9 +439,9 @@ function medalClass(position: number): string {
 }
 
 .standings-col-stat {
-  width: 3rem;
+  width: 4rem;
   text-align: center;
-  color: rgba(var(--v-theme-on-surface), 0.75);
+  color: #475569;
 }
 
 .standings-col-stat--goaldiff {
@@ -441,8 +452,8 @@ function medalClass(position: number): string {
   display: inline-flex;
   padding: 0.15rem 0.7rem;
   border-radius: 999px;
-  background: rgba(var(--v-theme-primary), 0.12);
-  color: rgb(var(--v-theme-primary));
+  background: #dcfce7;
+  color: #15803d;
   font-weight: 700;
 }
 
@@ -450,21 +461,21 @@ function medalClass(position: number): string {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: inherit;
+  color: #0f172a;
   text-decoration: none;
   min-width: 0;
   font-weight: 600;
 }
 
 .standings-club-link:hover {
-  color: rgb(var(--v-theme-primary));
+  color: #16a34a;
   text-decoration: underline;
 }
 
 .standings-footer {
   flex: 0 0 auto;
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-surface));
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .standings-footer-inner {
