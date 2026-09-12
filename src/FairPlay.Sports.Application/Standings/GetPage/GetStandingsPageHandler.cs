@@ -13,8 +13,19 @@ public sealed class GetStandingsPageHandler(IStandingRepository standings, ITeam
 
     public async Task<Result<PagedResult<StandingDto>>> Handle(GetStandingsPageQuery request, CancellationToken cancellationToken)
     {
+        var filter = request.Filter;
+
+        // Standing carries no navigation to Team, so a classification filter is resolved to
+        // concrete team ids here before the paged query runs.
+        if (filter.Type is not null || filter.Division is not null || filter.Category is not null)
+        {
+            var matchingTeamIds = await _teams.GetIdsByClassificationAsync(
+                filter.Type, filter.Division, filter.Category, cancellationToken);
+            filter = filter with { TeamIds = matchingTeamIds };
+        }
+
         var page = await _standings.GetPageAsync(
-            request.Filter,
+            filter,
             new StandingSort(request.Sort),
             request.Page,
             request.PageSize,

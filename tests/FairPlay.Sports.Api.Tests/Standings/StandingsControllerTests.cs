@@ -7,6 +7,7 @@ using FairPlay.Sports.Application.Standings.Delete;
 using FairPlay.Sports.Application.Standings.GetById;
 using FairPlay.Sports.Application.Standings.GetPage;
 using FairPlay.Sports.Application.Standings.Update;
+using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.TestSupport.Standings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +44,16 @@ public class StandingsControllerTests
             .Returns(Result<PagedResult<StandingDto>>.Success(pageResult));
 
         var teamId = Guid.NewGuid();
-        var request = new GetStandingsPageRequest { Page = 2, PageSize = 5, Sort = "-points", TeamId = teamId };
+        var request = new GetStandingsPageRequest
+        {
+            Page = 2,
+            PageSize = 5,
+            Sort = "-points",
+            TeamId = teamId,
+            Type = FootballType.Futsal,
+            Division = Division.First,
+            Category = AgeCategory.Juveniles,
+        };
 
         var response = await _controller.GetPage(request, _cancellationTokenSource.Token);
 
@@ -55,7 +65,10 @@ public class StandingsControllerTests
                 query.Page == 2 &&
                 query.PageSize == 5 &&
                 query.Sort == "-points" &&
-                query.Filter.TeamId == teamId),
+                query.Filter.TeamId == teamId &&
+                query.Filter.Type == FootballType.Futsal &&
+                query.Filter.Division == Division.First &&
+                query.Filter.Category == AgeCategory.Juveniles),
             _cancellationTokenSource.Token);
     }
 

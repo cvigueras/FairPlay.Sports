@@ -3,13 +3,21 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
-import { mdiArrowDown, mdiArrowUp, mdiShieldOutline, mdiTrophyOutline } from '@mdi/js'
+import { mdiArrowDown, mdiArrowUp, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { standingsApi } from '@/lib/standings'
-import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
+import TeamCrest from '@/components/TeamCrest.vue'
 import type { Standing } from '@/types/standing'
 import type { PagedResult } from '@/types/pagination'
+import {
+  AGE_CATEGORIES,
+  DIVISIONS,
+  FOOTBALL_TYPES,
+  type AgeCategory,
+  type Division,
+  type FootballType,
+} from '@/types/team'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -21,6 +29,17 @@ const page = ref(1)
 const result = ref<PagedResult<Standing> | null>(null)
 const loading = ref(false)
 const error = ref('')
+
+// Empty (null) means "no filter"; changing one re-queries from page 1.
+const type = ref<FootballType | null>(null)
+const division = ref<Division | null>(null)
+const category = ref<AgeCategory | null>(null)
+
+const enumItems = <T extends string>(values: readonly T[]) =>
+  values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
+const typeItems = computed(() => enumItems(FOOTBALL_TYPES))
+const divisionItems = computed(() => enumItems(DIVISIONS))
+const categoryItems = computed(() => enumItems(AGE_CATEGORIES))
 
 /** Sortable columns, in display order. Points defaults to best-first, like any league table. */
 const COLUMNS = [
@@ -52,7 +71,14 @@ async function load() {
   error.value = ''
   try {
     result.value = await standingsApi.page(
-      { page: page.value, pageSize: PAGE_SIZE, sort: sort.value },
+      {
+        page: page.value,
+        pageSize: PAGE_SIZE,
+        sort: sort.value,
+        type: type.value ?? undefined,
+        division: division.value ?? undefined,
+        category: category.value ?? undefined,
+      },
       auth.accessToken,
     )
   } catch (err) {
@@ -62,17 +88,26 @@ async function load() {
   }
 }
 
+// A filter or sort change goes back to the first page; reload directly if already there.
 function reload() {
   if (page.value === 1) load()
   else page.value = 1
 }
 
 watch(page, load, { immediate: true })
-watch(sort, reload)
+watch([sort, type, division, category], reload)
 
 /** The table's running row number, independent of the current page. */
 function positionOf(index: number): number {
   return (page.value - 1) * PAGE_SIZE + index + 1
+}
+
+/** A podium medal for the top 3 overall positions; plain otherwise. */
+function medalClass(position: number): string {
+  if (position === 1) return 'standings-medal--gold'
+  if (position === 2) return 'standings-medal--silver'
+  if (position === 3) return 'standings-medal--bronze'
+  return ''
 }
 </script>
 
@@ -84,6 +119,39 @@ function positionOf(index: number): number {
           <v-icon :icon="mdiTrophyOutline" color="#C9A227" />
           {{ t('standings.title') }}
         </h1>
+
+        <div class="standings-filterbar">
+          <v-select
+            v-model="type"
+            :items="typeItems"
+            :label="t('teams.fields.type')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+            class="standings-filter-select"
+          />
+          <v-select
+            v-model="division"
+            :items="divisionItems"
+            :label="t('teams.fields.division')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+            class="standings-filter-select"
+          />
+          <v-select
+            v-model="category"
+            :items="categoryItems"
+            :label="t('teams.fields.category')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            clearable
+            class="standings-filter-select"
+          />
+        </div>
       </div>
 
       <div class="standings-list">
@@ -102,63 +170,71 @@ function positionOf(index: number): number {
           </div>
 
           <div v-else class="standings-table-wrap">
-            <table class="standings-table">
-              <thead>
-                <tr>
-                  <th class="standings-col-position">{{ t('standings.fields.position') }}</th>
-                  <th class="standings-col-club">{{ t('standings.fields.club') }}</th>
-                  <th
-                    v-for="column in COLUMNS"
-                    :key="column.field"
-                    class="standings-col-stat"
-                    :class="{ 'standings-col-stat--active': sortField === column.field }"
-                    @click="toggleSort(column.field)"
-                  >
-                    <span class="standings-th-inner">
-                      {{ t(column.labelKey) }}
-                      <v-icon
-                        v-if="sortField === column.field"
-                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
-                        size="14"
-                      />
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(standing, index) in result.items" :key="standing.id">
-                  <td class="standings-col-position text-medium-emphasis">{{ positionOf(index) }}</td>
-                  <td class="standings-col-club">
-                    <RouterLink
-                      :to="{ name: 'team-detail', params: { id: standing.teamId } }"
-                      class="standings-club-link"
+            <div class="standings-card">
+              <table class="standings-table">
+                <thead>
+                  <tr>
+                    <th class="standings-col-position">{{ t('standings.fields.position') }}</th>
+                    <th class="standings-col-club">{{ t('standings.fields.club') }}</th>
+                    <th
+                      v-for="column in COLUMNS"
+                      :key="column.field"
+                      class="standings-col-stat"
+                      :class="{ 'standings-col-stat--active': sortField === column.field }"
+                      @click="toggleSort(column.field)"
                     >
-                      <v-avatar size="28" rounded="0" color="transparent">
-                        <v-img v-if="standing.teamHasCrest" :src="teamsApi.crestUrl(standing.teamId)" :alt="standing.teamName" />
-                        <v-icon v-else :icon="mdiShieldOutline" size="22" class="text-medium-emphasis" />
-                      </v-avatar>
-                      <span class="text-truncate">{{ standing.teamName }}</span>
-                    </RouterLink>
-                  </td>
-                  <td class="standings-col-stat font-weight-bold">{{ standing.points }}</td>
-                  <td class="standings-col-stat">{{ standing.played }}</td>
-                  <td class="standings-col-stat">{{ standing.won }}</td>
-                  <td class="standings-col-stat">{{ standing.drawn }}</td>
-                  <td class="standings-col-stat">{{ standing.lost }}</td>
-                  <td class="standings-col-stat">{{ standing.goalsFor }}</td>
-                  <td class="standings-col-stat">{{ standing.goalsAgainst }}</td>
-                  <td
-                    class="standings-col-stat"
-                    :class="{
-                      'text-success': standing.goalDifference > 0,
-                      'text-error': standing.goalDifference < 0,
-                    }"
-                  >
-                    {{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                      <span class="standings-th-inner">
+                        {{ t(column.labelKey) }}
+                        <v-icon
+                          v-if="sortField === column.field"
+                          :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                          size="14"
+                        />
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(standing, index) in result.items" :key="standing.id">
+                    <td class="standings-col-position">
+                      <span class="standings-medal" :class="medalClass(positionOf(index))">
+                        {{ positionOf(index) }}
+                      </span>
+                    </td>
+                    <td class="standings-col-club">
+                      <RouterLink
+                        :to="{ name: 'team-detail', params: { id: standing.teamId } }"
+                        class="standings-club-link"
+                      >
+                        <TeamCrest
+                          :team="{ id: standing.teamId, name: standing.teamName, hasCrest: standing.teamHasCrest }"
+                          :size="30"
+                        />
+                        <span class="text-truncate">{{ standing.teamName }}</span>
+                      </RouterLink>
+                    </td>
+                    <td class="standings-col-stat">
+                      <span class="standings-points">{{ standing.points }}</span>
+                    </td>
+                    <td class="standings-col-stat">{{ standing.played }}</td>
+                    <td class="standings-col-stat">{{ standing.won }}</td>
+                    <td class="standings-col-stat">{{ standing.drawn }}</td>
+                    <td class="standings-col-stat">{{ standing.lost }}</td>
+                    <td class="standings-col-stat">{{ standing.goalsFor }}</td>
+                    <td class="standings-col-stat">{{ standing.goalsAgainst }}</td>
+                    <td
+                      class="standings-col-stat standings-col-stat--goaldiff"
+                      :class="{
+                        'text-success': standing.goalDifference > 0,
+                        'text-error': standing.goalDifference < 0,
+                      }"
+                    >
+                      {{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </template>
       </div>
@@ -210,7 +286,22 @@ function positionOf(index: number): number {
 
 .standings-header {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding-bottom: 1rem;
+}
+
+.standings-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.standings-filter-select {
+  flex: 1 1 160px;
+  max-width: 220px;
 }
 
 .standings-list {
@@ -241,9 +332,18 @@ function positionOf(index: number): number {
   overflow-x: auto;
 }
 
+/* One elevated card wrapping the table, instead of a bare table sitting
+   directly on the page background. */
+.standings-card {
+  max-width: 1040px;
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 16px;
+  overflow: hidden;
+}
+
 .standings-table {
   width: 100%;
-  max-width: 1000px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -251,11 +351,15 @@ function positionOf(index: number): number {
 .standings-table thead th {
   position: sticky;
   top: 0;
-  background: rgb(var(--v-theme-surface));
-  border-bottom: 2px solid rgb(var(--v-theme-primary));
-  padding: 0.6rem 0.5rem;
+  background: rgb(var(--v-theme-background));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 0.75rem 0.5rem;
   text-align: center;
+  font-size: 0.6875rem;
   font-weight: 700;
+  color: rgba(var(--v-theme-on-surface), 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   white-space: nowrap;
   user-select: none;
 }
@@ -278,22 +382,45 @@ function positionOf(index: number): number {
   color: rgb(var(--v-theme-primary));
 }
 
-.standings-table tbody tr:nth-child(even) {
-  background: rgba(var(--v-theme-on-surface), 0.04);
-}
-
-.standings-table tbody tr:not(:last-child) {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+.standings-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.6));
 }
 
 .standings-table td {
-  padding: 0.55rem 0.5rem;
+  padding: 0.7rem 0.5rem;
 }
 
 .standings-col-position {
-  width: 2.5rem;
+  width: 2.75rem;
   text-align: center;
-  font-weight: 600;
+}
+
+.standings-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgba(var(--v-theme-on-surface), 0.06);
+  color: rgba(var(--v-theme-on-surface), 0.65);
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.standings-medal--gold {
+  background: rgba(234, 179, 8, 0.16);
+  color: #a16207;
+}
+
+.standings-medal--silver {
+  background: rgba(148, 163, 184, 0.22);
+  color: #475569;
+}
+
+.standings-medal--bronze {
+  background: rgba(180, 83, 9, 0.14);
+  color: #9a3412;
 }
 
 .standings-col-club {
@@ -303,15 +430,30 @@ function positionOf(index: number): number {
 .standings-col-stat {
   width: 3rem;
   text-align: center;
+  color: rgba(var(--v-theme-on-surface), 0.75);
+}
+
+.standings-col-stat--goaldiff {
+  font-weight: 700;
+}
+
+.standings-points {
+  display: inline-flex;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
+  font-weight: 700;
 }
 
 .standings-club-link {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
   color: inherit;
   text-decoration: none;
   min-width: 0;
+  font-weight: 600;
 }
 
 .standings-club-link:hover {
