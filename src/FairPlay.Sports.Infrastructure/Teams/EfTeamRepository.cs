@@ -43,6 +43,26 @@ internal sealed class EfTeamRepository : ITeamRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> GetIdsByClassificationAsync(
+        FootballType? type,
+        Division? division,
+        AgeCategory? category,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Teams.AsNoTracking();
+
+        if (type is not null)
+            query = query.Where(team => team.Classification.Type == type);
+
+        if (division is not null)
+            query = query.Where(team => team.Classification.Division == division);
+
+        if (category is not null)
+            query = query.Where(team => team.Classification.Category == category);
+
+        return await query.Select(team => team.Id).ToListAsync(cancellationToken);
+    }
+
     public Task<Team?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams.FirstOrDefaultAsync(team => team.Id == id, cancellationToken);
 

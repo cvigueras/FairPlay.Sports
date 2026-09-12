@@ -1,9 +1,13 @@
 import { http } from '@/lib/http'
 import type { Standing } from '@/types/standing'
+import type { AgeCategory, Division, FootballType } from '@/types/team'
 import { toQueryString, type PageParams, type PagedResult } from '@/types/pagination'
 
 export interface StandingFilters {
   teamId?: string
+  type?: FootballType
+  division?: Division
+  category?: AgeCategory
 }
 
 export type StandingQuery = PageParams & StandingFilters

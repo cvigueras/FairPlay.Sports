@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { teamsApi } from '@/lib/teams'
 import type { Team } from '@/types/team'
 
-const props = defineProps<{ team: Team; size?: number }>()
+const props = defineProps<{ team: Pick<Team, 'id' | 'name' | 'hasCrest'>; size?: number }>()
 
 const dimension = computed(() => props.size ?? 96)
 
@@ -21,6 +21,7 @@ const initials = computed(() =>
 <template>
   <v-img
     v-if="team.hasCrest"
+    eager
     :src="teamsApi.crestUrl(team.id)"
     :alt="team.name"
     :width="dimension"

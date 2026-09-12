@@ -376,8 +376,11 @@ function clearFilters() {
             v-model="page"
             :length="result.totalPages"
             :total-visible="smAndDown ? 3 : 7"
-            rounded="circle"
+            show-first-last-page
             density="comfortable"
+            variant="text"
+            active-color="primary"
+            class="app-pagination"
           />
           <p class="teams-count font-weight-bold">
             {{ t('teams.count', { n: result.totalCount }) }}
@@ -502,6 +505,34 @@ function clearFilters() {
   position: absolute;
   right: 1.5rem;
   margin: 0;
+}
+
+/* Pill-style pager matching the app's buttons: a filled green circle for the
+   current page, bordered icon buttons for first/prev/next/last. */
+.app-pagination :deep(.v-pagination__item .v-btn),
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border-radius: 10px !important;
+}
+
+.app-pagination :deep(.v-pagination__item .v-btn) {
+  color: #475569;
+  font-weight: 600;
+}
+
+.app-pagination :deep(.v-pagination__item--is-active .v-btn) {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
 }
 
 /* Not enough room to pin the count beside the pager - stack them instead. */

@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
-  mdiAccountOutline,
+  mdiChevronRight,
+  mdiEarth,
   mdiHomeOutline,
   mdiLogout,
   mdiMenu,
-  mdiTranslate,
   mdiTrophyOutline,
 } from '@mdi/js'
+import { baseUrl } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
@@ -23,6 +24,16 @@ const route = useRoute()
 const auth = useAuthStore()
 const ui = useUiStore()
 const { mobile } = useDisplay()
+
+const userInitial = computed(() => auth.currentUser?.userName?.charAt(0).toUpperCase() ?? '')
+const userMenuOpen = ref(false)
+
+const userPhotoUrl = computed(() => {
+  const user = auth.currentUser
+  if (!user?.hasPhoto) return null
+  const bust = auth.photoVersion ? `?v=${auth.photoVersion}` : ''
+  return `${baseUrl}/api/users/${user.id}/photo${bust}`
+})
 
 // Routes are flat, so every page is just "Home / <page>".
 const CRUMB_LABELS: Record<string, string> = {
@@ -82,7 +93,6 @@ function toggleNav(): void {
 
 const navItems = [
   { to: '/', icon: mdiHomeOutline, label: 'nav.home' },
-  { to: '/profile', icon: mdiAccountOutline, label: 'nav.profile' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
 ]
@@ -106,53 +116,95 @@ async function handleLogout(): Promise<void> {
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
 
-    <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs" />
+    <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs">
+      <template #divider>
+        <v-icon :icon="mdiChevronRight" size="14" />
+      </template>
+    </v-breadcrumbs>
 
     <v-spacer />
 
     <template #append>
-      <span
-        v-if="auth.currentUser"
-        class="text-body-2 font-weight-bold mx-3 d-none d-sm-inline"
-      >
-        {{ t('profile.welcome', { name: auth.currentUser.userName }) }}
-      </span>
+      <div class="app-bar-actions">
+        <div v-if="auth.currentUser" class="app-bar-user d-none d-sm-flex">
+          <v-menu v-model="userMenuOpen" :close-on-content-click="false" location="bottom end" offset="10">
+            <template #activator="{ props }">
+              <button
+                type="button"
+                class="app-bar-user__avatar-btn"
+                :aria-label="t('profile.menu.open')"
+                v-bind="props"
+              >
+                <span class="app-bar-user__avatar">
+                  <img
+                    v-if="userPhotoUrl"
+                    :src="userPhotoUrl"
+                    :alt="t('profile.photo.alt')"
+                    class="app-bar-user__avatar-img"
+                  />
+                  <template v-else>{{ userInitial }}</template>
+                </span>
+              </button>
+            </template>
 
-      <v-menu>
-        <template #activator="{ props }">
-          <v-btn v-bind="props" :prepend-icon="mdiTranslate" variant="text">
-            {{ t(`language.${locale}`) }}
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            v-for="option in SUPPORTED_LOCALES"
-            :key="option"
-            :active="option === locale"
-            @click="setLocale(option)"
-          >
-            <v-list-item-title>{{ t(`language.${option}`) }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+            <v-card class="user-panel" flat>
+              <div class="user-panel__avatar">
+                <img
+                  v-if="userPhotoUrl"
+                  :src="userPhotoUrl"
+                  :alt="t('profile.photo.alt')"
+                  class="user-panel__avatar-img"
+                />
+                <template v-else>{{ userInitial }}</template>
+              </div>
+              <p class="user-panel__name">{{ auth.currentUser.userName }}</p>
+              <RouterLink to="/profile" class="user-panel__link" @click="userMenuOpen = false">
+                {{ t('profile.menu.viewProfile') }}
+                <v-icon :icon="mdiChevronRight" size="16" />
+              </RouterLink>
+            </v-card>
+          </v-menu>
+
+          <span class="app-bar-user__name">{{ t('profile.welcome', { name: auth.currentUser.userName }) }}</span>
+        </div>
+
+        <v-menu>
+          <template #activator="{ props }">
+            <button type="button" class="lang-pill" :aria-label="t('language.label')" v-bind="props">
+              <v-icon :icon="mdiEarth" size="16" color="#64748b" />
+              <span class="lang-pill__code">{{ locale.toUpperCase() }}</span>
+            </button>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="option in SUPPORTED_LOCALES"
+              :key="option"
+              :active="option === locale"
+              @click="setLocale(option)"
+            >
+              <v-list-item-title>{{ t(`language.${option}`) }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
     </template>
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" :rail="rail">
-    <v-divider />
     <div class="nav-brand" :class="{ 'nav-brand--rail': rail }">
       <img :src="logoUrl" :alt="t('common.appName')" class="nav-brand-logo" />
       <span v-if="!rail" class="nav-brand-name">{{ t('common.appName') }}</span>
     </div>
     <v-divider />
 
-    <v-list nav density="comfortable">
+    <v-list nav density="comfortable" class="nav-list">
       <v-list-item
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
         :prepend-icon="item.icon"
         :title="t(item.label)"
+        rounded="lg"
       />
     </v-list>
 
@@ -162,6 +214,7 @@ async function handleLogout(): Promise<void> {
           v-if="rail"
           :icon="mdiLogout"
           variant="outlined"
+          class="logout-btn"
           :loading="isLoggingOut"
           :aria-label="t('profile.logout')"
           @click="handleLogout"
@@ -171,6 +224,7 @@ async function handleLogout(): Promise<void> {
           block
           variant="outlined"
           :prepend-icon="mdiLogout"
+          class="logout-btn"
           :loading="isLoggingOut"
           @click="handleLogout"
         >
@@ -187,6 +241,18 @@ async function handleLogout(): Promise<void> {
 .app-bar-crumbs {
   padding-inline: 0.5rem;
   min-width: 0;
+}
+
+.app-bar-crumbs :deep(.v-breadcrumbs-item) {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
+.app-bar-crumbs :deep(.v-breadcrumbs-item--disabled) {
+  color: #0f172a;
+  font-weight: 700;
+  opacity: 1;
 }
 
 /* Narrow screens: three levels ("Home / Teams / <team>") plus the language
@@ -213,13 +279,145 @@ async function handleLogout(): Promise<void> {
   }
 }
 
+.app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 4px;
+}
+
+.app-bar-user {
+  align-items: center;
+  gap: 10px;
+}
+
+.app-bar-user__avatar-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.app-bar-user__avatar {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.app-bar-user__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* At this size the browser is shrinking the photo by a large ratio; a
+     plain raster scale looks muddier than the same photo at 120px on
+     /profile. Promoting the image to its own GPU layer makes Chromium use
+     its (better) compositor-side downscale path instead. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.user-panel {
+  width: 240px;
+  padding: 1.25rem 1.375rem;
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+/* Display-only - unlike the /profile page's avatar, this one isn't
+   clickable: changing the photo happens on the full profile page. */
+.user-panel__avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.user-panel__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Same GPU-layer promotion as the header avatar - see its comment. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.user-panel__name {
+  margin: 0;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.user-panel__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #f1f5f9;
+  color: #16a34a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-panel__link:hover {
+  color: #15803d;
+  text-decoration: underline;
+}
+
+.app-bar-user__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.lang-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lang-pill__code {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .nav-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.9rem;
-  /* Very, very subtle blue. */
-  background: rgba(59, 130, 246, 0.04);
+  padding: 0.9rem 1.1rem;
 }
 
 .nav-brand--rail {
@@ -234,7 +432,38 @@ async function handleLogout(): Promise<void> {
 }
 
 .nav-brand-name {
-  font-weight: 600;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.nav-list {
+  padding: 0.75rem;
+}
+
+.nav-list :deep(.v-list-item) {
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.nav-list :deep(.v-list-item .v-icon) {
+  color: #475569;
+}
+
+.nav-list :deep(.v-list-item--active) {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.nav-list :deep(.v-list-item--active),
+.nav-list :deep(.v-list-item--active .v-icon),
+.nav-list :deep(.v-list-item--active .v-list-item-title) {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.logout-btn {
+  border-radius: 10px;
+  border-color: #e2e8f0 !important;
+  color: #334155;
 }
 </style>

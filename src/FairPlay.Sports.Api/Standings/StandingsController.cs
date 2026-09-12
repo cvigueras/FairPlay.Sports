@@ -30,7 +30,7 @@ public sealed class StandingsController(ISender sender) : ControllerBase
             request.Page,
             request.PageSize,
             request.Sort,
-            new StandingFilter(request.TeamId));
+            new StandingFilter(request.TeamId, request.Type, request.Division, request.Category));
 
         var result = await _sender.Send(query, cancellationToken);
         return result.ToActionResult(this);

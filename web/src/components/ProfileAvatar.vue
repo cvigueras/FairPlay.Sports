@@ -12,8 +12,6 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 const errorMessage = ref('')
 const showError = ref(false)
-/** Bumped after each upload so the <img> refetches instead of using the cached one. */
-const version = ref(0)
 
 const initials = computed(() =>
   (auth.currentUser?.userName ?? '')
@@ -27,7 +25,7 @@ const initials = computed(() =>
 const photoUrl = computed(() => {
   const user = auth.currentUser
   if (!user?.hasPhoto) return null
-  const bust = version.value ? `?v=${version.value}` : ''
+  const bust = auth.photoVersion ? `?v=${auth.photoVersion}` : ''
   return `${baseUrl}/api/users/${user.id}/photo${bust}`
 })
 
@@ -44,7 +42,6 @@ async function onFileChange(event: Event) {
   uploading.value = true
   try {
     await auth.uploadPhoto(file)
-    version.value = Date.now()
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : t('profile.photo.uploadFailed')
     showError.value = true

@@ -63,6 +63,17 @@
       "goalsFor": "GF",
       "goalsAgainst": "GC",
       "goalDifference": "DG"
+    },
+    "legend": {
+      "title": "Leyenda",
+      "points": "Puntos",
+      "played": "Partidos jugados",
+      "won": "Partidos ganados",
+      "drawn": "Partidos empatados",
+      "lost": "Partidos perdidos",
+      "goalsFor": "Goles a favor",
+      "goalsAgainst": "Goles en contra",
+      "goalDifference": "Diferencia de goles"
     }
   },
   "validation": {
@@ -76,6 +87,15 @@
   "login": {
     "title": "Iniciar sesión",
     "subtitle": "Bienvenido de nuevo a FairPlay Sports",
+    "heroEyebrow": "Fútbol amateur · Partidos amistosos",
+    "heroTitle": "Reta a otros equipos. Juega el partido.",
+    "heroDescription": "FairPlay Sports es la app para equipos de fútbol amateur: crea tu equipo, encuentra rivales de tu nivel y lánzales un reto para jugar un partido amistoso. Vosotros decidís el rival, la app se encarga del resto.",
+    "feature1Title": "Lanza el reto",
+    "feature1Body": "Elige un equipo rival y envíale la invitación a un amistoso.",
+    "feature2Title": "Cuadra el partido",
+    "feature2Body": "Acordad fecha, hora y campo directamente en la app.",
+    "feature3Title": "Sigue el marcador",
+    "feature3Body": "Consulta el historial de retos y resultados de tu equipo.",
     "justRegistered": "Cuenta creada. Inicia sesión para continuar.",
     "emailPlaceholder": "tu{'@'}email.com",
     "submit": "Entrar",
@@ -102,7 +122,11 @@
   "profile": {
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión...",
-    "welcome": "Bienvenido, {name}",
+    "welcome": "Hola, {name}",
+    "menu": {
+      "open": "Ver mi perfil",
+      "viewProfile": "Ver perfil"
+    },
     "activation": {
       "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },

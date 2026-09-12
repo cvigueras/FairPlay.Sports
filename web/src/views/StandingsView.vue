@@ -3,13 +3,21 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
-import { mdiArrowDown, mdiArrowUp, mdiShieldOutline, mdiTrophyOutline } from '@mdi/js'
+import { mdiArrowDown, mdiArrowUp, mdiInformationOutline, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { standingsApi } from '@/lib/standings'
-import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
+import TeamCrest from '@/components/TeamCrest.vue'
 import type { Standing } from '@/types/standing'
 import type { PagedResult } from '@/types/pagination'
+import {
+  AGE_CATEGORIES,
+  DIVISIONS,
+  FOOTBALL_TYPES,
+  type AgeCategory,
+  type Division,
+  type FootballType,
+} from '@/types/team'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -22,6 +30,18 @@ const result = ref<PagedResult<Standing> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
+// Always has a value - the filters aren't clearable, only reassignable.
+// Changing one re-queries from page 1.
+const type = ref<FootballType>('Football11')
+const division = ref<Division>('Second')
+const category = ref<AgeCategory>('Infantiles')
+
+const enumItems = <T extends string>(values: readonly T[]) =>
+  values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
+const typeItems = computed(() => enumItems(FOOTBALL_TYPES))
+const divisionItems = computed(() => enumItems(DIVISIONS))
+const categoryItems = computed(() => enumItems(AGE_CATEGORIES))
+
 /** Sortable columns, in display order. Points defaults to best-first, like any league table. */
 const COLUMNS = [
   { field: 'points', labelKey: 'standings.fields.points' },
@@ -32,6 +52,18 @@ const COLUMNS = [
   { field: 'goalsfor', labelKey: 'standings.fields.goalsFor' },
   { field: 'goalsagainst', labelKey: 'standings.fields.goalsAgainst' },
   { field: 'goaldifference', labelKey: 'standings.fields.goalDifference' },
+] as const
+
+/** What each column abbreviation means, shown in the legend beside the grid. */
+const LEGEND_FIELDS = [
+  'points',
+  'played',
+  'won',
+  'drawn',
+  'lost',
+  'goalsFor',
+  'goalsAgainst',
+  'goalDifference',
 ] as const
 
 const sortField = ref<string>('points')
@@ -52,7 +84,14 @@ async function load() {
   error.value = ''
   try {
     result.value = await standingsApi.page(
-      { page: page.value, pageSize: PAGE_SIZE, sort: sort.value },
+      {
+        page: page.value,
+        pageSize: PAGE_SIZE,
+        sort: sort.value,
+        type: type.value,
+        division: division.value,
+        category: category.value,
+      },
       auth.accessToken,
     )
   } catch (err) {
@@ -62,17 +101,26 @@ async function load() {
   }
 }
 
+// A filter or sort change goes back to the first page; reload directly if already there.
 function reload() {
   if (page.value === 1) load()
   else page.value = 1
 }
 
 watch(page, load, { immediate: true })
-watch(sort, reload)
+watch([sort, type, division, category], reload)
 
 /** The table's running row number, independent of the current page. */
 function positionOf(index: number): number {
   return (page.value - 1) * PAGE_SIZE + index + 1
+}
+
+/** A podium medal for the top 3 overall positions; plain otherwise. */
+function medalClass(position: number): string {
+  if (position === 1) return 'standings-medal--gold'
+  if (position === 2) return 'standings-medal--silver'
+  if (position === 3) return 'standings-medal--bronze'
+  return ''
 }
 </script>
 
@@ -84,6 +132,36 @@ function positionOf(index: number): number {
           <v-icon :icon="mdiTrophyOutline" color="#C9A227" />
           {{ t('standings.title') }}
         </h1>
+
+        <div class="standings-filterbar">
+          <v-select
+            v-model="type"
+            :items="typeItems"
+            :label="t('teams.fields.type')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="standings-filter-select"
+          />
+          <v-select
+            v-model="division"
+            :items="divisionItems"
+            :label="t('teams.fields.division')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="standings-filter-select"
+          />
+          <v-select
+            v-model="category"
+            :items="categoryItems"
+            :label="t('teams.fields.category')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="standings-filter-select"
+          />
+        </div>
       </div>
 
       <div class="standings-list">
@@ -102,63 +180,86 @@ function positionOf(index: number): number {
           </div>
 
           <div v-else class="standings-table-wrap">
-            <table class="standings-table">
-              <thead>
-                <tr>
-                  <th class="standings-col-position">{{ t('standings.fields.position') }}</th>
-                  <th class="standings-col-club">{{ t('standings.fields.club') }}</th>
-                  <th
-                    v-for="column in COLUMNS"
-                    :key="column.field"
-                    class="standings-col-stat"
-                    :class="{ 'standings-col-stat--active': sortField === column.field }"
-                    @click="toggleSort(column.field)"
-                  >
-                    <span class="standings-th-inner">
-                      {{ t(column.labelKey) }}
-                      <v-icon
-                        v-if="sortField === column.field"
-                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
-                        size="14"
-                      />
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(standing, index) in result.items" :key="standing.id">
-                  <td class="standings-col-position text-medium-emphasis">{{ positionOf(index) }}</td>
-                  <td class="standings-col-club">
-                    <RouterLink
-                      :to="{ name: 'team-detail', params: { id: standing.teamId } }"
-                      class="standings-club-link"
+            <div class="standings-card">
+              <table class="standings-table">
+                <thead>
+                  <tr>
+                    <th class="standings-col-position">{{ t('standings.fields.position') }}</th>
+                    <th class="standings-col-club">{{ t('standings.fields.club') }}</th>
+                    <th
+                      v-for="column in COLUMNS"
+                      :key="column.field"
+                      class="standings-col-stat"
+                      :class="{ 'standings-col-stat--active': sortField === column.field }"
+                      @click="toggleSort(column.field)"
                     >
-                      <v-avatar size="28" rounded="0" color="transparent">
-                        <v-img v-if="standing.teamHasCrest" :src="teamsApi.crestUrl(standing.teamId)" :alt="standing.teamName" />
-                        <v-icon v-else :icon="mdiShieldOutline" size="22" class="text-medium-emphasis" />
-                      </v-avatar>
-                      <span class="text-truncate">{{ standing.teamName }}</span>
-                    </RouterLink>
-                  </td>
-                  <td class="standings-col-stat font-weight-bold">{{ standing.points }}</td>
-                  <td class="standings-col-stat">{{ standing.played }}</td>
-                  <td class="standings-col-stat">{{ standing.won }}</td>
-                  <td class="standings-col-stat">{{ standing.drawn }}</td>
-                  <td class="standings-col-stat">{{ standing.lost }}</td>
-                  <td class="standings-col-stat">{{ standing.goalsFor }}</td>
-                  <td class="standings-col-stat">{{ standing.goalsAgainst }}</td>
-                  <td
-                    class="standings-col-stat"
-                    :class="{
-                      'text-success': standing.goalDifference > 0,
-                      'text-error': standing.goalDifference < 0,
-                    }"
-                  >
-                    {{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                      <span class="standings-th-inner">
+                        {{ t(column.labelKey) }}
+                        <v-icon
+                          v-if="sortField === column.field"
+                          :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                          size="14"
+                        />
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(standing, index) in result.items" :key="standing.id">
+                    <td class="standings-col-position">
+                      <span class="standings-medal" :class="medalClass(positionOf(index))">
+                        {{ positionOf(index) }}
+                      </span>
+                    </td>
+                    <td class="standings-col-club">
+                      <RouterLink
+                        :to="{ name: 'team-detail', params: { id: standing.teamId } }"
+                        class="standings-club-link"
+                      >
+                        <TeamCrest
+                          :team="{ id: standing.teamId, name: standing.teamName, hasCrest: standing.teamHasCrest }"
+                          :size="30"
+                        />
+                        <span class="text-truncate">{{ standing.teamName }}</span>
+                      </RouterLink>
+                    </td>
+                    <td class="standings-col-stat">
+                      <span class="standings-points">{{ standing.points }}</span>
+                    </td>
+                    <td class="standings-col-stat">{{ standing.played }}</td>
+                    <td class="standings-col-stat">{{ standing.won }}</td>
+                    <td class="standings-col-stat">{{ standing.drawn }}</td>
+                    <td class="standings-col-stat">{{ standing.lost }}</td>
+                    <td class="standings-col-stat">{{ standing.goalsFor }}</td>
+                    <td class="standings-col-stat">{{ standing.goalsAgainst }}</td>
+                    <td
+                      class="standings-col-stat standings-col-stat--goaldiff"
+                      :class="{
+                        'text-success': standing.goalDifference > 0,
+                        'text-error': standing.goalDifference < 0,
+                      }"
+                    >
+                      {{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <aside class="standings-legend">
+              <div class="standings-legend-title">
+                <v-icon :icon="mdiInformationOutline" size="16" color="#94a3b8" />
+                {{ t('standings.legend.title') }}
+              </div>
+              <div
+                v-for="field in LEGEND_FIELDS"
+                :key="field"
+                class="standings-legend-row"
+              >
+                <span class="standings-legend-chip">{{ t(`standings.fields.${field}`) }}</span>
+                <span class="standings-legend-text">{{ t(`standings.legend.${field}`) }}</span>
+              </div>
+            </aside>
           </div>
         </template>
       </div>
@@ -170,8 +271,11 @@ function positionOf(index: number): number {
             v-model="page"
             :length="result.totalPages"
             :total-visible="smAndDown ? 3 : 7"
-            rounded="circle"
+            show-first-last-page
             density="comfortable"
+            variant="text"
+            active-color="primary"
+            class="app-pagination"
           />
           <p class="standings-count font-weight-bold">
             {{ t('standings.count', { n: result.totalCount }) }}
@@ -193,18 +297,36 @@ function positionOf(index: number): number {
   padding-top: 1.5rem;
 }
 
+/* Matches the max-width the other list pages (Teams) use, so navigating
+   between them doesn't shift the content edges. The table itself stays
+   capped narrower below - it has nothing to gain from the extra room. */
 .standings-header,
 .standings-list,
 .standings-footer-inner {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1600px;
   margin-inline: auto;
   padding-inline: 1.5rem;
 }
 
 .standings-header {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding-bottom: 1rem;
+}
+
+.standings-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.standings-filter-select {
+  flex: 1 1 160px;
+  max-width: 220px;
 }
 
 .standings-list {
@@ -212,13 +334,28 @@ function positionOf(index: number): number {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
-  scrollbar-width: none;
+  /* The table below is wider than the viewport on small/medium screens, so
+     this same element also scrolls horizontally (see .standings-table-wrap).
+     Keep the vertical scrollbar hidden (it's the page's main scroll, always
+     available) but show a slim horizontal one - it's the only hint on a
+     mouse/trackpad device that the grid can be swiped sideways. */
+  scrollbar-width: thin;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .standings-list::-webkit-scrollbar {
   width: 0;
-  height: 0;
+  height: 6px;
+}
+
+.standings-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.standings-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .standings-empty {
@@ -229,14 +366,39 @@ function positionOf(index: number): number {
   padding: 4rem 1rem;
 }
 
-/* Narrow screens can't fit ten columns - let the table itself scroll sideways
-   rather than squeezing every column unreadably thin. */
+/* Narrow screens can't fit ten columns - the table scrolls sideways rather
+   than squeezing every column unreadably thin. No overflow-x here: on any
+   ancestor between the sticky thead below and .standings-list, a non-visible
+   overflow (including hidden, and auto on just one axis - which forces the
+   other axis to auto too) becomes the thead's sticky containing block
+   instead of .standings-list, breaking the sticky header entirely. Setting
+   overflow-y: auto on .standings-list already makes it scroll both axes.
+   The card and the legend sit side by side here; on narrow/medium screens
+   the legend is hidden altogether (see the min-width media query below), so
+   this row holds just the card. */
 .standings-table-wrap {
-  overflow-x: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  overflow: visible;
+}
+
+/* One elevated card wrapping the table, instead of a bare table sitting
+   directly on the page background. Slate palette to match the rest of the
+   app's redesigned screens (login, shell, teams) rather than Vuetify's
+   generic (black-based) theme tokens. Sized to the table's own content
+   (not stretched to fill the row) so its right border sits right after the
+   last column instead of floating in whatever blank space is left over. No
+   overflow: hidden here either (see .standings-table-wrap above) - the
+   rounded corners are cut into the corner cells themselves instead. */
+.standings-card {
+  flex: 0 0 auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
 }
 
 .standings-table {
-  width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -244,17 +406,45 @@ function positionOf(index: number): number {
 .standings-table thead th {
   position: sticky;
   top: 0;
-  background: rgb(var(--v-theme-surface));
-  border-bottom: 2px solid rgb(var(--v-theme-primary));
-  padding: 0.6rem 0.5rem;
+  /* Above row content (team crests, medals) so it doesn't get painted over
+     while scrolling - siblings later in the DOM (tbody) would otherwise
+     stack above a z-index:auto sticky thead. */
+  z-index: 2;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 0.85rem;
   text-align: center;
+  font-size: 0.6875rem;
   font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   white-space: nowrap;
   user-select: none;
 }
 
 .standings-table thead th.standings-col-club {
   text-align: left;
+  padding-inline: 0.5rem;
+}
+
+/* .standings-card no longer clips its content (that broke the sticky
+   header below), so the corners that used to come from that clipping are
+   cut directly into the table's own corner cells instead. */
+.standings-table thead th:first-child {
+  border-top-left-radius: 16px;
+}
+
+.standings-table thead th:last-child {
+  border-top-right-radius: 16px;
+}
+
+.standings-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px;
+}
+
+.standings-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px;
 }
 
 .standings-table thead th.standings-col-stat {
@@ -268,25 +458,52 @@ function positionOf(index: number): number {
 }
 
 .standings-col-stat--active {
-  color: rgb(var(--v-theme-primary));
+  color: #15803d;
 }
 
-.standings-table tbody tr:nth-child(even) {
-  background: rgba(var(--v-theme-on-surface), 0.04);
-}
-
-.standings-table tbody tr:not(:last-child) {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+.standings-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .standings-table td {
-  padding: 0.55rem 0.5rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.standings-table td.standings-col-club {
+  padding-inline: 0.5rem;
 }
 
 .standings-col-position {
-  width: 2.5rem;
+  width: 3.5rem;
   text-align: center;
-  font-weight: 600;
+}
+
+.standings-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.standings-medal--gold {
+  background: rgba(234, 179, 8, 0.16);
+  color: #a16207;
+}
+
+.standings-medal--silver {
+  background: rgba(148, 163, 184, 0.22);
+  color: #475569;
+}
+
+.standings-medal--bronze {
+  background: rgba(180, 83, 9, 0.14);
+  color: #9a3412;
 }
 
 .standings-col-club {
@@ -294,28 +511,106 @@ function positionOf(index: number): number {
 }
 
 .standings-col-stat {
-  width: 3rem;
+  width: 4rem;
   text-align: center;
+  color: #475569;
+}
+
+.standings-col-stat--goaldiff {
+  font-weight: 700;
+}
+
+.standings-points {
+  display: inline-flex;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
 }
 
 .standings-club-link {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  color: inherit;
+  gap: 0.75rem;
+  color: #0f172a;
   text-decoration: none;
   min-width: 0;
+  font-weight: 600;
 }
 
 .standings-club-link:hover {
-  color: rgb(var(--v-theme-primary));
+  color: #16a34a;
   text-decoration: underline;
+}
+
+/* Explains the column abbreviations in the space beside the grid. Hidden by
+   default - there's no room for it next to the table below desktop widths,
+   and the user asked for it to disappear entirely on small/mobile screens
+   rather than dropping below the table. */
+.standings-legend {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .standings-legend {
+    display: block;
+    /* Pinned the same way as the table's own header row, against the same
+       scroll container (.standings-list) - it should stay put while the
+       rows scroll underneath, not travel up with them. */
+    position: sticky;
+    top: 0;
+    flex: 0 0 300px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1.375rem;
+  }
+}
+
+.standings-legend-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.standings-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.standings-legend-row:not(:last-child) {
+  margin-bottom: 0.7rem;
+}
+
+.standings-legend-chip {
+  flex: 0 0 2.5rem;
+  text-align: center;
+  padding: 0.25rem 0;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.standings-legend-text {
+  font-size: 0.8125rem;
+  color: #475569;
 }
 
 .standings-footer {
   flex: 0 0 auto;
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-surface));
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .standings-footer-inner {
@@ -333,6 +628,34 @@ function positionOf(index: number): number {
   margin: 0;
 }
 
+/* Pill-style pager matching the app's buttons: a filled green circle for the
+   current page, bordered icon buttons for first/prev/next/last. */
+.app-pagination :deep(.v-pagination__item .v-btn),
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border-radius: 10px !important;
+}
+
+.app-pagination :deep(.v-pagination__item .v-btn) {
+  color: #475569;
+  font-weight: 600;
+}
+
+.app-pagination :deep(.v-pagination__item--is-active .v-btn) {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
+}
+
 @media (max-width: 599px) {
   .standings-footer-inner {
     flex-direction: column;
@@ -345,6 +668,37 @@ function positionOf(index: number): number {
 
   .standings-footer-inner :deep(.v-pagination) {
     margin-inline: 1.5rem;
+  }
+
+  /* Tighter grid so a phone-width screen needs less horizontal scroll to
+     reach the last column. */
+  .standings-header,
+  .standings-list,
+  .standings-footer-inner {
+    padding-inline: 1rem;
+  }
+
+  .standings-table {
+    font-size: 0.8125rem;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .standings-col-club {
+    min-width: 160px;
+  }
+
+  .standings-col-stat {
+    width: 3rem;
+  }
+
+  .standings-medal {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.75rem;
   }
 }
 </style>

@@ -63,6 +63,17 @@
       "goalsFor": "GF",
       "goalsAgainst": "GA",
       "goalDifference": "GD"
+    },
+    "legend": {
+      "title": "Legend",
+      "points": "Points",
+      "played": "Matches played",
+      "won": "Matches won",
+      "drawn": "Matches drawn",
+      "lost": "Matches lost",
+      "goalsFor": "Goals for",
+      "goalsAgainst": "Goals against",
+      "goalDifference": "Goal difference"
     }
   },
   "validation": {
@@ -76,6 +87,15 @@
   "login": {
     "title": "Sign in",
     "subtitle": "Welcome back to FairPlay Sports",
+    "heroEyebrow": "Amateur football · Friendly matches",
+    "heroTitle": "Challenge other teams. Play the match.",
+    "heroDescription": "FairPlay Sports is the app for amateur football teams: create your team, find rivals at your level and send them a challenge for a friendly match. You pick the rival, the app handles the rest.",
+    "feature1Title": "Send the challenge",
+    "feature1Body": "Pick a rival team and send them an invitation to a friendly.",
+    "feature2Title": "Set up the match",
+    "feature2Body": "Agree on the date, time and pitch right inside the app.",
+    "feature3Title": "Track the scoreboard",
+    "feature3Body": "Check your team's history of challenges and results.",
     "justRegistered": "Account created. Sign in to continue.",
     "emailPlaceholder": "you{'@'}email.com",
     "submit": "Sign in",
@@ -102,7 +122,11 @@
   "profile": {
     "logout": "Log out",
     "loggingOut": "Logging out...",
-    "welcome": "Welcome, {name}",
+    "welcome": "Hi, {name}",
+    "menu": {
+      "open": "View your profile",
+      "viewProfile": "View profile"
+    },
     "activation": {
       "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
     },

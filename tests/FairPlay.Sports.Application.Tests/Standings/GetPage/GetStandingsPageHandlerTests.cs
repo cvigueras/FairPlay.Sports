@@ -45,6 +45,29 @@ public class GetStandingsPageHandlerTests
     }
 
     [Test]
+    public async Task Handle_resolvesAClassificationFilter_toTeamIds_beforePaging()
+    {
+        var matchingTeamIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        _teams.GetIdsByClassificationAsync(
+                FootballType.Futsal, Division.First, AgeCategory.Juveniles, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlyList<Guid>)matchingTeamIds);
+        _standings.GetPageAsync(
+                Arg.Any<IQueryFilter<Standing>>(), Arg.Any<IQuerySort<Standing>>(),
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new PagedResult<Standing>([], Page: 1, PageSize: 20, TotalCount: 0));
+
+        var filter = new StandingFilter(Type: FootballType.Futsal, Division: Division.First, Category: AgeCategory.Juveniles);
+        await _handler.Handle(new GetStandingsPageQuery(1, 20, null, filter), CancellationToken.None);
+
+        await _standings.Received(1).GetPageAsync(
+            Arg.Is<IQueryFilter<Standing>>(f => ((StandingFilter)f).TeamIds!.SequenceEqual(matchingTeamIds)),
+            Arg.Any<IQuerySort<Standing>>(),
+            1,
+            20,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
     public async Task Handle_mapsTheDomainPageToDtos_resolvingTeamNames_andKeepingMetadata()
     {
         var teamA = TeamMother.DomainTeam(name: "Alpha FC");

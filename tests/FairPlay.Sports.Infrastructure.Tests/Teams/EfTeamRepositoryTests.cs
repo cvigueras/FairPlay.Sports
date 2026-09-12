@@ -260,6 +260,37 @@ public class EfTeamRepositoryTests : RepositoryTestBase
         Assert.That(await new EfTeamRepository(context).GetByIdsAsync([]), Is.Empty);
     }
 
+    [Test]
+    public async Task GetIdsByClassificationAsync_filtersOnEveryGivenFacet()
+    {
+        var wanted = TeamMother.DomainTeam(
+            name: "Wanted FC", type: FootballType.Futsal, division: Division.First, category: AgeCategory.Juveniles);
+        var wrongType = TeamMother.DomainTeam(
+            name: "Wrong Type FC", type: FootballType.Football11, division: Division.First, category: AgeCategory.Juveniles);
+        var wrongDivision = TeamMother.DomainTeam(
+            name: "Wrong Division FC", type: FootballType.Futsal, division: Division.Second, category: AgeCategory.Juveniles);
+        await SeedAsync(wanted, wrongType, wrongDivision);
+
+        await using var context = NewContext();
+        var ids = await new EfTeamRepository(context).GetIdsByClassificationAsync(
+            FootballType.Futsal, Division.First, AgeCategory.Juveniles);
+
+        Assert.That(ids, Is.EqualTo(new[] { wanted.Id }));
+    }
+
+    [Test]
+    public async Task GetIdsByClassificationAsync_withEveryFacetNull_returnsEveryTeam()
+    {
+        var teamA = TeamMother.DomainTeam(name: "Team A");
+        var teamB = TeamMother.DomainTeam(name: "Team B");
+        await SeedAsync(teamA, teamB);
+
+        await using var context = NewContext();
+        var ids = await new EfTeamRepository(context).GetIdsByClassificationAsync(null, null, null);
+
+        Assert.That(ids, Is.EquivalentTo(new[] { teamA.Id, teamB.Id }));
+    }
+
     private static async Task<PagedResult<Team>> GetPageAsync(
         int page, int pageSize, TeamFilter? filter = null, string? sort = null)
     {
