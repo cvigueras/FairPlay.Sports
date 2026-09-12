@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
-  mdiAccountOutline,
   mdiChevronRight,
   mdiEarth,
   mdiHomeOutline,
@@ -17,7 +16,6 @@ import { baseUrl } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
-import ProfileAvatar from '@/components/ProfileAvatar.vue'
 import logoUrl from '@/assets/logo.webp'
 
 const { t, locale } = useI18n()
@@ -35,16 +33,6 @@ const userPhotoUrl = computed(() => {
   if (!user?.hasPhoto) return null
   const bust = auth.photoVersion ? `?v=${auth.photoVersion}` : ''
   return `${baseUrl}/api/users/${user.id}/photo${bust}`
-})
-
-const memberSince = computed(() => {
-  const user = auth.currentUser
-  if (!user) return ''
-  return new Date(user.createdAt).toLocaleDateString(locale.value, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
 })
 
 // Routes are flat, so every page is just "Home / <page>".
@@ -161,22 +149,15 @@ async function handleLogout(): Promise<void> {
 
             <v-card class="user-panel" flat>
               <div class="user-panel__avatar">
-                <ProfileAvatar />
+                <img
+                  v-if="userPhotoUrl"
+                  :src="userPhotoUrl"
+                  :alt="t('profile.photo.alt')"
+                  class="user-panel__avatar-img"
+                />
+                <template v-else>{{ userInitial }}</template>
               </div>
               <p class="user-panel__name">{{ auth.currentUser.userName }}</p>
-              <p class="user-panel__email">{{ auth.currentUser.email }}</p>
-              <v-chip
-                :color="auth.currentUser.role === 'Admin' ? 'amber-darken-2' : 'primary'"
-                size="small"
-                variant="tonal"
-                class="mt-2"
-              >
-                {{ auth.currentUser.role }}
-              </v-chip>
-              <div class="user-panel__since">
-                <span class="text-medium-emphasis">{{ t('profile.fields.memberSince') }}</span>
-                <span class="font-weight-medium">{{ memberSince }}</span>
-              </div>
               <RouterLink to="/profile" class="user-panel__link" @click="userMenuOpen = false">
                 {{ t('profile.menu.viewProfile') }}
                 <v-icon :icon="mdiChevronRight" size="16" />
@@ -340,17 +321,34 @@ async function handleLogout(): Promise<void> {
 }
 
 .user-panel {
-  width: 280px;
+  width: 240px;
   padding: 1.25rem 1.375rem;
   border-radius: 16px !important;
   border: 1px solid #e2e8f0;
   text-align: center;
 }
 
+/* Display-only - unlike the /profile page's avatar, this one isn't
+   clickable: changing the photo happens on the full profile page. */
 .user-panel__avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 0.75rem;
+  font-size: 22px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.user-panel__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-panel__name {
@@ -358,25 +356,6 @@ async function handleLogout(): Promise<void> {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-weight: 700;
   color: #0f172a;
-}
-
-.user-panel__email {
-  margin: 0.15rem 0 0;
-  font-size: 0.8125rem;
-  color: #64748b;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-panel__since {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-top: 0.9rem;
-  padding-top: 0.9rem;
-  border-top: 1px solid #f1f5f9;
-  font-size: 0.8125rem;
 }
 
 .user-panel__link {
