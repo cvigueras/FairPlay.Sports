@@ -170,8 +170,11 @@ function positionOf(index: number): number {
             v-model="page"
             :length="result.totalPages"
             :total-visible="smAndDown ? 3 : 7"
-            rounded="circle"
+            show-first-last-page
             density="comfortable"
+            variant="text"
+            active-color="primary"
+            class="app-pagination"
           />
           <p class="standings-count font-weight-bold">
             {{ t('standings.count', { n: result.totalCount }) }}
@@ -193,11 +196,14 @@ function positionOf(index: number): number {
   padding-top: 1.5rem;
 }
 
+/* Matches the max-width the other list pages (Teams) use, so navigating
+   between them doesn't shift the content edges. The table itself stays
+   capped narrower below - it has nothing to gain from the extra room. */
 .standings-header,
 .standings-list,
 .standings-footer-inner {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1600px;
   margin-inline: auto;
   padding-inline: 1.5rem;
 }
@@ -237,6 +243,7 @@ function positionOf(index: number): number {
 
 .standings-table {
   width: 100%;
+  max-width: 1000px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -331,6 +338,34 @@ function positionOf(index: number): number {
   position: absolute;
   right: 1.5rem;
   margin: 0;
+}
+
+/* Pill-style pager matching the app's buttons: a filled green circle for the
+   current page, bordered icon buttons for first/prev/next/last. */
+.app-pagination :deep(.v-pagination__item .v-btn),
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border-radius: 10px !important;
+}
+
+.app-pagination :deep(.v-pagination__item .v-btn) {
+  color: #475569;
+  font-weight: 600;
+}
+
+.app-pagination :deep(.v-pagination__item--is-active .v-btn) {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.app-pagination :deep(.v-pagination__first .v-btn),
+.app-pagination :deep(.v-pagination__prev .v-btn),
+.app-pagination :deep(.v-pagination__next .v-btn),
+.app-pagination :deep(.v-pagination__last .v-btn) {
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
 }
 
 @media (max-width: 599px) {
