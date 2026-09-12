@@ -6,10 +6,11 @@ import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
   mdiAccountOutline,
+  mdiChevronRight,
+  mdiEarth,
   mdiHomeOutline,
   mdiLogout,
   mdiMenu,
-  mdiTranslate,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { useAuthStore } from '@/stores/auth'
@@ -23,6 +24,8 @@ const route = useRoute()
 const auth = useAuthStore()
 const ui = useUiStore()
 const { mobile } = useDisplay()
+
+const userInitial = computed(() => auth.currentUser?.userName?.charAt(0).toUpperCase() ?? '')
 
 // Routes are flat, so every page is just "Home / <page>".
 const CRUMB_LABELS: Record<string, string> = {
@@ -106,53 +109,58 @@ async function handleLogout(): Promise<void> {
       <v-app-bar-nav-icon :icon="mdiMenu" @click="toggleNav" />
     </template>
 
-    <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs" />
+    <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs">
+      <template #divider>
+        <v-icon :icon="mdiChevronRight" size="14" />
+      </template>
+    </v-breadcrumbs>
 
     <v-spacer />
 
     <template #append>
-      <span
-        v-if="auth.currentUser"
-        class="text-body-2 font-weight-bold mx-3 d-none d-sm-inline"
-      >
-        {{ t('profile.welcome', { name: auth.currentUser.userName }) }}
-      </span>
+      <div class="app-bar-actions">
+        <div v-if="auth.currentUser" class="app-bar-user d-none d-sm-flex">
+          <span class="app-bar-user__avatar">{{ userInitial }}</span>
+          <span class="app-bar-user__name">{{ t('profile.welcome', { name: auth.currentUser.userName }) }}</span>
+        </div>
 
-      <v-menu>
-        <template #activator="{ props }">
-          <v-btn v-bind="props" :prepend-icon="mdiTranslate" variant="text">
-            {{ t(`language.${locale}`) }}
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            v-for="option in SUPPORTED_LOCALES"
-            :key="option"
-            :active="option === locale"
-            @click="setLocale(option)"
-          >
-            <v-list-item-title>{{ t(`language.${option}`) }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+        <v-menu>
+          <template #activator="{ props }">
+            <button type="button" class="lang-pill" :aria-label="t('language.label')" v-bind="props">
+              <v-icon :icon="mdiEarth" size="16" color="#64748b" />
+              <span class="lang-pill__code">{{ locale.toUpperCase() }}</span>
+            </button>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="option in SUPPORTED_LOCALES"
+              :key="option"
+              :active="option === locale"
+              @click="setLocale(option)"
+            >
+              <v-list-item-title>{{ t(`language.${option}`) }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
     </template>
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" :rail="rail">
-    <v-divider />
     <div class="nav-brand" :class="{ 'nav-brand--rail': rail }">
       <img :src="logoUrl" :alt="t('common.appName')" class="nav-brand-logo" />
       <span v-if="!rail" class="nav-brand-name">{{ t('common.appName') }}</span>
     </div>
     <v-divider />
 
-    <v-list nav density="comfortable">
+    <v-list nav density="comfortable" class="nav-list">
       <v-list-item
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
         :prepend-icon="item.icon"
         :title="t(item.label)"
+        rounded="lg"
       />
     </v-list>
 
@@ -162,6 +170,7 @@ async function handleLogout(): Promise<void> {
           v-if="rail"
           :icon="mdiLogout"
           variant="outlined"
+          class="logout-btn"
           :loading="isLoggingOut"
           :aria-label="t('profile.logout')"
           @click="handleLogout"
@@ -171,6 +180,7 @@ async function handleLogout(): Promise<void> {
           block
           variant="outlined"
           :prepend-icon="mdiLogout"
+          class="logout-btn"
           :loading="isLoggingOut"
           @click="handleLogout"
         >
@@ -187,6 +197,18 @@ async function handleLogout(): Promise<void> {
 .app-bar-crumbs {
   padding-inline: 0.5rem;
   min-width: 0;
+}
+
+.app-bar-crumbs :deep(.v-breadcrumbs-item) {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
+.app-bar-crumbs :deep(.v-breadcrumbs-item--disabled) {
+  color: #0f172a;
+  font-weight: 700;
+  opacity: 1;
 }
 
 /* Narrow screens: three levels ("Home / Teams / <team>") plus the language
@@ -213,13 +235,64 @@ async function handleLogout(): Promise<void> {
   }
 }
 
+.app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 4px;
+}
+
+.app-bar-user {
+  align-items: center;
+  gap: 10px;
+}
+
+.app-bar-user__avatar {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.app-bar-user__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.lang-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lang-pill__code {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .nav-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.9rem;
-  /* Very, very subtle blue. */
-  background: rgba(59, 130, 246, 0.04);
+  padding: 0.9rem 1.1rem;
 }
 
 .nav-brand--rail {
@@ -234,7 +307,38 @@ async function handleLogout(): Promise<void> {
 }
 
 .nav-brand-name {
-  font-weight: 600;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.nav-list {
+  padding: 0.75rem;
+}
+
+.nav-list :deep(.v-list-item) {
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.nav-list :deep(.v-list-item .v-icon) {
+  color: #475569;
+}
+
+.nav-list :deep(.v-list-item--active) {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.nav-list :deep(.v-list-item--active),
+.nav-list :deep(.v-list-item--active .v-icon),
+.nav-list :deep(.v-list-item--active .v-list-item-title) {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.logout-btn {
+  border-radius: 10px;
+  border-color: #e2e8f0 !important;
+  color: #334155;
 }
 </style>

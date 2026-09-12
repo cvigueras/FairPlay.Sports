@@ -111,7 +111,7 @@
   "profile": {
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión...",
-    "welcome": "Bienvenido, {name}",
+    "welcome": "Hola, {name}",
     "activation": {
       "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },
