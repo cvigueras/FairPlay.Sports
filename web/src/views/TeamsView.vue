@@ -13,6 +13,7 @@ import {
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
   mdiSoccer,
+  mdiSortVariant,
   mdiTrophyOutline,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -56,12 +57,30 @@ const asTextFilter = (text: string | null) => {
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
 
-// Desktop column-header sorting (name/category/type/division/city), same
-// mechanism as StandingsView: click a header to sort by it, click again to
-// reverse; a new column always starts descending.
+// Sort by name/category/type/division/city. On desktop this is driven by
+// clicking a column header (same mechanism as StandingsView: click to sort
+// by it, click again to reverse, a new column starts descending); on
+// mobile, where there's no header row to click, by the dropdown below the
+// title (the app's original sort picker, now covering every column instead
+// of just name/city). Both read and write the same sortField/sortDescending
+// state, so switching between the two stays in sync.
 const sortField = ref('name')
 const sortDescending = ref(false)
-const sort = computed(() => `${sortDescending.value ? '-' : ''}${sortField.value}`)
+const sort = computed({
+  get: () => `${sortDescending.value ? '-' : ''}${sortField.value}`,
+  set: (value: string) => {
+    sortDescending.value = value.startsWith('-')
+    sortField.value = sortDescending.value ? value.slice(1) : value
+  },
+})
+
+const SORTABLE_FIELDS = ['name', 'category', 'type', 'division', 'city'] as const
+const sortItems = computed(() =>
+  SORTABLE_FIELDS.flatMap((field) => [
+    { value: field, title: `${t(`teams.fields.${field}`)} (A-Z)` },
+    { value: `-${field}`, title: `${t(`teams.fields.${field}`)} (Z-A)` },
+  ]),
+)
 
 function toggleSort(field: string) {
   if (sortField.value === field) {
@@ -160,6 +179,19 @@ function toggleTeamRow(id: string) {
           <v-icon :icon="mdiAccountGroupOutline" color="primary" />
           {{ t('teams.title') }}
         </h1>
+
+        <!-- Mobile only (see the max-width: 599px rules below): the table's
+             sortable column headers don't exist here, so this dropdown
+             (the app's original sort picker) drives the same state instead. -->
+        <v-select
+          v-model="sort"
+          :items="sortItems"
+          :prepend-inner-icon="mdiSortVariant"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          class="teams-mobile-sort"
+        />
       </div>
 
       <div class="teams-filterbar">
@@ -548,6 +580,13 @@ function toggleTeamRow(id: string) {
   padding-bottom: 0.75rem;
 }
 
+/* Desktop sorts via the table's column headers (see .teams-col-sortable
+   below); this stays hidden until the max-width: 599px rules turn it on
+   for the mobile list, which has no header row to click. */
+.teams-mobile-sort {
+  display: none;
+}
+
 .teams-filterbar {
   flex: 0 0 auto;
   display: flex;
@@ -908,6 +947,11 @@ function toggleTeamRow(id: string) {
 
   .teams-mobile {
     display: block;
+  }
+
+  .teams-mobile-sort {
+    display: block;
+    flex: 1 1 200px;
   }
 }
 </style>
