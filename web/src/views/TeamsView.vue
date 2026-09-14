@@ -581,10 +581,11 @@ function clearFilters() {
   min-width: 760px;
   border-collapse: collapse;
   table-layout: fixed;
+  font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 34%;
+  width: 28%;
 }
 
 .teams-col-stat {
@@ -592,7 +593,7 @@ function clearFilters() {
 }
 
 .teams-col-city {
-  width: 12%;
+  width: 14%;
 }
 
 .teams-col-actions {
@@ -606,19 +607,12 @@ function clearFilters() {
   background: rgb(var(--v-theme-background));
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   padding: 0.65rem 0.75rem;
-  text-align: center;
-  font-size: 0.6875rem;
+  text-align: left;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   white-space: nowrap;
   user-select: none;
-}
-
-.teams-table thead th.teams-col-club,
-.teams-table thead th.teams-col-city {
-  text-align: left;
 }
 
 .teams-table thead th:first-child {
@@ -654,6 +648,13 @@ function clearFilters() {
 
 .teams-table td.teams-col-actions {
   text-align: right;
+}
+
+/* Age category, modality and division chips fill their (equal-width)
+   column so the three read as same-sized labels, whatever their text. */
+.teams-table td.teams-col-stat :deep(.v-chip) {
+  width: 100%;
+  justify-content: center;
 }
 
 .team-row-club {
