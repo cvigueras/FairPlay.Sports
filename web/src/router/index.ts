@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui'
+
+/** Team-listing screens a team's detail page can be reached from. */
+const TEAM_DETAIL_ORIGINS = new Set(['teams', 'my-teams', 'standings'])
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,6 +70,15 @@ router.beforeEach((to) => {
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
     return { name: 'home' }
+  }
+})
+
+// Remembers the last team-listing screen visited, so a team detail page's
+// breadcrumb can point back to wherever the user actually came from
+// (Teams, My teams or Standings) instead of a hardcoded parent.
+router.afterEach((to) => {
+  if (typeof to.name === 'string' && TEAM_DETAIL_ORIGINS.has(to.name)) {
+    useUiStore().lastListRoute = { name: to.name, path: to.fullPath }
   }
 })
 

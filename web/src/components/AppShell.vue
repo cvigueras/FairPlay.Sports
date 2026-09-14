@@ -64,9 +64,14 @@ const breadcrumbs = computed(() => {
     return [home]
   }
   if (route.name === 'team-detail') {
+    // Point back at wherever the user actually came from (Teams, My teams or
+    // Standings all link into a team's detail page) rather than a hardcoded
+    // parent; falls back to Teams for a direct link/refresh with no origin.
+    const origin = ui.lastListRoute ?? { name: 'teams', path: '/teams' }
+    const originKey = CRUMB_LABELS[origin.name] ?? 'nav.teams'
     return [
       { ...home, disabled: false },
-      { title: t('nav.teams'), to: '/teams', disabled: false },
+      { title: t(originKey), to: origin.path, disabled: false },
       {
         title: ui.breadcrumbLabel ?? '…',
         to: route.path,
