@@ -23,4 +23,36 @@ public class UserTests
     {
         Assert.That(() => Create("not-an-email"), Throws.ArgumentException);
     }
+
+    [Test]
+    public void UpdateProfile_TrimsTheUserName_AndNormalisesTheEmail()
+    {
+        var user = Create();
+
+        user.UpdateProfile("  new-name  ", "  New@Example.COM  ");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(user.UserName, Is.EqualTo("new-name"));
+            Assert.That(user.Email, Is.EqualTo("new@example.com"));
+        });
+    }
+
+    [Test]
+    public void UpdateProfile_RejectsAnEmailWithoutAnAtSign()
+    {
+        var user = Create();
+
+        Assert.That(() => user.UpdateProfile("new-name", "not-an-email"), Throws.ArgumentException);
+    }
+
+    [Test]
+    public void ChangePasswordHash_ReplacesTheStoredHash()
+    {
+        var user = Create();
+
+        user.ChangePasswordHash("a-new-hash");
+
+        Assert.That(user.PasswordHash, Is.EqualTo("a-new-hash"));
+    }
 }

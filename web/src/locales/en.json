@@ -135,6 +135,22 @@
       "alt": "Profile photo",
       "uploadFailed": "Could not upload the photo."
     },
+    "account": {
+      "userName": "Username",
+      "email": "Email",
+      "save": "Save changes",
+      "saved": "Your details have been updated.",
+      "saveFailed": "Could not save your changes."
+    },
+    "security": {
+      "title": "Security",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "save": "Update password",
+      "saved": "Your password has been updated.",
+      "saveFailed": "Could not update your password."
+    },
     "fields": {
       "memberSince": "Member since"
     },

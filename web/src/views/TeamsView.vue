@@ -4,13 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
-  mdiAccountOutline,
   mdiCardAccountDetailsOutline,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
   mdiSoccer,
-  mdiSoccerField,
   mdiSortVariant,
   mdiTrophyOutline,
   mdiTuneVariant,
@@ -296,75 +294,79 @@ function clearFilters() {
             </p>
           </div>
 
-          <div v-else class="teams-card-grid">
-            <v-card
-              v-for="team in result.items"
-              :key="team.id"
-              border
-              flat
-              rounded="xl"
-              class="team-card"
-            >
-              <div class="team-card-head">
-                <TeamCrest :team="team" :size="60" />
-                <div class="team-card-title">
-                  <div class="text-subtitle-1 font-weight-bold text-truncate">{{ team.name }}</div>
-                  <v-chip
-                    size="small"
-                    variant="tonal"
-                    :color="AGE_CATEGORY_COLOR[team.category]"
-                    class="team-card-category"
-                  >
-                    {{ t(`profile.team.enums.${team.category}`) }}
-                  </v-chip>
-                </div>
-              </div>
-
-              <div class="team-card-chips">
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="MODALITY_COLOR[team.type]"
-                  :prepend-icon="mdiSoccer"
-                >
-                  {{ t(`profile.team.enums.${team.type}`) }}
-                </v-chip>
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="DIVISION_COLOR[team.division]"
-                  :prepend-icon="mdiTrophyOutline"
-                >
-                  {{ t(`profile.team.enums.${team.division}`) }}
-                </v-chip>
-                <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                  {{ team.city }}
-                </v-chip>
-              </div>
-
-              <v-divider />
-
-              <div class="team-card-meta text-body-2 text-medium-emphasis">
-                <span class="team-card-meta-row">
-                  <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
-                  <span class="team-card-meta-text">{{ team.coach }}</span>
-                </span>
-                <span v-if="team.venueName" class="team-card-meta-row">
-                  <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
-                  <span class="team-card-meta-text">{{ team.venueName }}</span>
-                </span>
-              </div>
-
-              <v-btn
-                :to="{ name: 'team-detail', params: { id: team.id } }"
-                :prepend-icon="mdiCardAccountDetailsOutline"
-                color="blue"
-                variant="outlined"
-                block
-              >
-                {{ t('profile.team.viewDetails') }}
-              </v-btn>
-            </v-card>
+          <div v-else class="teams-table-wrap">
+            <table class="teams-table">
+              <colgroup>
+                <col class="teams-col-club">
+                <col class="teams-col-stat">
+                <col class="teams-col-stat">
+                <col class="teams-col-stat">
+                <col class="teams-col-city">
+                <col class="teams-col-actions">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="teams-col-club">{{ t('teams.fields.name') }}</th>
+                  <th class="teams-col-stat">{{ t('teams.fields.category') }}</th>
+                  <th class="teams-col-stat">{{ t('teams.fields.type') }}</th>
+                  <th class="teams-col-stat">{{ t('teams.fields.division') }}</th>
+                  <th class="teams-col-city">{{ t('teams.fields.city') }}</th>
+                  <th class="teams-col-actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="team in result.items" :key="team.id">
+                  <td class="teams-col-club">
+                    <div class="team-row-club">
+                      <TeamCrest :team="team" :size="32" />
+                      <span class="text-truncate">{{ team.name }}</span>
+                    </div>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
+                      {{ t(`profile.team.enums.${team.category}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip
+                      size="small"
+                      variant="tonal"
+                      :color="MODALITY_COLOR[team.type]"
+                      :prepend-icon="mdiSoccer"
+                    >
+                      {{ t(`profile.team.enums.${team.type}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip
+                      size="small"
+                      variant="tonal"
+                      :color="DIVISION_COLOR[team.division]"
+                      :prepend-icon="mdiTrophyOutline"
+                    >
+                      {{ t(`profile.team.enums.${team.division}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-city">
+                    <span class="team-row-city text-body-2 text-medium-emphasis">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
+                      {{ team.city }}
+                    </span>
+                  </td>
+                  <td class="teams-col-actions">
+                    <v-btn
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      :prepend-icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                      size="small"
+                    >
+                      {{ t('profile.team.viewDetails') }}
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </template>
       </div>
@@ -466,14 +468,27 @@ function clearFilters() {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
-  /* Scrollable, but the scrollbar itself is hidden. */
-  scrollbar-width: none;
+  /* The table below can be wider than the viewport on small screens, so this
+     same element also scrolls horizontally (see .teams-table-wrap). Keep the
+     vertical scrollbar hidden (it's the page's main scroll, always
+     available) but show a slim horizontal one, as in StandingsView. */
+  scrollbar-width: thin;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .teams-list::-webkit-scrollbar {
   width: 0;
-  height: 0;
+  height: 6px;
+}
+
+.teams-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.teams-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .teams-empty {
@@ -551,64 +566,111 @@ function clearFilters() {
   }
 }
 
-/* Responsive card grid: as many 300px+ columns as fit, one on a phone. */
-.teams-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-  padding-bottom: 0.5rem;
+/* One team per line: a compact table (same shape as StandingsView's),
+   wrapped in a bordered card so the list reads as one block. No overflow
+   here (see the .teams-list comment above) - the rounded corners are cut
+   into the table's own corner cells instead. */
+.teams-table-wrap {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 16px;
 }
 
-.team-card {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+.teams-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.team-card-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
+.teams-col-club {
+  width: 34%;
 }
 
-.team-card-title {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.teams-col-stat {
+  width: 16%;
 }
 
-.team-card-category {
-  align-self: flex-start;
+.teams-col-city {
+  width: 12%;
 }
 
-.team-card-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+.teams-col-actions {
+  width: 10%;
 }
 
-.team-card-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+.teams-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgb(var(--v-theme-background));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 0.65rem 0.75rem;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.team-card-meta-row {
+.teams-table thead th.teams-col-club,
+.teams-table thead th.teams-col-city {
+  text-align: left;
+}
+
+.teams-table thead th:first-child {
+  border-top-left-radius: 16px;
+}
+
+.teams-table thead th:last-child {
+  border-top-right-radius: 16px;
+}
+
+.teams-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px;
+}
+
+.teams-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px;
+}
+
+.teams-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.teams-table td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.teams-table td.teams-col-club,
+.teams-table td.teams-col-city {
+  text-align: left;
+}
+
+.teams-table td.teams-col-actions {
+  text-align: right;
+}
+
+.team-row-club {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.65rem;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.team-row-club span {
   min-width: 0;
 }
 
-.team-card-meta-text {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.team-row-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 </style>

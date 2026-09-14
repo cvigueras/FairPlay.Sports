@@ -58,6 +58,14 @@ public sealed class User
 
     public void Activate() => Active = true;
 
+    public void UpdateProfile(string userName, string email)
+    {
+        UserName = ValidateUserName(userName);
+        Email = ValidateEmail(email);
+    }
+
+    public void ChangePasswordHash(string passwordHash) => PasswordHash = ValidatePasswordHash(passwordHash);
+
     public void SetPhoto(byte[] image, string contentType)
     {
         if (image is null || image.Length == 0)

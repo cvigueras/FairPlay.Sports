@@ -4,11 +4,13 @@ using FairPlay.Sports.TestSupport.Users;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
+using FairPlay.Sports.Application.Users.ChangePassword;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.GetPhoto;
 using FairPlay.Sports.Application.Users.MoveToTeam;
 using FairPlay.Sports.Application.Users.Register;
+using FairPlay.Sports.Application.Users.UpdateProfile;
 using FairPlay.Sports.Application.Users.UploadPhoto;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -154,6 +156,69 @@ public class UsersControllerTests
         var response = await _controller.Activate(id, CancellationToken.None);
 
         Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task UpdateProfile_DispatchesCommandWithRouteIdAndBody_AndReturnsOkWithHandlerValue()
+    {
+        var id = Guid.NewGuid();
+        var request = UserRequestMother.UpdateProfileRequest();
+        var dto = UserMother.Dto(id);
+        _sender.Send(Arg.Any<UpdateUserProfileCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserDto>.Success(dto));
+
+        var response = await _controller.UpdateProfile(id, request, CancellationToken.None);
+
+        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dto));
+        await _sender.Received(1).Send(
+            Arg.Is<UpdateUserProfileCommand>(command =>
+                command.UserId == id &&
+                command.UserName == request.UserName &&
+                command.Email == request.Email),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task UpdateProfile_WhenHandlerFails_ReturnsBadRequest()
+    {
+        _sender.Send(Arg.Any<UpdateUserProfileCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<UserDto>.Failure("Email 'x@example.com' is already registered."));
+
+        var response = await _controller.UpdateProfile(
+            Guid.NewGuid(), UserRequestMother.UpdateProfileRequest(), CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task ChangePassword_DispatchesCommandWithRouteIdAndBody_AndReturnsNoContent()
+    {
+        var id = Guid.NewGuid();
+        var request = UserRequestMother.ChangePasswordRequest();
+        _sender.Send(Arg.Any<ChangeUserPasswordCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _controller.ChangePassword(id, request, CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NoContentResult>());
+        await _sender.Received(1).Send(
+            Arg.Is<ChangeUserPasswordCommand>(command =>
+                command.UserId == id &&
+                command.CurrentPassword == request.CurrentPassword &&
+                command.NewPassword == request.NewPassword),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task ChangePassword_WhenHandlerFails_ReturnsBadRequest()
+    {
+        _sender.Send(Arg.Any<ChangeUserPasswordCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure("The current password is incorrect."));
+
+        var response = await _controller.ChangePassword(
+            Guid.NewGuid(), UserRequestMother.ChangePasswordRequest(), CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<BadRequestObjectResult>());
     }
 
     [Test]
