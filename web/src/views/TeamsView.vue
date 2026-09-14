@@ -731,26 +731,28 @@ function toggleTeamRow(id: string) {
 
 .teams-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 900px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 28%;
+  width: 25%;
 }
 
 .teams-col-stat {
-  width: 16%;
-}
-
-.teams-col-city {
   width: 14%;
 }
 
+.teams-col-city {
+  width: 13%;
+}
+
+/* Wide enough that the icon + label never get squeezed inside the button,
+   even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 10%;
+  width: 20%;
 }
 
 .teams-table thead th {
