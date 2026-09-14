@@ -396,11 +396,16 @@ function medalClass(position: number): string {
 /* table-layout: fixed plus width: 100% stretches the table to the card's
    full width; every column except .standings-col-club carries an explicit
    width, so fixed layout hands club all the extra space instead of
-   spreading it evenly. Below the columns' combined natural width the table
-   still can't shrink (fixed layout doesn't compress sized columns), so it
-   overflows .standings-list and scrolls horizontally exactly as before. */
+   spreading it evenly. min-width is a floor, not a suggestion: fixed
+   layout does NOT fall back to overflow-and-scroll on its own - once the
+   card is narrower than the columns' combined width, Chrome collapses the
+   unsized club column straight to 0 instead (min-width on the <th> is
+   ignored), hiding the name entirely. The explicit min-width below stops
+   the table itself from ever shrinking that far, so .standings-list's
+   horizontal scroll (see above) takes over first. */
 .standings-table {
   width: 100%;
+  min-width: 860px;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.875rem;
