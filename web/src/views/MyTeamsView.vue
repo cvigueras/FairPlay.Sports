@@ -6,7 +6,6 @@ import {
   mdiAccountOutline,
   mdiCardAccountDetailsOutline,
   mdiMapMarkerOutline,
-  mdiShieldOutline,
   mdiSoccer,
   mdiSoccerField,
   mdiTrophyOutline,
@@ -133,11 +132,7 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
 <template>
   <v-main>
     <v-container v-if="user" class="py-6 py-md-10 profile-container">
-      <h1 class="text-h5 font-weight-bold d-flex align-center ga-2 mb-5">
-        <v-icon :icon="mdiShieldOutline" color="primary" />
-        {{ t('myTeams.title') }}
-      </h1>
-
+      <!-- The page title moved to the breadcrumb (see AppShell). -->
       <v-alert
         v-if="!user.teamId"
         type="warning"

@@ -46,6 +46,18 @@ const CRUMB_LABELS: Record<string, string> = {
   standings: 'nav.standings',
 }
 
+// My teams/Teams/Standings dropped their own on-page title; this is that
+// title's icon now, moved to sit left of the current-page breadcrumb label
+// (Profile never had one, but gets the same treatment for consistency).
+const CRUMB_ICONS: Partial<Record<string, string>> = {
+  profile: mdiAccountOutline,
+  'my-teams': mdiShieldOutline,
+  teams: mdiAccountGroupOutline,
+  standings: mdiTrophyOutline,
+}
+
+type BreadcrumbItem = { title: string; to: string; disabled: boolean; icon?: string }
+
 const breadcrumbs = computed(() => {
   const home = { title: t('nav.home'), to: '/', disabled: route.name === 'home' }
   if (route.name === 'home' || !route.name) {
@@ -55,13 +67,23 @@ const breadcrumbs = computed(() => {
     return [
       { ...home, disabled: false },
       { title: t('nav.teams'), to: '/teams', disabled: false },
-      { title: ui.breadcrumbLabel ?? '…', to: route.path, disabled: true },
+      {
+        title: ui.breadcrumbLabel ?? '…',
+        to: route.path,
+        disabled: true,
+        icon: CRUMB_ICONS.teams,
+      },
     ]
   }
   const key = CRUMB_LABELS[String(route.name)]
   return [
     { ...home, disabled: false },
-    { title: key ? t(key) : String(route.name), to: route.path, disabled: true },
+    {
+      title: key ? t(key) : String(route.name),
+      to: route.path,
+      disabled: true,
+      icon: CRUMB_ICONS[String(route.name)],
+    },
   ]
 })
 
@@ -122,6 +144,15 @@ async function handleLogout(): Promise<void> {
     </template>
 
     <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs">
+      <template #title="{ item }">
+        <v-icon
+          v-if="(item as BreadcrumbItem).icon"
+          :icon="(item as BreadcrumbItem).icon"
+          size="14"
+          class="app-bar-crumb-icon"
+        />
+        {{ item.title }}
+      </template>
       <template #divider>
         <v-icon :icon="mdiChevronRight" size="14" />
       </template>
@@ -252,6 +283,10 @@ async function handleLogout(): Promise<void> {
   color: #94a3b8;
   font-weight: 500;
   font-size: 13.5px;
+}
+
+.app-bar-crumb-icon {
+  margin-inline-end: 0.3rem;
 }
 
 .app-bar-crumbs :deep(.v-breadcrumbs-item--disabled) {

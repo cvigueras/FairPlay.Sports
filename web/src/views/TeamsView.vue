@@ -175,11 +175,8 @@ function toggleTeamRow(id: string) {
   <v-main>
     <div class="teams-page">
       <div class="teams-toolbar">
-        <h1 class="text-h5 font-weight-bold d-flex align-center ga-2">
-          <v-icon :icon="mdiAccountGroupOutline" color="primary" />
-          {{ t('teams.title') }}
-        </h1>
-
+        <!-- The page title moved to the breadcrumb (see AppShell); this row
+             now only carries the mobile sort control. -->
         <!-- Mobile only (see the max-width: 599px rules below): the table's
              sortable column headers don't exist here, so this dropdown
              (the app's original sort picker) drives the same state instead. -->

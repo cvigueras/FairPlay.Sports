@@ -18,7 +18,6 @@
     "subtitle": "This is your FairPlay Sports hub. More coming soon."
   },
   "teams": {
-    "title": "Teams",
     "count": "{n} teams",
     "empty": "No teams yet.",
     "noResults": "Your search returned no results.",
@@ -43,7 +42,6 @@
     }
   },
   "standings": {
-    "title": "Standings",
     "count": "{n} teams",
     "empty": "No standings yet.",
     "loadFailed": "Could not load the standings.",
@@ -113,9 +111,6 @@
     "failed": "Could not complete the registration. Please try again.",
     "haveAccount": "Already have an account?",
     "goLogin": "Sign in"
-  },
-  "myTeams": {
-    "title": "My teams"
   },
   "profile": {
     "logout": "Log out",

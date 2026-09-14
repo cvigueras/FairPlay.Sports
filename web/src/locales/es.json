@@ -18,7 +18,6 @@
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
   },
   "teams": {
-    "title": "Equipos",
     "count": "{n} equipos",
     "empty": "Todavía no hay equipos.",
     "noResults": "La búsqueda no muestra resultados.",
@@ -43,7 +42,6 @@
     }
   },
   "standings": {
-    "title": "Clasificación",
     "count": "{n} equipos",
     "empty": "Todavía no hay clasificación.",
     "loadFailed": "No se ha podido cargar la clasificación.",
@@ -113,9 +111,6 @@
     "failed": "No se ha podido completar el registro. Inténtalo de nuevo.",
     "haveAccount": "¿Ya tienes cuenta?",
     "goLogin": "Inicia sesión"
-  },
-  "myTeams": {
-    "title": "Mis equipos"
   },
   "profile": {
     "logout": "Cerrar sesión",

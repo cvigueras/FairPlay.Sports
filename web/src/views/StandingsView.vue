@@ -139,11 +139,7 @@ function medalClass(position: number): string {
   <v-main>
     <div class="standings-page">
       <div class="standings-header">
-        <h1 class="text-h5 font-weight-bold d-flex align-center ga-2">
-          <v-icon :icon="mdiTrophyOutline" color="#C9A227" />
-          {{ t('standings.title') }}
-        </h1>
-
+        <!-- The page title moved to the breadcrumb (see AppShell). -->
         <div class="standings-filterbar">
           <v-select
             v-model="type"
