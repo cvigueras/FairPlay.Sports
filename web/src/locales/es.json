@@ -9,6 +9,7 @@
   "nav": {
     "home": "Inicio",
     "profile": "Perfil",
+    "myTeams": "Mis equipos",
     "teams": "Equipos",
     "standings": "Clasificación"
   },
@@ -118,6 +119,9 @@
     "failed": "No se ha podido completar el registro. Inténtalo de nuevo.",
     "haveAccount": "¿Ya tienes cuenta?",
     "goLogin": "Inicia sesión"
+  },
+  "myTeams": {
+    "title": "Mis equipos"
   },
   "profile": {
     "logout": "Cerrar sesión",

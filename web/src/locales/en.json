@@ -9,6 +9,7 @@
   "nav": {
     "home": "Home",
     "profile": "Profile",
+    "myTeams": "My teams",
     "teams": "Teams",
     "standings": "Standings"
   },
@@ -118,6 +119,9 @@
     "failed": "Could not complete the registration. Please try again.",
     "haveAccount": "Already have an account?",
     "goLogin": "Sign in"
+  },
+  "myTeams": {
+    "title": "My teams"
   },
   "profile": {
     "logout": "Log out",

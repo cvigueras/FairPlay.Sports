@@ -11,6 +11,7 @@ import {
   mdiHomeOutline,
   mdiLogout,
   mdiMenu,
+  mdiShieldOutline,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { baseUrl } from '@/lib/http'
@@ -40,6 +41,7 @@ const userPhotoUrl = computed(() => {
 const CRUMB_LABELS: Record<string, string> = {
   home: 'nav.home',
   profile: 'nav.profile',
+  'my-teams': 'nav.myTeams',
   teams: 'nav.teams',
   standings: 'nav.standings',
 }
@@ -95,6 +97,7 @@ function toggleNav(): void {
 const navItems = [
   { to: '/', icon: mdiHomeOutline, label: 'nav.home' },
   { to: '/profile', icon: mdiAccountOutline, label: 'nav.profile' },
+  { to: '/my-teams', icon: mdiShieldOutline, label: 'nav.myTeams' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
 ]
