@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { storeToRefs } from 'pinia'
-import { mdiArrowDown, mdiArrowUp, mdiInformationOutline, mdiTrophyOutline } from '@mdi/js'
+import {
+  mdiArrowDown,
+  mdiArrowUp,
+  mdiChevronDown,
+  mdiInformationOutline,
+  mdiTrophyOutline,
+} from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { standingsApi } from '@/lib/standings'
 import { useAuthStore } from '@/stores/auth'
@@ -59,6 +65,17 @@ const LEGEND_FIELDS = [
   'goalsAgainst',
   'goalDifference',
 ] as const
+
+/** The stats shown inside a mobile row's expandable details - everything
+ * the legend covers except points, which the collapsed row already shows. */
+const MOBILE_STAT_FIELDS = LEGEND_FIELDS.filter((field) => field !== 'points')
+
+/** Which mobile rows currently have their details expanded, keyed by standing id. */
+const expandedRows = reactive<Record<string, boolean>>({})
+
+function toggleRow(id: string) {
+  expandedRows[id] = !expandedRows[id]
+}
 
 const sortField = ref<string>('points')
 const sortDescending = ref(true)
@@ -173,7 +190,8 @@ function medalClass(position: number): string {
             <p class="text-body-1 mt-3">{{ t('standings.empty') }}</p>
           </div>
 
-          <div v-else class="standings-table-wrap">
+          <template v-else>
+          <div class="standings-table-wrap">
             <div class="standings-card">
               <table class="standings-table">
                 <thead>
@@ -255,6 +273,57 @@ function medalClass(position: number): string {
               </div>
             </aside>
           </div>
+
+          <!-- Mobile only (see the max-width: 599px rules below): one row per
+               team - position, club, points - that expands in place instead
+               of the desktop table's horizontal scroll. -->
+          <div class="standings-mobile">
+            <div class="standings-mobile-card">
+              <template v-for="(standing, index) in result.items" :key="standing.id">
+                <button
+                  type="button"
+                  class="standings-mobile-row"
+                  :aria-expanded="!!expandedRows[standing.id]"
+                  @click="toggleRow(standing.id)"
+                >
+                  <span class="standings-medal" :class="medalClass(positionOf(index))">
+                    {{ positionOf(index) }}
+                  </span>
+                  <TeamCrest
+                    :team="{ id: standing.teamId, name: standing.teamName, hasCrest: standing.teamHasCrest }"
+                    :size="28"
+                  />
+                  <span class="standings-mobile-club text-truncate">{{ standing.teamName }}</span>
+                  <span class="standings-points">{{ standing.points }}</span>
+                  <v-icon
+                    :icon="mdiChevronDown"
+                    size="18"
+                    class="standings-mobile-chevron"
+                    :class="{ 'standings-mobile-chevron--open': expandedRows[standing.id] }"
+                  />
+                </button>
+
+                <div v-if="expandedRows[standing.id]" class="standings-mobile-details">
+                  <div v-for="field in MOBILE_STAT_FIELDS" :key="field" class="standings-mobile-stat">
+                    <span class="standings-mobile-stat-label">
+                      {{ t(`standings.fields.${field}`) }} · {{ t(`standings.legend.${field}`) }}
+                    </span>
+                    <span
+                      class="standings-mobile-stat-value"
+                      :class="{
+                        'text-success': field === 'goalDifference' && standing.goalDifference > 0,
+                        'text-error': field === 'goalDifference' && standing.goalDifference < 0,
+                      }"
+                    >
+                      <template v-if="field === 'goalDifference'">{{ standing.goalDifference > 0 ? '+' : '' }}{{ standing.goalDifference }}</template>
+                      <template v-else>{{ standing[field] }}</template>
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          </template>
         </template>
       </div>
 
@@ -615,6 +684,85 @@ function medalClass(position: number): string {
   color: #475569;
 }
 
+/* Mobile-only replacement for the desktop table (see the max-width: 599px
+   rules below, which swap the two). One row per team - position, club,
+   points - that expands in place instead of scrolling sideways. */
+.standings-mobile {
+  display: none;
+}
+
+.standings-mobile-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.standings-mobile-card > *:last-child {
+  border-bottom: none;
+}
+
+.standings-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.standings-mobile-club {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #0f172a;
+}
+
+.standings-mobile-chevron {
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.standings-mobile-chevron--open {
+  transform: rotate(180deg);
+}
+
+.standings-mobile-details {
+  padding: 0.15rem 0.85rem 0.9rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem 0.5rem;
+}
+
+.standings-mobile-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.standings-mobile-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.standings-mobile-stat-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 .standings-footer {
   flex: 0 0 auto;
   border-top: 1px solid #e2e8f0;
@@ -678,29 +826,20 @@ function medalClass(position: number): string {
     margin-inline: 1.5rem;
   }
 
-  /* Tighter grid so a phone-width screen needs less horizontal scroll to
-     reach the last column. */
   .standings-header,
   .standings-list,
   .standings-footer-inner {
     padding-inline: 1rem;
   }
 
-  .standings-table {
-    font-size: 0.8125rem;
+  /* The desktop table (and its horizontal scroll) gives way to the
+     expandable mobile list below this width - see .standings-mobile above. */
+  .standings-table-wrap {
+    display: none;
   }
 
-  .standings-table th,
-  .standings-table td {
-    padding: 0.6rem 0.5rem;
-  }
-
-  .standings-col-club {
-    min-width: 160px;
-  }
-
-  .standings-col-stat {
-    width: 3rem;
+  .standings-mobile {
+    display: block;
   }
 
   .standings-medal {
