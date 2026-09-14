@@ -23,6 +23,7 @@
     "noResults": "La búsqueda no muestra resultados.",
     "clearFilters": "Limpiar filtros",
     "searchPlaceholder": "Buscar equipo por nombre…",
+    "filters": "Filtros",
     "moreFilters": "Más filtros",
     "loadFailed": "No se han podido cargar los equipos.",
     "fields": {
