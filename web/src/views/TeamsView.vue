@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { storeToRefs } from 'pinia'
 import {
   mdiAccountGroupOutline,
   mdiCardAccountDetailsOutline,
+  mdiChevronDown,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
@@ -132,6 +133,13 @@ function clearFilters() {
   cityText.value = ''
   clearTimeout(textFilterTimer)
   reload()
+}
+
+/** Which mobile rows currently have their details expanded, keyed by team id. */
+const expandedTeamRows = reactive<Record<string, boolean>>({})
+
+function toggleTeamRow(id: string) {
+  expandedTeamRows[id] = !expandedTeamRows[id]
 }
 </script>
 
@@ -279,7 +287,8 @@ function clearFilters() {
             </p>
           </div>
 
-          <div v-else class="teams-table-wrap">
+          <template v-else>
+          <div class="teams-table-wrap">
             <table class="teams-table">
               <colgroup>
                 <col class="teams-col-club">
@@ -353,6 +362,68 @@ function clearFilters() {
               </tbody>
             </table>
           </div>
+
+          <!-- Mobile only (see the max-width: 599px rules below): one row
+               per team - crest, name, category - that expands in place
+               instead of the desktop table's horizontal scroll. -->
+          <div class="teams-mobile">
+            <div class="teams-mobile-card">
+              <template v-for="team in result.items" :key="team.id">
+                <button
+                  type="button"
+                  class="teams-mobile-row"
+                  :aria-expanded="!!expandedTeamRows[team.id]"
+                  @click="toggleTeamRow(team.id)"
+                >
+                  <TeamCrest :team="team" :size="28" />
+                  <span class="teams-mobile-name text-truncate">{{ team.name }}</span>
+                  <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
+                    {{ t(`profile.team.enums.${team.category}`) }}
+                  </v-chip>
+                  <v-icon
+                    :icon="mdiChevronDown"
+                    size="18"
+                    class="teams-mobile-chevron"
+                    :class="{ 'teams-mobile-chevron--open': expandedTeamRows[team.id] }"
+                  />
+                </button>
+
+                <div v-if="expandedTeamRows[team.id]" class="teams-mobile-details">
+                  <div class="teams-mobile-detail-grid">
+                    <div class="teams-mobile-detail-cell">
+                      <span class="teams-mobile-detail-label">{{ t('teams.fields.type') }}</span>
+                      <v-chip size="small" variant="tonal" :color="MODALITY_COLOR[team.type]" :prepend-icon="mdiSoccer">
+                        {{ t(`profile.team.enums.${team.type}`) }}
+                      </v-chip>
+                    </div>
+                    <div class="teams-mobile-detail-cell">
+                      <span class="teams-mobile-detail-label">{{ t('teams.fields.division') }}</span>
+                      <v-chip size="small" variant="tonal" :color="DIVISION_COLOR[team.division]" :prepend-icon="mdiTrophyOutline">
+                        {{ t(`profile.team.enums.${team.division}`) }}
+                      </v-chip>
+                    </div>
+                  </div>
+                  <div class="teams-mobile-detail-cell">
+                    <span class="teams-mobile-detail-label">{{ t('teams.fields.city') }}</span>
+                    <span class="teams-mobile-city">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
+                      {{ team.city }}
+                    </span>
+                  </div>
+                  <v-btn
+                    :to="{ name: 'team-detail', params: { id: team.id } }"
+                    :prepend-icon="mdiCardAccountDetailsOutline"
+                    color="blue"
+                    variant="outlined"
+                    block
+                  >
+                    {{ t('profile.team.viewDetails') }}
+                  </v-btn>
+                </div>
+              </template>
+            </div>
+          </div>
+          </template>
         </template>
       </div>
 
@@ -658,5 +729,110 @@ function clearFilters() {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+/* Mobile-only replacement for the desktop table (see the max-width: 599px
+   rules below, which swap the two). One row per team - crest, name,
+   category - that expands in place instead of scrolling sideways. */
+.teams-mobile {
+  display: none;
+}
+
+.teams-mobile-card {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.teams-mobile-card > *:last-child {
+  border-bottom: none;
+}
+
+.teams-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: none;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-surface));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+
+.teams-mobile-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #0f172a;
+}
+
+.teams-mobile-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.teams-mobile-chevron--open {
+  transform: rotate(180deg);
+}
+
+.teams-mobile-details {
+  padding: 0.75rem 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-background));
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.teams-mobile-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.teams-mobile-detail-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.teams-mobile-detail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.teams-mobile-detail-cell :deep(.v-chip) {
+  width: fit-content;
+}
+
+.teams-mobile-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .teams-table-wrap {
+    display: none;
+  }
+
+  .teams-mobile {
+    display: block;
+  }
 }
 </style>
