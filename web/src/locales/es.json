@@ -35,12 +35,6 @@
       "category": "Categoría",
       "memberSince": "Miembro desde"
     },
-    "sort": {
-      "nameAsc": "Nombre (A-Z)",
-      "nameDesc": "Nombre (Z-A)",
-      "cityAsc": "Ciudad (A-Z)",
-      "recent": "Más recientes"
-    },
     "detail": {
       "notFound": "No se ha encontrado este equipo.",
       "loadFailed": "No se ha podido cargar este equipo.",

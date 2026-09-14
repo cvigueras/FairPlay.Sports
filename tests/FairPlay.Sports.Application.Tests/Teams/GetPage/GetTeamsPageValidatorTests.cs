@@ -35,6 +35,8 @@ public class GetTeamsPageValidatorTests
     [TestCase("-createdAt")]
     [TestCase("city,-name")]
     [TestCase("TYPE")]
+    [TestCase("-division")]
+    [TestCase("category")]
     public void Passes_forWhitelistedSortFields(string sort)
     {
         Assert.That(_validator.Validate(Query(sort: sort)).IsValid, Is.True);

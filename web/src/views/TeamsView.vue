@@ -5,13 +5,14 @@ import { useDisplay } from 'vuetify'
 import { storeToRefs } from 'pinia'
 import {
   mdiAccountGroupOutline,
+  mdiArrowDown,
+  mdiArrowUp,
   mdiCardAccountDetailsOutline,
   mdiChevronDown,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
   mdiSoccer,
-  mdiSortVariant,
   mdiTrophyOutline,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -55,13 +56,21 @@ const asTextFilter = (text: string | null) => {
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
 
-const sort = ref('name')
-const sortItems = computed(() => [
-  { value: 'name', title: t('teams.sort.nameAsc') },
-  { value: '-name', title: t('teams.sort.nameDesc') },
-  { value: 'city', title: t('teams.sort.cityAsc') },
-  { value: '-createdAt', title: t('teams.sort.recent') },
-])
+// Desktop column-header sorting (name/category/type/division/city), same
+// mechanism as StandingsView: click a header to sort by it, click again to
+// reverse; a new column always starts descending.
+const sortField = ref('name')
+const sortDescending = ref(false)
+const sort = computed(() => `${sortDescending.value ? '-' : ''}${sortField.value}`)
+
+function toggleSort(field: string) {
+  if (sortField.value === field) {
+    sortDescending.value = !sortDescending.value
+  } else {
+    sortField.value = field
+    sortDescending.value = true
+  }
+}
 
 const hasActiveFilters = computed(
   () =>
@@ -151,15 +160,6 @@ function toggleTeamRow(id: string) {
           <v-icon :icon="mdiAccountGroupOutline" color="primary" />
           {{ t('teams.title') }}
         </h1>
-        <v-select
-          v-model="sort"
-          :items="sortItems"
-          :prepend-inner-icon="mdiSortVariant"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          class="teams-sort"
-        />
       </div>
 
       <div class="teams-filterbar">
@@ -300,11 +300,76 @@ function toggleTeamRow(id: string) {
               </colgroup>
               <thead>
                 <tr>
-                  <th class="teams-col-club">{{ t('teams.fields.name') }}</th>
-                  <th class="teams-col-stat">{{ t('teams.fields.category') }}</th>
-                  <th class="teams-col-stat">{{ t('teams.fields.type') }}</th>
-                  <th class="teams-col-stat">{{ t('teams.fields.division') }}</th>
-                  <th class="teams-col-city">{{ t('teams.fields.city') }}</th>
+                  <th
+                    class="teams-col-club teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'name' }"
+                    @click="toggleSort('name')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.name') }}
+                      <v-icon
+                        v-if="sortField === 'name'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'category' }"
+                    @click="toggleSort('category')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.category') }}
+                      <v-icon
+                        v-if="sortField === 'category'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'type' }"
+                    @click="toggleSort('type')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.type') }}
+                      <v-icon
+                        v-if="sortField === 'type'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'division' }"
+                    @click="toggleSort('division')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.division') }}
+                      <v-icon
+                        v-if="sortField === 'division'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-city teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'city' }"
+                    @click="toggleSort('city')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.city') }}
+                      <v-icon
+                        v-if="sortField === 'city'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
                   <th class="teams-col-actions"></th>
                 </tr>
               </thead>
@@ -481,10 +546,6 @@ function toggleTeamRow(id: string) {
   gap: 1rem;
   flex-wrap: wrap;
   padding-bottom: 0.75rem;
-}
-
-.teams-sort {
-  flex: 0 1 220px;
 }
 
 .teams-filterbar {
@@ -669,6 +730,20 @@ function toggleTeamRow(id: string) {
   color: #64748b;
   white-space: nowrap;
   user-select: none;
+}
+
+.teams-table thead th.teams-col-sortable {
+  cursor: pointer;
+}
+
+.teams-table thead th.teams-col-sortable--active {
+  color: #15803d;
+}
+
+.teams-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
 }
 
 .teams-table thead th:first-child {

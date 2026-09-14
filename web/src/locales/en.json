@@ -35,12 +35,6 @@
       "category": "Age category",
       "memberSince": "Member since"
     },
-    "sort": {
-      "nameAsc": "Name (A-Z)",
-      "nameDesc": "Name (Z-A)",
-      "cityAsc": "City (A-Z)",
-      "recent": "Most recent"
-    },
     "detail": {
       "notFound": "This team could not be found.",
       "loadFailed": "Could not load this team.",
