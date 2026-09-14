@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
+  mdiAccountOutline,
   mdiChevronRight,
   mdiEarth,
   mdiHomeOutline,
@@ -93,6 +94,7 @@ function toggleNav(): void {
 
 const navItems = [
   { to: '/', icon: mdiHomeOutline, label: 'nav.home' },
+  { to: '/profile', icon: mdiAccountOutline, label: 'nav.profile' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
 ]
