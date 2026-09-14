@@ -386,19 +386,28 @@ function medalClass(position: number): string {
 /* One elevated card wrapping the table, instead of a bare table sitting
    directly on the page background. Slate palette to match the rest of the
    app's redesigned screens (login, shell, teams) rather than Vuetify's
-   generic (black-based) theme tokens. Sized to the table's own content
-   (not stretched to fill the row) so its right border sits right after the
-   last column instead of floating in whatever blank space is left over. No
-   overflow: hidden here either (see .standings-table-wrap above) - the
-   rounded corners are cut into the corner cells themselves instead. */
+   generic (black-based) theme tokens. Grows to fill the row (same content
+   width as Teams/My teams) rather than sitting at the table's own minimal
+   content width; the club column absorbs the extra space (see
+   .standings-table below). No overflow: hidden here either (see
+   .standings-table-wrap above) - the rounded corners are cut into the
+   corner cells themselves instead. */
 .standings-card {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
 }
 
+/* table-layout: fixed plus width: 100% stretches the table to the card's
+   full width; every column except .standings-col-club carries an explicit
+   width, so fixed layout hands club all the extra space instead of
+   spreading it evenly. Below the columns' combined natural width the table
+   still can't shrink (fixed layout doesn't compress sized columns), so it
+   overflows .standings-list and scrolls horizontally exactly as before. */
 .standings-table {
+  width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
