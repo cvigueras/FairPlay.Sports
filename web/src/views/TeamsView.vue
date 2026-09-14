@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { storeToRefs } from 'pinia'
 import {
   mdiAccountGroupOutline,
   mdiCardAccountDetailsOutline,
@@ -16,19 +17,12 @@ import {
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
+import { useLeagueFilterStore } from '@/stores/leagueFilter'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
-import {
-  AGE_CATEGORIES,
-  DIVISIONS,
-  FOOTBALL_TYPES,
-  type AgeCategory,
-  type Division,
-  type FootballType,
-  type Team,
-} from '@/types/team'
+import { AGE_CATEGORIES, DIVISIONS, FOOTBALL_TYPES, type Team } from '@/types/team'
 import type { PagedResult } from '@/types/pagination'
 
 const { t } = useI18n()
@@ -42,10 +36,10 @@ const result = ref<PagedResult<Team> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Dropdown filters: empty (null) means "no filter"; changing one re-queries immediately.
-const type = ref<FootballType | null>(null)
-const division = ref<Division | null>(null)
-const category = ref<AgeCategory | null>(null)
+// Shared with the Standings screen, so switching pages keeps the same
+// league slice in view. Always has a value - not clearable, only
+// reassignable; changing one re-queries immediately.
+const { type, division, category } = storeToRefs(useLeagueFilterStore())
 
 // Free-text filters: only kick in once at least this many characters are typed.
 const TEXT_FILTER_MIN_CHARS = 3
@@ -72,10 +66,7 @@ const hasActiveFilters = computed(
   () =>
     asTextFilter(nameText.value) !== undefined ||
     asTextFilter(coachText.value) !== undefined ||
-    asTextFilter(cityText.value) !== undefined ||
-    type.value != null ||
-    division.value != null ||
-    category.value != null,
+    asTextFilter(cityText.value) !== undefined,
 )
 
 // Coach/city live behind "More filters"; a badge on that button surfaces how
@@ -106,9 +97,9 @@ async function load() {
         name: asTextFilter(nameText.value),
         coach: asTextFilter(coachText.value),
         city: asTextFilter(cityText.value),
-        type: type.value ?? undefined,
-        division: division.value ?? undefined,
-        category: category.value ?? undefined,
+        type: type.value,
+        division: division.value,
+        category: category.value,
       },
       auth.accessToken,
     )
@@ -139,9 +130,6 @@ function clearFilters() {
   nameText.value = ''
   coachText.value = ''
   cityText.value = ''
-  type.value = null
-  division.value = null
-  category.value = null
   clearTimeout(textFilterTimer)
   reload()
 }
@@ -184,7 +172,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-select
@@ -194,7 +181,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-select
@@ -204,7 +190,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-menu :close-on-content-click="false" location="bottom end">

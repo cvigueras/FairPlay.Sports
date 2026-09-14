@@ -3,21 +3,16 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { storeToRefs } from 'pinia'
 import { mdiArrowDown, mdiArrowUp, mdiInformationOutline, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { standingsApi } from '@/lib/standings'
 import { useAuthStore } from '@/stores/auth'
+import { useLeagueFilterStore } from '@/stores/leagueFilter'
 import TeamCrest from '@/components/TeamCrest.vue'
 import type { Standing } from '@/types/standing'
 import type { PagedResult } from '@/types/pagination'
-import {
-  AGE_CATEGORIES,
-  DIVISIONS,
-  FOOTBALL_TYPES,
-  type AgeCategory,
-  type Division,
-  type FootballType,
-} from '@/types/team'
+import { AGE_CATEGORIES, DIVISIONS, FOOTBALL_TYPES } from '@/types/team'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -30,11 +25,10 @@ const result = ref<PagedResult<Standing> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Always has a value - the filters aren't clearable, only reassignable.
-// Changing one re-queries from page 1.
-const type = ref<FootballType>('Football11')
-const division = ref<Division>('Second')
-const category = ref<AgeCategory>('Infantiles')
+// Shared with the Teams grid, so switching pages keeps the same league
+// slice in view. Always has a value - the filters aren't clearable, only
+// reassignable. Changing one re-queries from page 1.
+const { type, division, category } = storeToRefs(useLeagueFilterStore())
 
 const enumItems = <T extends string>(values: readonly T[]) =>
   values.map((value) => ({ value, title: t(`profile.team.enums.${value}`) }))
