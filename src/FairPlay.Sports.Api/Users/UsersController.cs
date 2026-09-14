@@ -2,11 +2,13 @@ using FairPlay.Sports.Api.Common;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
+using FairPlay.Sports.Application.Users.ChangePassword;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.GetPhoto;
 using FairPlay.Sports.Application.Users.MoveToTeam;
 using FairPlay.Sports.Application.Users.Register;
+using FairPlay.Sports.Application.Users.UpdateProfile;
 using FairPlay.Sports.Application.Users.UploadPhoto;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +59,29 @@ public sealed class UsersController(ISender sender) : ControllerBase
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+
+    /// <summary>Updates the user's name and email.</summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UpdateProfile(Guid id, UpdateUserProfileRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new UpdateUserProfileCommand(id, request.UserName, request.Email), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Changes the user's password, given the current one.</summary>
+    [HttpPut("{id:guid}/password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword(Guid id, ChangeUserPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var command = new ChangeUserPasswordCommand(id, request.CurrentPassword, request.NewPassword);
+        var result = await _sender.Send(command, cancellationToken);
+        return result.ToActionResult(this);
     }
 
     /// <summary>Sets the team the user belongs to.</summary>

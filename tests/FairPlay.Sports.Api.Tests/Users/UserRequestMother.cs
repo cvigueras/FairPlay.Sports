@@ -7,4 +7,10 @@ internal static class UserRequestMother
 {
     public static RegisterUserRequest RegisterRequest() =>
         new(UserMother.UserName, UserMother.Email, UserMother.Password, UserMother.TeamId);
+
+    public static UpdateUserProfileRequest UpdateProfileRequest() =>
+        new(UserMother.UserName, UserMother.Email);
+
+    public static ChangeUserPasswordRequest ChangePasswordRequest() =>
+        new(UserMother.Password, "a-new-password");
 }

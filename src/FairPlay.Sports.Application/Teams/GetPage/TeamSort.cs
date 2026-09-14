@@ -6,7 +6,10 @@ namespace FairPlay.Sports.Application.Teams.GetPage;
 public sealed class TeamSort(string? sort) : IQuerySort<Team>
 {
     public static readonly IReadOnlySet<string> AllowedFields =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "name", "city", "createdAt", "active", "type" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "name", "city", "createdAt", "active", "type", "division", "category",
+        };
 
     private readonly IReadOnlyList<SortField> _fields = SortSpec.Parse(sort);
 
@@ -23,6 +26,8 @@ public sealed class TeamSort(string? sort) : IQuerySort<Team>
                 "createdat" => Chain(source, ordered, team => team.CreatedAt, field.Descending),
                 "active" => Chain(source, ordered, team => team.Active, field.Descending),
                 "type" => Chain(source, ordered, team => team.Classification.Type, field.Descending),
+                "division" => Chain(source, ordered, team => team.Classification.Division, field.Descending),
+                "category" => Chain(source, ordered, team => team.Classification.Category, field.Descending),
                 _ => ordered
             };
         }

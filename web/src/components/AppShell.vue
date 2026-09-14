@@ -5,11 +5,13 @@ import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import {
   mdiAccountGroupOutline,
+  mdiAccountOutline,
   mdiChevronRight,
   mdiEarth,
   mdiHomeOutline,
   mdiLogout,
   mdiMenu,
+  mdiShieldOutline,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { baseUrl } from '@/lib/http'
@@ -39,9 +41,22 @@ const userPhotoUrl = computed(() => {
 const CRUMB_LABELS: Record<string, string> = {
   home: 'nav.home',
   profile: 'nav.profile',
+  'my-teams': 'nav.myTeams',
   teams: 'nav.teams',
   standings: 'nav.standings',
 }
+
+// My teams/Teams/Standings dropped their own on-page title; this is that
+// title's icon now, moved to sit left of the current-page breadcrumb label
+// (Profile never had one, but gets the same treatment for consistency).
+const CRUMB_ICONS: Partial<Record<string, string>> = {
+  profile: mdiAccountOutline,
+  'my-teams': mdiShieldOutline,
+  teams: mdiAccountGroupOutline,
+  standings: mdiTrophyOutline,
+}
+
+type BreadcrumbItem = { title: string; to: string; disabled: boolean; icon?: string }
 
 const breadcrumbs = computed(() => {
   const home = { title: t('nav.home'), to: '/', disabled: route.name === 'home' }
@@ -49,16 +64,31 @@ const breadcrumbs = computed(() => {
     return [home]
   }
   if (route.name === 'team-detail') {
+    // Point back at wherever the user actually came from (Teams, My teams or
+    // Standings all link into a team's detail page) rather than a hardcoded
+    // parent; falls back to Teams for a direct link/refresh with no origin.
+    const origin = ui.lastListRoute ?? { name: 'teams', path: '/teams' }
+    const originKey = CRUMB_LABELS[origin.name] ?? 'nav.teams'
     return [
       { ...home, disabled: false },
-      { title: t('nav.teams'), to: '/teams', disabled: false },
-      { title: ui.breadcrumbLabel ?? '…', to: route.path, disabled: true },
+      { title: t(originKey), to: origin.path, disabled: false },
+      {
+        title: ui.breadcrumbLabel ?? '…',
+        to: route.path,
+        disabled: true,
+        icon: CRUMB_ICONS.teams,
+      },
     ]
   }
   const key = CRUMB_LABELS[String(route.name)]
   return [
     { ...home, disabled: false },
-    { title: key ? t(key) : String(route.name), to: route.path, disabled: true },
+    {
+      title: key ? t(key) : String(route.name),
+      to: route.path,
+      disabled: true,
+      icon: CRUMB_ICONS[String(route.name)],
+    },
   ]
 })
 
@@ -93,6 +123,8 @@ function toggleNav(): void {
 
 const navItems = [
   { to: '/', icon: mdiHomeOutline, label: 'nav.home' },
+  { to: '/profile', icon: mdiAccountOutline, label: 'nav.profile' },
+  { to: '/my-teams', icon: mdiShieldOutline, label: 'nav.myTeams' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
 ]
@@ -117,6 +149,15 @@ async function handleLogout(): Promise<void> {
     </template>
 
     <v-breadcrumbs :items="breadcrumbs" density="compact" class="app-bar-crumbs">
+      <template #title="{ item }">
+        <v-icon
+          v-if="(item as BreadcrumbItem).icon"
+          :icon="(item as BreadcrumbItem).icon"
+          size="14"
+          class="app-bar-crumb-icon"
+        />
+        {{ item.title }}
+      </template>
       <template #divider>
         <v-icon :icon="mdiChevronRight" size="14" />
       </template>
@@ -247,6 +288,10 @@ async function handleLogout(): Promise<void> {
   color: #94a3b8;
   font-weight: 500;
   font-size: 13.5px;
+}
+
+.app-bar-crumb-icon {
+  margin-inline-end: 0.3rem;
 }
 
 .app-bar-crumbs :deep(.v-breadcrumbs-item--disabled) {

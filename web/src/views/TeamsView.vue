@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { storeToRefs } from 'pinia'
 import {
   mdiAccountGroupOutline,
-  mdiAccountOutline,
+  mdiArrowDown,
+  mdiArrowUp,
   mdiCardAccountDetailsOutline,
+  mdiChevronDown,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
   mdiSoccer,
-  mdiSoccerField,
   mdiSortVariant,
   mdiTrophyOutline,
   mdiTuneVariant,
@@ -18,19 +20,12 @@ import {
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
+import { useLeagueFilterStore } from '@/stores/leagueFilter'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
-import {
-  AGE_CATEGORIES,
-  DIVISIONS,
-  FOOTBALL_TYPES,
-  type AgeCategory,
-  type Division,
-  type FootballType,
-  type Team,
-} from '@/types/team'
+import { AGE_CATEGORIES, DIVISIONS, FOOTBALL_TYPES, type Team } from '@/types/team'
 import type { PagedResult } from '@/types/pagination'
 
 const { t } = useI18n()
@@ -44,10 +39,10 @@ const result = ref<PagedResult<Team> | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Dropdown filters: empty (null) means "no filter"; changing one re-queries immediately.
-const type = ref<FootballType | null>(null)
-const division = ref<Division | null>(null)
-const category = ref<AgeCategory | null>(null)
+// Shared with the Standings screen, so switching pages keeps the same
+// league slice in view. Always has a value - not clearable, only
+// reassignable; changing one re-queries immediately.
+const { type, division, category } = storeToRefs(useLeagueFilterStore())
 
 // Free-text filters: only kick in once at least this many characters are typed.
 const TEXT_FILTER_MIN_CHARS = 3
@@ -62,22 +57,45 @@ const asTextFilter = (text: string | null) => {
   return trimmed.length >= TEXT_FILTER_MIN_CHARS ? trimmed : undefined
 }
 
-const sort = ref('name')
-const sortItems = computed(() => [
-  { value: 'name', title: t('teams.sort.nameAsc') },
-  { value: '-name', title: t('teams.sort.nameDesc') },
-  { value: 'city', title: t('teams.sort.cityAsc') },
-  { value: '-createdAt', title: t('teams.sort.recent') },
-])
+// Sort by name/category/type/division/city. On desktop this is driven by
+// clicking a column header (same mechanism as StandingsView: click to sort
+// by it, click again to reverse, a new column starts descending); on
+// mobile, where there's no header row to click, by the dropdown below the
+// title (the app's original sort picker, now covering every column instead
+// of just name/city). Both read and write the same sortField/sortDescending
+// state, so switching between the two stays in sync.
+const sortField = ref('name')
+const sortDescending = ref(false)
+const sort = computed({
+  get: () => `${sortDescending.value ? '-' : ''}${sortField.value}`,
+  set: (value: string) => {
+    sortDescending.value = value.startsWith('-')
+    sortField.value = sortDescending.value ? value.slice(1) : value
+  },
+})
+
+const SORTABLE_FIELDS = ['name', 'category', 'type', 'division', 'city'] as const
+const sortItems = computed(() =>
+  SORTABLE_FIELDS.flatMap((field) => [
+    { value: field, title: `${t(`teams.fields.${field}`)} (A-Z)` },
+    { value: `-${field}`, title: `${t(`teams.fields.${field}`)} (Z-A)` },
+  ]),
+)
+
+function toggleSort(field: string) {
+  if (sortField.value === field) {
+    sortDescending.value = !sortDescending.value
+  } else {
+    sortField.value = field
+    sortDescending.value = true
+  }
+}
 
 const hasActiveFilters = computed(
   () =>
     asTextFilter(nameText.value) !== undefined ||
     asTextFilter(coachText.value) !== undefined ||
-    asTextFilter(cityText.value) !== undefined ||
-    type.value != null ||
-    division.value != null ||
-    category.value != null,
+    asTextFilter(cityText.value) !== undefined,
 )
 
 // Coach/city live behind "More filters"; a badge on that button surfaces how
@@ -108,9 +126,9 @@ async function load() {
         name: asTextFilter(nameText.value),
         coach: asTextFilter(coachText.value),
         city: asTextFilter(cityText.value),
-        type: type.value ?? undefined,
-        division: division.value ?? undefined,
-        category: category.value ?? undefined,
+        type: type.value,
+        division: division.value,
+        category: category.value,
       },
       auth.accessToken,
     )
@@ -141,11 +159,15 @@ function clearFilters() {
   nameText.value = ''
   coachText.value = ''
   cityText.value = ''
-  type.value = null
-  division.value = null
-  category.value = null
   clearTimeout(textFilterTimer)
   reload()
+}
+
+/** Which mobile rows currently have their details expanded, keyed by team id. */
+const expandedTeamRows = reactive<Record<string, boolean>>({})
+
+function toggleTeamRow(id: string) {
+  expandedTeamRows[id] = !expandedTeamRows[id]
 }
 </script>
 
@@ -153,10 +175,11 @@ function clearFilters() {
   <v-main>
     <div class="teams-page">
       <div class="teams-toolbar">
-        <h1 class="text-h5 font-weight-bold d-flex align-center ga-2">
-          <v-icon :icon="mdiAccountGroupOutline" color="primary" />
-          {{ t('teams.title') }}
-        </h1>
+        <!-- The page title moved to the breadcrumb (see AppShell); this row
+             now only carries the mobile sort control. -->
+        <!-- Mobile only (see the max-width: 599px rules below): the table's
+             sortable column headers don't exist here, so this dropdown
+             (the app's original sort picker) drives the same state instead. -->
         <v-select
           v-model="sort"
           :items="sortItems"
@@ -164,7 +187,7 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          class="teams-sort"
+          class="teams-mobile-sort"
         />
       </div>
 
@@ -186,7 +209,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-select
@@ -196,7 +218,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-select
@@ -206,7 +227,6 @@ function clearFilters() {
           variant="outlined"
           density="comfortable"
           hide-details
-          clearable
           class="teams-filter-select"
         />
         <v-menu :close-on-content-click="false" location="bottom end">
@@ -296,76 +316,208 @@ function clearFilters() {
             </p>
           </div>
 
-          <div v-else class="teams-card-grid">
-            <v-card
-              v-for="team in result.items"
-              :key="team.id"
-              border
-              flat
-              rounded="xl"
-              class="team-card"
-            >
-              <div class="team-card-head">
-                <TeamCrest :team="team" :size="60" />
-                <div class="team-card-title">
-                  <div class="text-subtitle-1 font-weight-bold text-truncate">{{ team.name }}</div>
-                  <v-chip
-                    size="small"
-                    variant="tonal"
-                    :color="AGE_CATEGORY_COLOR[team.category]"
-                    class="team-card-category"
+          <template v-else>
+          <div class="teams-table-wrap">
+            <table class="teams-table">
+              <colgroup>
+                <col class="teams-col-club">
+                <col class="teams-col-stat">
+                <col class="teams-col-stat">
+                <col class="teams-col-stat">
+                <col class="teams-col-city">
+                <col class="teams-col-actions">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th
+                    class="teams-col-club teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'name' }"
+                    @click="toggleSort('name')"
                   >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.name') }}
+                      <v-icon
+                        v-if="sortField === 'name'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'category' }"
+                    @click="toggleSort('category')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.category') }}
+                      <v-icon
+                        v-if="sortField === 'category'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'type' }"
+                    @click="toggleSort('type')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.type') }}
+                      <v-icon
+                        v-if="sortField === 'type'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-stat teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'division' }"
+                    @click="toggleSort('division')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.division') }}
+                      <v-icon
+                        v-if="sortField === 'division'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th
+                    class="teams-col-city teams-col-sortable"
+                    :class="{ 'teams-col-sortable--active': sortField === 'city' }"
+                    @click="toggleSort('city')"
+                  >
+                    <span class="teams-th-inner">
+                      {{ t('teams.fields.city') }}
+                      <v-icon
+                        v-if="sortField === 'city'"
+                        :icon="sortDescending ? mdiArrowDown : mdiArrowUp"
+                        size="14"
+                      />
+                    </span>
+                  </th>
+                  <th class="teams-col-actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="team in result.items" :key="team.id">
+                  <td class="teams-col-club">
+                    <div class="team-row-club">
+                      <TeamCrest :team="team" :size="32" />
+                      <span class="text-truncate">{{ team.name }}</span>
+                    </div>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
+                      {{ t(`profile.team.enums.${team.category}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip
+                      size="small"
+                      variant="tonal"
+                      :color="MODALITY_COLOR[team.type]"
+                      :prepend-icon="mdiSoccer"
+                    >
+                      {{ t(`profile.team.enums.${team.type}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-stat">
+                    <v-chip
+                      size="small"
+                      variant="tonal"
+                      :color="DIVISION_COLOR[team.division]"
+                      :prepend-icon="mdiTrophyOutline"
+                    >
+                      {{ t(`profile.team.enums.${team.division}`) }}
+                    </v-chip>
+                  </td>
+                  <td class="teams-col-city">
+                    <span class="team-row-city text-body-2 text-medium-emphasis">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
+                      {{ team.city }}
+                    </span>
+                  </td>
+                  <td class="teams-col-actions">
+                    <v-btn
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      :prepend-icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                      size="small"
+                    >
+                      {{ t('profile.team.viewDetails') }}
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile only (see the max-width: 599px rules below): one row
+               per team - crest, name, category - that expands in place
+               instead of the desktop table's horizontal scroll. -->
+          <div class="teams-mobile">
+            <div class="teams-mobile-card">
+              <template v-for="team in result.items" :key="team.id">
+                <button
+                  type="button"
+                  class="teams-mobile-row"
+                  :aria-expanded="!!expandedTeamRows[team.id]"
+                  @click="toggleTeamRow(team.id)"
+                >
+                  <TeamCrest :team="team" :size="28" />
+                  <span class="teams-mobile-name text-truncate">{{ team.name }}</span>
+                  <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
                     {{ t(`profile.team.enums.${team.category}`) }}
                   </v-chip>
+                  <v-icon
+                    :icon="mdiChevronDown"
+                    size="18"
+                    class="teams-mobile-chevron"
+                    :class="{ 'teams-mobile-chevron--open': expandedTeamRows[team.id] }"
+                  />
+                </button>
+
+                <div v-if="expandedTeamRows[team.id]" class="teams-mobile-details">
+                  <div class="teams-mobile-detail-grid">
+                    <div class="teams-mobile-detail-cell">
+                      <span class="teams-mobile-detail-label">{{ t('teams.fields.type') }}</span>
+                      <v-chip size="small" variant="tonal" :color="MODALITY_COLOR[team.type]" :prepend-icon="mdiSoccer">
+                        {{ t(`profile.team.enums.${team.type}`) }}
+                      </v-chip>
+                    </div>
+                    <div class="teams-mobile-detail-cell">
+                      <span class="teams-mobile-detail-label">{{ t('teams.fields.division') }}</span>
+                      <v-chip size="small" variant="tonal" :color="DIVISION_COLOR[team.division]" :prepend-icon="mdiTrophyOutline">
+                        {{ t(`profile.team.enums.${team.division}`) }}
+                      </v-chip>
+                    </div>
+                  </div>
+                  <div class="teams-mobile-detail-cell">
+                    <span class="teams-mobile-detail-label">{{ t('teams.fields.city') }}</span>
+                    <span class="teams-mobile-city">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
+                      {{ team.city }}
+                    </span>
+                  </div>
+                  <v-btn
+                    :to="{ name: 'team-detail', params: { id: team.id } }"
+                    :prepend-icon="mdiCardAccountDetailsOutline"
+                    color="blue"
+                    variant="outlined"
+                    block
+                  >
+                    {{ t('profile.team.viewDetails') }}
+                  </v-btn>
                 </div>
-              </div>
-
-              <div class="team-card-chips">
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="MODALITY_COLOR[team.type]"
-                  :prepend-icon="mdiSoccer"
-                >
-                  {{ t(`profile.team.enums.${team.type}`) }}
-                </v-chip>
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="DIVISION_COLOR[team.division]"
-                  :prepend-icon="mdiTrophyOutline"
-                >
-                  {{ t(`profile.team.enums.${team.division}`) }}
-                </v-chip>
-                <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                  {{ team.city }}
-                </v-chip>
-              </div>
-
-              <v-divider />
-
-              <div class="team-card-meta text-body-2 text-medium-emphasis">
-                <span class="team-card-meta-row">
-                  <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
-                  <span class="team-card-meta-text">{{ team.coach }}</span>
-                </span>
-                <span v-if="team.venueName" class="team-card-meta-row">
-                  <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
-                  <span class="team-card-meta-text">{{ team.venueName }}</span>
-                </span>
-              </div>
-
-              <v-btn
-                :to="{ name: 'team-detail', params: { id: team.id } }"
-                :prepend-icon="mdiCardAccountDetailsOutline"
-                color="blue"
-                variant="outlined"
-                block
-              >
-                {{ t('profile.team.viewDetails') }}
-              </v-btn>
-            </v-card>
+              </template>
+            </div>
           </div>
+          </template>
         </template>
       </div>
 
@@ -425,8 +577,11 @@ function clearFilters() {
   padding-bottom: 0.75rem;
 }
 
-.teams-sort {
-  flex: 0 1 220px;
+/* Desktop sorts via the table's column headers (see .teams-col-sortable
+   below); this stays hidden until the max-width: 599px rules turn it on
+   for the mobile list, which has no header row to click. */
+.teams-mobile-sort {
+  display: none;
 }
 
 .teams-filterbar {
@@ -466,14 +621,27 @@ function clearFilters() {
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
-  /* Scrollable, but the scrollbar itself is hidden. */
-  scrollbar-width: none;
+  /* The table below can be wider than the viewport on small screens, so this
+     same element also scrolls horizontally (see .teams-table-wrap). Keep the
+     vertical scrollbar hidden (it's the page's main scroll, always
+     available) but show a slim horizontal one, as in StandingsView. */
+  scrollbar-width: thin;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .teams-list::-webkit-scrollbar {
   width: 0;
-  height: 0;
+  height: 6px;
+}
+
+.teams-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.teams-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .teams-empty {
@@ -551,64 +719,236 @@ function clearFilters() {
   }
 }
 
-/* Responsive card grid: as many 300px+ columns as fit, one on a phone. */
-.teams-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-  padding-bottom: 0.5rem;
+/* One team per line: a compact table (same shape as StandingsView's),
+   wrapped in a bordered card so the list reads as one block. No overflow
+   here (see the .teams-list comment above) - the rounded corners are cut
+   into the table's own corner cells instead. */
+.teams-table-wrap {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 16px;
 }
 
-.team-card {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+.teams-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
 }
 
-.team-card-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
+.teams-col-club {
+  width: 28%;
 }
 
-.team-card-title {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.teams-col-stat {
+  width: 16%;
 }
 
-.team-card-category {
-  align-self: flex-start;
+.teams-col-city {
+  width: 14%;
 }
 
-.team-card-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+.teams-col-actions {
+  width: 10%;
 }
 
-.team-card-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+.teams-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgb(var(--v-theme-background));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #64748b;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.team-card-meta-row {
+.teams-table thead th.teams-col-sortable {
+  cursor: pointer;
+}
+
+.teams-table thead th.teams-col-sortable--active {
+  color: #15803d;
+}
+
+.teams-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.teams-table thead th:first-child {
+  border-top-left-radius: 16px;
+}
+
+.teams-table thead th:last-child {
+  border-top-right-radius: 16px;
+}
+
+.teams-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px;
+}
+
+.teams-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px;
+}
+
+.teams-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.teams-table td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.teams-table td.teams-col-club,
+.teams-table td.teams-col-city {
+  text-align: left;
+}
+
+.teams-table td.teams-col-actions {
+  text-align: right;
+}
+
+/* Age category, modality and division chips fill their (equal-width)
+   column so the three read as same-sized labels, whatever their text. */
+.teams-table td.teams-col-stat :deep(.v-chip) {
+  width: 100%;
+  justify-content: center;
+}
+
+.team-row-club {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.65rem;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.team-row-club span {
   min-width: 0;
 }
 
-.team-card-meta-text {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
+.team-row-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Mobile-only replacement for the desktop table (see the max-width: 599px
+   rules below, which swap the two). One row per team - crest, name,
+   category - that expands in place instead of scrolling sideways. */
+.teams-mobile {
+  display: none;
+}
+
+.teams-mobile-card {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 16px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.teams-mobile-card > *:last-child {
+  border-bottom: none;
+}
+
+.teams-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: none;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-surface));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+
+.teams-mobile-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #0f172a;
+}
+
+.teams-mobile-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.teams-mobile-chevron--open {
+  transform: rotate(180deg);
+}
+
+.teams-mobile-details {
+  padding: 0.75rem 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-background));
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.teams-mobile-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.teams-mobile-detail-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.teams-mobile-detail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.teams-mobile-detail-cell :deep(.v-chip) {
+  width: fit-content;
+}
+
+.teams-mobile-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .teams-table-wrap {
+    display: none;
+  }
+
+  .teams-mobile {
+    display: block;
+  }
+
+  .teams-mobile-sort {
+    display: block;
+    flex: 1 1 200px;
+  }
 }
 </style>

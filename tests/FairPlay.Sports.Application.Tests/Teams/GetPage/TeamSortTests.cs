@@ -56,4 +56,34 @@ public class TeamSortTests
 
         Assert.That(result.Select(t => t.Name), Is.EqualTo(new[] { "Alpha", "Bravo", "Charlie" }));
     }
+
+    [Test]
+    public void SortsByDivision_topTierFirst()
+    {
+        var teams = new[]
+        {
+            TeamMother.DomainTeam(name: "Bravo", division: Division.Third),
+            TeamMother.DomainTeam(name: "Alpha", division: Division.HonorDivision),
+            TeamMother.DomainTeam(name: "Charlie", division: Division.First),
+        }.AsQueryable();
+
+        var result = new TeamSort("division").Apply(teams);
+
+        Assert.That(result.Select(t => t.Name), Is.EqualTo(new[] { "Alpha", "Charlie", "Bravo" }));
+    }
+
+    [Test]
+    public void SortsByCategory_youngestFirst()
+    {
+        var teams = new[]
+        {
+            TeamMother.DomainTeam(name: "Bravo", category: AgeCategory.Veteranos),
+            TeamMother.DomainTeam(name: "Alpha", category: AgeCategory.Chupetes),
+            TeamMother.DomainTeam(name: "Charlie", category: AgeCategory.Infantiles),
+        }.AsQueryable();
+
+        var result = new TeamSort("category").Apply(teams);
+
+        Assert.That(result.Select(t => t.Name), Is.EqualTo(new[] { "Alpha", "Charlie", "Bravo" }));
+    }
 }
