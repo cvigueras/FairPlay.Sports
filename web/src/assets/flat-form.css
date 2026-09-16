@@ -8,6 +8,9 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background: rgb(var(--v-theme-surface));
+  /* Vuetify's default v-card elevation paints its own drop shadow on top of
+     this border, reading as an extra tinted outline - this design is flat. */
+  box-shadow: none !important;
 }
 
 .fp-modal-card {

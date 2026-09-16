@@ -205,16 +205,16 @@ async function confirmLeave() {
 
 <template>
   <v-main>
-    <v-container v-if="user" class="py-6 py-md-10 profile-container">
+    <v-container v-if="user" class="my-teams-container">
       <!-- The page title moved to the breadcrumb (see AppShell). -->
       <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning mb-5">
         {{ t('profile.activation.needsTeam') }}
       </div>
 
-      <!-- Join an existing team: full width, above the member's own team card(s), and
-           always available - no toggle needed to reveal it. -->
-      <v-row class="mb-4">
-        <v-col cols="12">
+      <v-row>
+        <!-- Left: join an existing team, and found a new one. Always available -
+             no toggle needed to reveal it. -->
+        <v-col cols="12" md="5" class="py-5">
           <v-card class="fp-card pa-6">
             <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
@@ -276,100 +276,100 @@ async function confirmLeave() {
               <template v-else>{{ t('profile.team.save') }}</template>
             </button>
           </v-card>
+
+          <!-- Create a new team: always available, opens the step-by-step wizard. -->
+          <button
+            type="button"
+            class="fp-btn fp-btn-tonal fp-btn-block"
+            style="margin-top: 18px"
+            @click="wizardOpen = true"
+          >
+            <v-icon :icon="mdiPlusCircleOutline" size="18" />
+            {{ t('profile.team.createAnother') }}
+          </button>
+        </v-col>
+
+        <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
+        <v-col v-if="myTeams.length > 0" cols="12" md="7" class="py-7">
+          <div class="fp-team-list">
+            <v-card v-for="{ membership, team } in myTeamCards" :key="membership.id" class="fp-card fp-team-card">
+              <div class="fp-crest-shield">
+                <img v-if="team.hasCrest" :src="teamsApi.crestUrl(team.id)" :alt="team.name" />
+                <v-icon v-else :icon="mdiShieldOutline" size="34" color="primary" />
+              </div>
+              <div class="fp-team-body">
+                <div class="fp-team-row1">
+                  <span class="fp-team-name">{{ team.name }}</span>
+                  <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
+                </div>
+                <div class="fp-chip-row">
+                  <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
+                    {{ t(`profile.team.enums.${team.type}`) }}
+                  </span>
+                  <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                    {{ t(`profile.team.enums.${team.division}`) }}
+                  </span>
+                  <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                    {{ t(`profile.team.enums.${team.category}`) }}
+                  </span>
+                  <span class="fp-chip" style="background: #f1f5f9; color: #475569">{{ team.city }}</span>
+                </div>
+                <div class="fp-meta-row">
+                  <span>
+                    <v-icon size="14" :icon="mdiAccountOutline" />
+                    {{ membership.displayName }}
+                  </span>
+                  <span v-if="team.venueName">
+                    <v-icon size="14" :icon="mdiSoccerField" />
+                    {{ team.venueName }}
+                  </span>
+                </div>
+              </div>
+              <div class="fp-team-actions">
+                <v-tooltip :text="t('profile.team.viewDetails')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <router-link
+                      v-bind="tooltipProps"
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      class="fp-icon-btn"
+                      :aria-label="t('profile.team.viewDetails')"
+                      @click.stop
+                    >
+                      <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
+                    </router-link>
+                  </template>
+                </v-tooltip>
+                <v-tooltip :text="t('profile.team.editTitle')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <button
+                      type="button"
+                      v-bind="tooltipProps"
+                      class="fp-icon-btn"
+                      :aria-label="t('profile.team.editTitle')"
+                      @click="openEdit(team.id)"
+                    >
+                      <v-icon :icon="mdiPencilOutline" size="18" />
+                    </button>
+                  </template>
+                </v-tooltip>
+                <v-tooltip :text="t('profile.team.leave')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <button
+                      type="button"
+                      v-bind="tooltipProps"
+                      class="fp-icon-btn fp-icon-btn--danger"
+                      :aria-label="t('profile.team.leave')"
+                      @click="leavingTeam = team"
+                    >
+                      <v-icon :icon="mdiAccountRemoveOutline" size="18" />
+                    </button>
+                  </template>
+                </v-tooltip>
+              </div>
+            </v-card>
+          </div>
         </v-col>
       </v-row>
-
-      <!-- Has teams: show one card per membership. -->
-      <v-row v-if="myTeams.length > 0" class="mb-4">
-        <v-col v-for="{ membership, team } in myTeamCards" :key="membership.id" cols="12">
-          <v-card class="fp-card fp-team-card">
-            <div class="fp-crest-shield">
-              <img v-if="team.hasCrest" :src="teamsApi.crestUrl(team.id)" :alt="team.name" />
-              <v-icon v-else :icon="mdiShieldOutline" size="34" color="primary" />
-            </div>
-            <div class="fp-team-body">
-              <div class="fp-team-row1">
-                <span class="fp-team-name">{{ team.name }}</span>
-                <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
-              </div>
-              <div class="fp-chip-row">
-                <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
-                  {{ t(`profile.team.enums.${team.type}`) }}
-                </span>
-                <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
-                  {{ t(`profile.team.enums.${team.division}`) }}
-                </span>
-                <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
-                  {{ t(`profile.team.enums.${team.category}`) }}
-                </span>
-                <span class="fp-chip" style="background: #f1f5f9; color: #475569">{{ team.city }}</span>
-              </div>
-              <div class="fp-meta-row">
-                <span>
-                  <v-icon size="14" :icon="mdiAccountOutline" />
-                  {{ membership.displayName }}
-                </span>
-                <span v-if="team.venueName">
-                  <v-icon size="14" :icon="mdiSoccerField" />
-                  {{ team.venueName }}
-                </span>
-              </div>
-            </div>
-            <div class="fp-team-actions">
-              <v-tooltip :text="t('profile.team.viewDetails')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <router-link
-                    v-bind="tooltipProps"
-                    :to="{ name: 'team-detail', params: { id: team.id } }"
-                    class="fp-icon-btn"
-                    :aria-label="t('profile.team.viewDetails')"
-                    @click.stop
-                  >
-                    <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
-                  </router-link>
-                </template>
-              </v-tooltip>
-              <v-tooltip :text="t('profile.team.editTitle')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <button
-                    type="button"
-                    v-bind="tooltipProps"
-                    class="fp-icon-btn"
-                    :aria-label="t('profile.team.editTitle')"
-                    @click="openEdit(team.id)"
-                  >
-                    <v-icon :icon="mdiPencilOutline" size="18" />
-                  </button>
-                </template>
-              </v-tooltip>
-              <v-tooltip :text="t('profile.team.leave')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <button
-                    type="button"
-                    v-bind="tooltipProps"
-                    class="fp-icon-btn fp-icon-btn--danger"
-                    :aria-label="t('profile.team.leave')"
-                    @click="leavingTeam = team"
-                  >
-                    <v-icon :icon="mdiAccountRemoveOutline" size="18" />
-                  </button>
-                </template>
-              </v-tooltip>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <!-- Create a new team: always available, opens the step-by-step wizard. -->
-      <button
-        type="button"
-        class="fp-btn fp-btn-tonal fp-btn-block"
-        style="margin-top: 18px"
-        @click="wizardOpen = true"
-      >
-        <v-icon :icon="mdiPlusCircleOutline" size="18" />
-        {{ t('profile.team.createAnother') }}
-      </button>
     </v-container>
 
     <!-- Create a new team -->
@@ -414,3 +414,22 @@ async function confirmLeave() {
     </v-dialog>
   </v-main>
 </template>
+
+<style scoped>
+/* Matches the max-width of the other list pages (Teams, Standings), now that
+   this view is a two-column layout rather than a single narrow form. */
+.my-teams-container {
+  max-width: 1600px;
+}
+
+/* Bounded so a long team list scrolls in place instead of pushing the page
+   footer away - the left column (join/create) stays put beside it. */
+.fp-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+</style>
