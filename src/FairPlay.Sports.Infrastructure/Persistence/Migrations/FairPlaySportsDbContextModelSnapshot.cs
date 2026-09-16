@@ -182,6 +182,44 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.ToTable("Teams", (string)null);
                 });
 
+            modelBuilder.Entity("FairPlay.Sports.Domain.Teams.TeamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TeamId", "Role")
+                        .IsUnique()
+                        .HasFilter("\"Role\" <> 'Player'");
+
+                    b.HasIndex("TeamId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("TeamMembers", (string)null);
+                });
+
             modelBuilder.Entity("FairPlay.Sports.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -217,9 +255,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("Member");
 
-                    b.Property<Guid?>("TeamId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -229,8 +264,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("TeamId");
 
                     b.HasIndex("UserName")
                         .IsUnique();
@@ -324,12 +357,19 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.Navigation("HomeVenue");
                 });
 
-            modelBuilder.Entity("FairPlay.Sports.Domain.Users.User", b =>
+            modelBuilder.Entity("FairPlay.Sports.Domain.Teams.TeamMember", b =>
                 {
                     b.HasOne("FairPlay.Sports.Domain.Teams.Team", null)
                         .WithMany()
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FairPlay.Sports.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

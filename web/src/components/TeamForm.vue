@@ -22,8 +22,9 @@ const props = withDefaults(
     error?: string
     submitLabel: string
     withCrest?: boolean
+    disabled?: boolean
   }>(),
-  { initial: null, loading: false, error: '', withCrest: false },
+  { initial: null, loading: false, error: '', withCrest: false, disabled: false },
 )
 
 const emit = defineEmits<{
@@ -357,7 +358,7 @@ function hasOptionalError(): boolean {
       {{ error }}
     </v-alert>
 
-    <v-btn type="submit" block size="large" variant="tonal" :loading="loading">
+    <v-btn type="submit" block size="large" variant="tonal" :loading="loading" :disabled="disabled">
       {{ submitLabel }}
     </v-btn>
   </v-form>

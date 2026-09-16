@@ -6,7 +6,10 @@ using FairPlay.Sports.Application.Teams.Activate;
 using FairPlay.Sports.Application.Teams.Create;
 using FairPlay.Sports.Application.Teams.GetById;
 using FairPlay.Sports.Application.Teams.GetCrest;
+using FairPlay.Sports.Application.Teams.GetMembers;
 using FairPlay.Sports.Application.Teams.GetPage;
+using FairPlay.Sports.Application.Teams.JoinTeam;
+using FairPlay.Sports.Application.Teams.LeaveTeam;
 using FairPlay.Sports.Application.Teams.Update;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
@@ -144,6 +147,39 @@ public sealed class TeamsController(ISender sender) : ControllerBase
         var command = new UploadTeamCrestCommand(id, buffer.ToArray(), file.ContentType ?? string.Empty);
         var result = await _sender.Send(command, cancellationToken);
 
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Lists a team's members.</summary>
+    [HttpGet("{id:guid}/members")]
+    [ProducesResponseType(typeof(IReadOnlyList<TeamMemberDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<TeamMemberDto>>> GetMembers(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new GetTeamMembersQuery(id), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Adds a user to the team with a given role.</summary>
+    [HttpPost("{id:guid}/members")]
+    [ProducesResponseType(typeof(TeamMemberDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TeamMemberDto>> JoinTeam(
+        Guid id, JoinTeamRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new JoinTeamCommand(id, request.UserId, request.Role, request.DisplayName), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Removes a user from the team.</summary>
+    [HttpDelete("{id:guid}/members/{userId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LeaveTeam(Guid id, Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new LeaveTeamCommand(id, userId), cancellationToken);
         return result.ToActionResult(this);
     }
 

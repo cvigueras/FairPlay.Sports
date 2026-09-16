@@ -1,6 +1,8 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { http } from '@/lib/http'
+import { teamsApi } from '@/lib/teams'
+import type { TeamMemberRole, TeamMembership } from '@/types/team'
 import type { User } from '@/types/user'
 
 interface AuthResponse {
@@ -27,6 +29,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => currentUser.value !== null)
   /** Bumped on every photo upload so every avatar on screen refetches instead of using a cached image. */
   const photoVersion = ref(0)
+  /** The signed-in user's team memberships - a user can belong to several teams. */
+  const myTeams = ref<TeamMembership[]>([])
 
   function apply(response: AuthResponse): void {
     accessToken.value = response.accessToken
@@ -36,6 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
   function clear(): void {
     accessToken.value = null
     currentUser.value = null
+    myTeams.value = []
   }
 
   async function login(email: string, password: string): Promise<void> {
@@ -47,14 +52,37 @@ export const useAuthStore = defineStore('auth', () => {
     return http.post<User>('/api/users', payload)
   }
 
-  /** Assigns the signed-in user to a team and refreshes the cached user. */
-  async function setTeam(teamId: string): Promise<void> {
+  /** Refreshes the signed-in user's team memberships from the server. */
+  async function loadMyTeams(): Promise<void> {
     if (!currentUser.value) return
-    currentUser.value = await http.put<User>(
-      `/api/users/${currentUser.value.id}/team`,
-      { teamId },
-      { token: accessToken.value },
+    myTeams.value = await http.get<TeamMembership[]>(`/api/users/${currentUser.value.id}/teams`, {
+      token: accessToken.value,
+    })
+  }
+
+  /**
+   * Joins the signed-in user to a team - founding one or joining an existing one - with the
+   * role they occupy there and their name/nickname there. Refreshes the memberships list and
+   * the cached user (joining a first team activates it).
+   */
+  async function joinTeam(teamId: string, role: TeamMemberRole, displayName: string): Promise<void> {
+    if (!currentUser.value) return
+    await teamsApi.members.join(
+      teamId,
+      { userId: currentUser.value.id, role, displayName },
+      accessToken.value,
     )
+    currentUser.value = await http.get<User>(`/api/users/${currentUser.value.id}`, {
+      token: accessToken.value,
+    })
+    await loadMyTeams()
+  }
+
+  /** Removes the signed-in user from a team, then refreshes the memberships list. */
+  async function leaveTeam(teamId: string): Promise<void> {
+    if (!currentUser.value) return
+    await teamsApi.members.leave(teamId, currentUser.value.id, accessToken.value)
+    await loadMyTeams()
   }
 
   /** Updates the user's name and email, then refreshes the cached user. */
@@ -111,9 +139,12 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     isAuthenticated,
     photoVersion,
+    myTeams,
     login,
     register,
-    setTeam,
+    loadMyTeams,
+    joinTeam,
+    leaveTeam,
     updateProfile,
     changePassword,
     uploadPhoto,

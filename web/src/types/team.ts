@@ -12,6 +12,27 @@ export type AgeCategory =
   | 'Veteranos'
 export type PitchSurface = 'NaturalGrass' | 'ArtificialTurf' | 'Hybrid' | 'Earth' | 'Indoor'
 
+/** The capacity a user takes part in a team as, chosen when founding/joining it. */
+export type TeamMemberRole = 'Delegate' | 'Coach' | 'President' | 'TechnicalStaff' | 'Player'
+
+export const TEAM_MEMBER_ROLES: TeamMemberRole[] = [
+  'Delegate',
+  'Coach',
+  'President',
+  'TechnicalStaff',
+  'Player',
+]
+
+/** Mirrors the backend `TeamMemberDto` - one user's membership in one team. */
+export interface TeamMembership {
+  id: string
+  teamId: string
+  userId: string
+  role: TeamMemberRole
+  displayName: string
+  createdAt: string
+}
+
 /** Optional "ficha" fields a team may carry, mirrored on create/update/DTO. */
 export interface TeamProfileFields {
   shortName?: string | null

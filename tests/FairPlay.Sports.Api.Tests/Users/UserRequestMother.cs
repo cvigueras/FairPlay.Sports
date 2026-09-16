@@ -6,7 +6,7 @@ namespace FairPlay.Sports.Api.Tests.Users;
 internal static class UserRequestMother
 {
     public static RegisterUserRequest RegisterRequest() =>
-        new(UserMother.UserName, UserMother.Email, UserMother.Password, UserMother.TeamId);
+        new(UserMother.UserName, UserMother.Email, UserMother.Password);
 
     public static UpdateUserProfileRequest UpdateProfileRequest() =>
         new(UserMother.UserName, UserMother.Email);

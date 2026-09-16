@@ -1,11 +1,14 @@
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using MediatR;
 
 namespace FairPlay.Sports.Application.Users.Activate;
 
-public sealed class ActivateUserHandler(IUserRepository repository) : IRequestHandler<ActivateUserCommand, Result>
+public sealed class ActivateUserHandler(IUserRepository repository, ITeamMemberRepository members)
+    : IRequestHandler<ActivateUserCommand, Result>
 {
     private readonly IUserRepository _repository = repository;
+    private readonly ITeamMemberRepository _members = members;
 
     public async Task<Result> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
     {
@@ -13,7 +16,7 @@ public sealed class ActivateUserHandler(IUserRepository repository) : IRequestHa
         if (user is null)
             return Result.NotFound($"User '{request.Id}' was not found.");
 
-        if (user.TeamId is null)
+        if (!await _members.ExistsForUserAsync(request.Id, cancellationToken))
             return Result.Failure("A user cannot be activated until they belong to a team.");
 
         user.Activate();
