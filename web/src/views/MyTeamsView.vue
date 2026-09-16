@@ -287,7 +287,7 @@ async function confirmLeave() {
         </v-col>
 
         <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
-        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6 d-flex flex-column">
+        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6 d-flex flex-column my-teams-list-col">
           <div class="fp-team-list">
             <v-card v-for="{ membership, team } in myTeamCards" :key="membership.id" class="fp-card fp-team-card">
               <div class="fp-crest-shield">
@@ -410,13 +410,32 @@ async function confirmLeave() {
    this view is a two-column layout rather than a single narrow form. */
 .my-teams-container {
   max-width: 1600px;
+  /* Vuetify's v-container adds 16px top/bottom padding by default; left as
+     is, that's 32px more than the viewport-height row below leaves room
+     for, which is exactly what was pushing the whole page into scrolling
+     instead of only .fp-team-list. The columns' own py-6 already gives
+     top/bottom breathing room, so the container doesn't need to add more. */
+  padding-block: 0;
 }
 
-/* Fills the whole viewport height below the app bar (64px) - there's no
+/* Pinned to the viewport height below the app bar (64px) - there's no
    pagination to cap the list at a guessed height, so it may as well use
-   all the room the window actually gives it before scrolling in place. */
+   all the room the window actually gives it. A fixed `height` (not
+   `min-height`) plus `overflow: hidden` keeps the row itself, and the join
+   form beside the list, from ever growing past that and scrolling the
+   whole page - only .fp-team-list's own overflow scrolls. */
 .my-teams-row {
-  min-height: calc(100vh - 64px);
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+/* Vuetify's v-col doesn't reliably stretch to a flex row's cross size (its
+   own default flex-grow/shrink: 0 seems to win out even with min-height:
+   0), so the column is pinned to the same explicit height as the row
+   instead of depending on stretch to propagate it down. */
+.my-teams-list-col {
+  height: calc(100vh - 64px);
+  min-height: 0;
 }
 
 .fp-team-list {
