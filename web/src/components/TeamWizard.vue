@@ -17,9 +17,8 @@ import {
   type TeamMemberRole,
 } from '@/types/team'
 
-const props = withDefaults(defineProps<{ modelValue: boolean; loading?: boolean; error?: string }>(), {
+const props = withDefaults(defineProps<{ modelValue: boolean; loading?: boolean }>(), {
   loading: false,
-  error: '',
 })
 
 const emit = defineEmits<{
@@ -433,8 +432,6 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
-
-          <div v-if="error" class="fp-alert fp-alert-error mt-2">{{ error }}</div>
         </template>
       </v-card-text>
 

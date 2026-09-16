@@ -22,9 +22,11 @@ import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui'
 import type { CreateTeamPayload, Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const { t } = useI18n()
 
 const user = computed(() => auth.currentUser)
@@ -46,8 +48,6 @@ const joinRole = ref<TeamMemberRole | null>(null)
  *  per-team nickname (that's what the create wizard's own name field is for). */
 const joinDisplayName = ref(auth.currentUser?.userName ?? '')
 const savingTeam = ref(false)
-const teamSaved = ref(false)
-const teamError = ref('')
 const joinErrors = reactive<Record<string, string>>({})
 
 const joinableTeams = computed(() =>
@@ -70,7 +70,7 @@ async function loadMyTeamDetails() {
     )
     teamDetails.value = Object.fromEntries(details.map((team) => [team.id, team]))
   } catch (error) {
-    teamError.value = error instanceof ApiError ? error.message : t('profile.team.loadFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
   } finally {
     loadingMyTeams.value = false
   }
@@ -82,7 +82,7 @@ onMounted(async () => {
     const [list] = await Promise.all([teamsApi.list(auth.accessToken), auth.loadMyTeams()])
     teams.value = list
   } catch (error) {
-    teamError.value = error instanceof ApiError ? error.message : t('profile.team.loadFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
   } finally {
     loadingTeams.value = false
   }
@@ -102,17 +102,15 @@ function validateJoin(): boolean {
 
 async function saveTeam() {
   if (!validateJoin() || !selectedTeamId.value || !joinRole.value) return
-  teamError.value = ''
-  teamSaved.value = false
   savingTeam.value = true
   try {
     await auth.joinTeam(selectedTeamId.value, joinRole.value, joinDisplayName.value.trim())
     await loadMyTeamDetails()
-    teamSaved.value = true
+    ui.notify(t('profile.team.saved'), 'success')
     selectedTeamId.value = null
     joinRole.value = null
   } catch (error) {
-    teamError.value = error instanceof ApiError ? error.message : t('profile.team.saveFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.saveFailed'), 'error')
   } finally {
     savingTeam.value = false
   }
@@ -122,7 +120,6 @@ async function saveTeam() {
 
 const wizardOpen = ref(false)
 const creatingTeam = ref(false)
-const createError = ref('')
 
 async function handleCreate({
   payload,
@@ -135,7 +132,6 @@ async function handleCreate({
   displayName: string
   crest: File | null
 }) {
-  createError.value = ''
   creatingTeam.value = true
   try {
     const created = await teamsApi.create(payload, auth.accessToken)
@@ -147,7 +143,7 @@ async function handleCreate({
     teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
     wizardOpen.value = false
   } catch (error) {
-    createError.value = error instanceof ApiError ? error.message : t('profile.team.createFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.createFailed'), 'error')
   } finally {
     creatingTeam.value = false
   }
@@ -160,7 +156,6 @@ const editingTeam = computed(() =>
   editingTeamId.value ? (teamDetails.value[editingTeamId.value] ?? null) : null,
 )
 const savingEdit = ref(false)
-const editError = ref('')
 
 function openEdit(teamId: string) {
   editingTeamId.value = teamId
@@ -168,7 +163,6 @@ function openEdit(teamId: string) {
 
 async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: File | null }) {
   if (!editingTeam.value) return
-  editError.value = ''
   savingEdit.value = true
   try {
     const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
@@ -176,7 +170,7 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
     teams.value = teams.value.map((tm) => (tm.id === updated.id ? updated : tm))
     editingTeamId.value = null
   } catch (error) {
-    editError.value = error instanceof ApiError ? error.message : t('profile.team.updateFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
   } finally {
     savingEdit.value = false
   }
@@ -187,19 +181,17 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
 /** Snapshot of the team being left, captured when the dialog opens - kept stable
  *  through the dialog's closing transition even after `teamDetails` is pruned. */
 const leavingTeam = ref<Team | null>(null)
-const leaveError = ref('')
 
 async function confirmLeave() {
   if (!leavingTeam.value) return
   const teamId = leavingTeam.value.id
-  leaveError.value = ''
   try {
     await auth.leaveTeam(teamId)
     const { [teamId]: _removed, ...rest } = teamDetails.value
     teamDetails.value = rest
     leavingTeam.value = null
   } catch (error) {
-    leaveError.value = error instanceof ApiError ? error.message : t('profile.team.leaveFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.leaveFailed'), 'error')
   }
 }
 </script>
@@ -267,11 +259,6 @@ async function confirmLeave() {
             <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" class="mb-4">
               <RolePills v-model="joinRole" />
             </FlatField>
-
-            <div v-if="teamError" class="fp-alert fp-alert-error my-4">{{ teamError }}</div>
-            <div v-else-if="teamSaved" class="fp-alert fp-alert-success my-4">
-              {{ t('profile.team.saved') }}
-            </div>
 
             <button
               type="button"
@@ -382,12 +369,7 @@ async function confirmLeave() {
     </v-container>
 
     <!-- Create a new team -->
-    <TeamWizard
-      v-model="wizardOpen"
-      :loading="creatingTeam"
-      :error="createError"
-      @submit="handleCreate"
-    />
+    <TeamWizard v-model="wizardOpen" :loading="creatingTeam" @submit="handleCreate" />
 
     <!-- Edit a team -->
     <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
@@ -397,7 +379,6 @@ async function confirmLeave() {
           :initial="editingTeam"
           :submit-label="t('profile.team.saveChanges')"
           :loading="savingEdit"
-          :error="editError"
           @submit="handleUpdate"
         />
       </v-card>
@@ -410,7 +391,6 @@ async function confirmLeave() {
           {{ t('profile.team.leaveConfirmTitle', { name: leavingTeam.name }) }}
         </h2>
         <p class="fp-confirm-hint">{{ t('profile.team.leaveConfirmHint') }}</p>
-        <div v-if="leaveError" class="fp-alert fp-alert-error mb-4">{{ leaveError }}</div>
         <div class="fp-confirm-actions">
           <button type="button" class="fp-btn fp-btn-text" @click="leavingTeam = null">
             {{ t('profile.team.cancel') }}
