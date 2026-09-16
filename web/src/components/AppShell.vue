@@ -12,6 +12,7 @@ import {
   mdiLogout,
   mdiMenu,
   mdiShieldOutline,
+  mdiSwordCross,
   mdiTrophyOutline,
 } from '@mdi/js'
 import { baseUrl } from '@/lib/http'
@@ -44,6 +45,7 @@ const CRUMB_LABELS: Record<string, string> = {
   'my-teams': 'nav.myTeams',
   teams: 'nav.teams',
   standings: 'nav.standings',
+  challenges: 'nav.challenges',
 }
 
 // My teams/Teams/Standings dropped their own on-page title; this is that
@@ -54,6 +56,7 @@ const CRUMB_ICONS: Partial<Record<string, string>> = {
   'my-teams': mdiShieldOutline,
   teams: mdiAccountGroupOutline,
   standings: mdiTrophyOutline,
+  challenges: mdiSwordCross,
 }
 
 type BreadcrumbItem = { title: string; to: string; disabled: boolean; icon?: string }
@@ -127,6 +130,8 @@ const navItems = [
   { to: '/my-teams', icon: mdiShieldOutline, label: 'nav.myTeams' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
+  // TODO: badge is a placeholder count until the challenges API exists.
+  { to: '/challenges', icon: mdiSwordCross, label: 'nav.challenges', badge: 3 },
 ]
 
 const isLoggingOut = ref(false)
@@ -246,7 +251,11 @@ async function handleLogout(): Promise<void> {
         :prepend-icon="item.icon"
         :title="t(item.label)"
         rounded="lg"
-      />
+      >
+        <template v-if="item.badge && !rail" #append>
+          <span class="nav-badge">{{ item.badge }}</span>
+        </template>
+      </v-list-item>
     </v-list>
 
     <template #append>
@@ -504,6 +513,21 @@ async function handleLogout(): Promise<void> {
 .nav-list :deep(.v-list-item--active .v-list-item-title) {
   color: #15803d;
   font-weight: 700;
+}
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .logout-btn {

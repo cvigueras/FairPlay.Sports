@@ -190,6 +190,7 @@ async function confirmLeave() {
     const { [teamId]: _removed, ...rest } = teamDetails.value
     teamDetails.value = rest
     leavingTeam.value = null
+    ui.notify(t('profile.team.leftSuccess'), 'success')
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.leaveFailed'), 'error')
   }
@@ -204,7 +205,7 @@ async function confirmLeave() {
         {{ t('profile.activation.needsTeam') }}
       </div>
 
-      <v-row>
+      <v-row class="my-teams-row">
         <!-- Left: join an existing team, and found a new one. Always available -
              no toggle needed to reveal it. -->
         <v-col cols="12" md="4" class="py-6">
@@ -286,7 +287,7 @@ async function confirmLeave() {
         </v-col>
 
         <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
-        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6">
+        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6 d-flex flex-column">
           <div class="fp-team-list">
             <v-card v-for="{ membership, team } in myTeamCards" :key="membership.id" class="fp-card fp-team-card">
               <div class="fp-crest-shield">
@@ -411,13 +412,19 @@ async function confirmLeave() {
   max-width: 1600px;
 }
 
-/* Bounded so a long team list scrolls in place instead of pushing the page
-   footer away - the left column (join/create) stays put beside it. */
+/* Fills the whole viewport height below the app bar (64px) - there's no
+   pagination to cap the list at a guessed height, so it may as well use
+   all the room the window actually gives it before scrolling in place. */
+.my-teams-row {
+  min-height: calc(100vh - 64px);
+}
+
 .fp-team-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 70vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
 }

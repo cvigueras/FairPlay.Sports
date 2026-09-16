@@ -11,11 +11,15 @@
     "profile": "Profile",
     "myTeams": "My teams",
     "teams": "Teams",
-    "standings": "Standings"
+    "standings": "Standings",
+    "challenges": "Challenges"
   },
   "home": {
     "greeting": "Hi, {name}",
     "subtitle": "This is your FairPlay Sports hub. More coming soon."
+  },
+  "challenges": {
+    "placeholder": "Here are your challenges"
   },
   "teams": {
     "count": "{n} teams",
@@ -159,6 +163,7 @@
       "saveFailed": "Could not update your team.",
       "createAnother": "Create a new team",
       "leave": "Leave team",
+      "leftSuccess": "You've left the team.",
       "leaveFailed": "Could not leave the team.",
       "leaveConfirmTitle": "Leave {name}?",
       "leaveConfirmHint": "You can join it again later.",

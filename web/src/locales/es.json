@@ -11,11 +11,15 @@
     "profile": "Perfil",
     "myTeams": "Mis equipos",
     "teams": "Equipos",
-    "standings": "Clasificación"
+    "standings": "Clasificación",
+    "challenges": "Desafíos"
   },
   "home": {
     "greeting": "Hola, {name}",
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
+  },
+  "challenges": {
+    "placeholder": "Aquí tus retos"
   },
   "teams": {
     "count": "{n} equipos",
@@ -159,6 +163,7 @@
       "saveFailed": "No se ha podido actualizar tu equipo.",
       "createAnother": "Crear un nuevo equipo",
       "leave": "Salir del equipo",
+      "leftSuccess": "Has salido del equipo correctamente.",
       "leaveFailed": "No se ha podido salir del equipo.",
       "leaveConfirmTitle": "¿Salir de {name}?",
       "leaveConfirmHint": "Podrás volver a unirte más adelante.",
