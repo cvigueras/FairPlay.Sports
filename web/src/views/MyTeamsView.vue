@@ -1,37 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccountOutline,
   mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
-  mdiMapMarkerOutline,
   mdiPencilOutline,
   mdiPlusCircleOutline,
-  mdiSoccer,
+  mdiShieldOutline,
   mdiSoccerField,
-  mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
-import TeamCrest from '@/components/TeamCrest.vue'
+import FlatField from '@/components/FlatField.vue'
+import RolePills from '@/components/RolePills.vue'
 import TeamForm from '@/components/TeamForm.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
+import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
-import type { CreateTeamPayload, Team } from '@/types/team'
-import { TEAM_MEMBER_ROLES, type TeamMemberRole, type TeamMembership } from '@/types/team'
+import type { CreateTeamPayload, Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const auth = useAuthStore()
 const { t } = useI18n()
 
 const user = computed(() => auth.currentUser)
 const myTeams = computed(() => auth.myTeams)
-
-const memberRoleItems = computed(() =>
-  TEAM_MEMBER_ROLES.map((role) => ({ value: role, title: t(`profile.team.memberRoles.${role}`) })),
-)
 
 /* ---- My teams ----------------------------------------------------------
    A user can belong to several teams. `myTeams` (the memberships) comes from
@@ -46,10 +42,10 @@ const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
 const joinRole = ref<TeamMemberRole | null>(null)
 const joinDisplayName = ref('')
-const joinValid = computed(() => !!joinRole.value && joinDisplayName.value.trim().length > 0)
 const savingTeam = ref(false)
 const teamSaved = ref(false)
 const teamError = ref('')
+const joinErrors = reactive<Record<string, string>>({})
 
 const joinableTeams = computed(() =>
   teams.value.filter((team) => !myTeams.value.some((membership) => membership.teamId === team.id)),
@@ -62,9 +58,6 @@ const myTeamCards = computed(() =>
     .map((membership) => ({ membership, team: teamDetails.value[membership.teamId] }))
     .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team),
 )
-
-/** Shown when there's nothing to show yet, or the user asks to join/found another team. */
-const showJoinPanel = ref(true)
 
 async function loadMyTeamDetails() {
   loadingMyTeams.value = true
@@ -92,11 +85,21 @@ onMounted(async () => {
   }
 
   await loadMyTeamDetails()
-  showJoinPanel.value = myTeams.value.length === 0
 })
 
+function validateJoin(): boolean {
+  const required = t('profile.team.required')
+  for (const key of Object.keys(joinErrors)) delete joinErrors[key]
+
+  if (!selectedTeamId.value) joinErrors.team = required
+  if (!joinRole.value) joinErrors.role = required
+  if (!joinDisplayName.value.trim()) joinErrors.displayName = required
+
+  return Object.keys(joinErrors).length === 0
+}
+
 async function saveTeam() {
-  if (!selectedTeamId.value || !joinRole.value) return
+  if (!validateJoin() || !selectedTeamId.value || !joinRole.value) return
   teamError.value = ''
   teamSaved.value = false
   savingTeam.value = true
@@ -104,7 +107,6 @@ async function saveTeam() {
     await auth.joinTeam(selectedTeamId.value, joinRole.value, joinDisplayName.value.trim())
     await loadMyTeamDetails()
     teamSaved.value = true
-    showJoinPanel.value = false
     selectedTeamId.value = null
     joinRole.value = null
     joinDisplayName.value = ''
@@ -115,16 +117,23 @@ async function saveTeam() {
   }
 }
 
-/* ---- Create a new team ---------------------------------------------------- */
+/* ---- Create a new team (wizard) --------------------------------------- */
 
-const createRole = ref<TeamMemberRole | null>(null)
-const createDisplayName = ref('')
-const createValid = computed(() => !!createRole.value && createDisplayName.value.trim().length > 0)
+const wizardOpen = ref(false)
 const creatingTeam = ref(false)
 const createError = ref('')
 
-async function handleCreate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
-  if (!createRole.value) return
+async function handleCreate({
+  payload,
+  role,
+  displayName,
+  crest,
+}: {
+  payload: CreateTeamPayload
+  role: TeamMemberRole
+  displayName: string
+  crest: File | null
+}) {
   createError.value = ''
   creatingTeam.value = true
   try {
@@ -133,12 +142,9 @@ async function handleCreate({ payload, crest }: { payload: CreateTeamPayload; cr
 
     const withCrest = { ...created, hasCrest: !!crest }
     teams.value = [...teams.value, withCrest].sort((a, b) => a.name.localeCompare(b.name))
-    await auth.joinTeam(created.id, createRole.value, createDisplayName.value.trim())
+    await auth.joinTeam(created.id, role, displayName)
     teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
-    teamSaved.value = true
-    showJoinPanel.value = false
-    createRole.value = null
-    createDisplayName.value = ''
+    wizardOpen.value = false
   } catch (error) {
     createError.value = error instanceof ApiError ? error.message : t('profile.team.createFailed')
   } finally {
@@ -177,18 +183,20 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
 
 /* ---- Leave a team ------------------------------------------------------------ */
 
-const leavingTeamId = ref<string | null>(null)
+/** Snapshot of the team being left, captured when the dialog opens - kept stable
+ *  through the dialog's closing transition even after `teamDetails` is pruned. */
+const leavingTeam = ref<Team | null>(null)
 const leaveError = ref('')
 
 async function confirmLeave() {
-  if (!leavingTeamId.value) return
-  const teamId = leavingTeamId.value
+  if (!leavingTeam.value) return
+  const teamId = leavingTeam.value.id
   leaveError.value = ''
   try {
     await auth.leaveTeam(teamId)
     const { [teamId]: _removed, ...rest } = teamDetails.value
     teamDetails.value = rest
-    leavingTeamId.value = null
+    leavingTeam.value = null
   } catch (error) {
     leaveError.value = error instanceof ApiError ? error.message : t('profile.team.leaveFailed')
   }
@@ -199,143 +207,41 @@ async function confirmLeave() {
   <v-main>
     <v-container v-if="user" class="py-6 py-md-10 profile-container">
       <!-- The page title moved to the breadcrumb (see AppShell). -->
-      <v-alert
-        v-if="myTeams.length === 0"
-        type="warning"
-        variant="tonal"
-        density="comfortable"
-        class="mb-5"
-      >
+      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning mb-5">
         {{ t('profile.activation.needsTeam') }}
-      </v-alert>
+      </div>
 
-      <!-- Has teams: show one card per membership. -->
-      <v-row v-if="myTeams.length > 0" class="mb-4">
-        <v-col v-for="{ membership, team } in myTeamCards" :key="membership.id" cols="12">
-          <v-card border flat rounded="xl" class="bkt bkt2 px-4 py-3 px-md-6">
-            <div class="bkt-crest">
-              <TeamCrest :team="team" :size="76" />
-            </div>
-            <div class="bkt-body">
-              <div class="bkt-row1">
-                <span class="text-h5 font-weight-bold">{{ team.name }}</span>
-                <v-chip size="default" variant="tonal" color="primary" class="text-subtitle-1 font-weight-medium">
-                  {{ t(`profile.team.memberRoles.${membership.role}`) }}
-                </v-chip>
-              </div>
-              <div class="bkt-chips">
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="MODALITY_COLOR[team.type]"
-                  :prepend-icon="mdiSoccer"
-                >
-                  {{ t(`profile.team.enums.${team.type}`) }}
-                </v-chip>
-                <v-chip
-                  size="x-small"
-                  variant="tonal"
-                  :color="DIVISION_COLOR[team.division]"
-                  :prepend-icon="mdiTrophyOutline"
-                >
-                  {{ t(`profile.team.enums.${team.division}`) }}
-                </v-chip>
-                <v-chip size="x-small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
-                  {{ t(`profile.team.enums.${team.category}`) }}
-                </v-chip>
-                <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                  {{ team.city }}
-                </v-chip>
-              </div>
-              <div class="bkt-meta text-body-2 text-medium-emphasis">
-                <span>
-                  <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
-                  {{ membership.displayName }}
-                </span>
-                <span v-if="team.venueName">
-                  <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
-                  {{ team.venueName }}
-                </span>
-              </div>
-            </div>
-            <div class="bkt-actions">
-              <v-tooltip :text="t('profile.team.viewDetails')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <v-btn
-                    v-bind="tooltipProps"
-                    :to="{ name: 'team-detail', params: { id: team.id } }"
-                    :icon="mdiCardAccountDetailsOutline"
-                    color="blue"
-                    variant="outlined"
-                    size="small"
-                    :aria-label="t('profile.team.viewDetails')"
-                    @click.stop
+      <!-- Join an existing team: full width, above the member's own team card(s), and
+           always available - no toggle needed to reveal it. -->
+      <v-row class="mb-4">
+        <v-col cols="12">
+          <v-card class="fp-card pa-6">
+            <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
+
+            <v-row dense>
+              <v-col cols="12" sm="6">
+                <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
+                  <select
+                    v-model="selectedTeamId"
+                    class="fp-select"
+                    :class="{ 'fp-invalid': joinErrors.team }"
+                  >
+                    <option :value="null">{{ t('profile.team.selectPlaceholder') }}</option>
+                    <option v-for="tm in joinableTeams" :key="tm.id" :value="tm.id">{{ tm.name }}</option>
+                  </select>
+                </FlatField>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <FlatField :label="t('profile.team.displayName')" :error="joinErrors.displayName" class="mb-4">
+                  <input
+                    v-model="joinDisplayName"
+                    class="fp-input"
+                    :class="{ 'fp-invalid': joinErrors.displayName }"
+                    type="text"
                   />
-                </template>
-              </v-tooltip>
-              <v-tooltip :text="t('profile.team.editTitle')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <v-btn
-                    v-bind="tooltipProps"
-                    :icon="mdiPencilOutline"
-                    color="blue"
-                    variant="outlined"
-                    size="small"
-                    :aria-label="t('profile.team.editTitle')"
-                    @click="openEdit(team.id)"
-                  />
-                </template>
-              </v-tooltip>
-              <v-tooltip :text="t('profile.team.leave')" location="top">
-                <template #activator="{ props: tooltipProps }">
-                  <v-btn
-                    v-bind="tooltipProps"
-                    :icon="mdiAccountRemoveOutline"
-                    color="error"
-                    variant="outlined"
-                    size="small"
-                    :aria-label="t('profile.team.leave')"
-                    @click="leavingTeamId = team.id"
-                  />
-                </template>
-              </v-tooltip>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <v-btn
-        v-if="myTeams.length > 0 && !showJoinPanel"
-        variant="tonal"
-        :prepend-icon="mdiPlusCircleOutline"
-        class="mb-4"
-        @click="showJoinPanel = true"
-      >
-        {{ t('profile.team.joinAnother') }}
-      </v-btn>
-
-      <!-- Join or found a team: each card asks who you are there - your role
-           and your name/nickname - since that's specific to that team. -->
-      <v-row v-if="showJoinPanel">
-        <!-- Join an existing team -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.joinTitle') }}</h2>
-
-            <v-select
-              v-model="selectedTeamId"
-              :items="joinableTeams"
-              item-title="name"
-              item-value="id"
-              variant="outlined"
-              density="comfortable"
-              :label="t('profile.team.select')"
-              :placeholder="t('profile.team.selectPlaceholder')"
-              persistent-placeholder
-              :loading="loadingTeams"
-              hide-details="auto"
-              class="mb-4"
-            />
+                </FlatField>
+              </v-col>
+            </v-row>
 
             <div v-if="selectedTeam" class="mb-4 text-center">
               <v-img
@@ -351,103 +257,133 @@ async function confirmLeave() {
               </p>
             </div>
 
-            <v-row dense class="mb-2">
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="joinRole"
-                  :items="memberRoleItems"
-                  variant="outlined"
-                  density="comfortable"
-                  :label="t('profile.team.memberRole')"
-                  hide-details
-                />
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="joinDisplayName"
-                  variant="outlined"
-                  density="comfortable"
-                  :label="t('profile.team.displayName')"
-                  hide-details
-                />
-              </v-col>
-            </v-row>
+            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" class="mb-4">
+              <RolePills v-model="joinRole" />
+            </FlatField>
 
-            <v-alert
-              v-if="teamError"
-              type="error"
-              variant="tonal"
-              density="compact"
-              class="my-4"
-            >
-              {{ teamError }}
-            </v-alert>
-            <v-alert
-              v-else-if="teamSaved"
-              type="success"
-              variant="tonal"
-              density="compact"
-              class="my-4"
-            >
+            <div v-if="teamError" class="fp-alert fp-alert-error my-4">{{ teamError }}</div>
+            <div v-else-if="teamSaved" class="fp-alert fp-alert-success my-4">
               {{ t('profile.team.saved') }}
-            </v-alert>
+            </div>
 
-            <v-btn
-              block
-              size="large"
-              :loading="savingTeam"
-              :disabled="!selectedTeamId || !joinValid"
+            <button
+              type="button"
+              class="fp-btn fp-btn-tonal fp-btn-block"
+              :disabled="savingTeam"
               @click="saveTeam"
             >
-              {{ t('profile.team.save') }}
-            </v-btn>
-          </v-card>
-        </v-col>
-
-        <!-- Create a new team and assign it to yourself -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.createTitle') }}</h2>
-
-            <v-row dense class="mb-2">
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="createRole"
-                  :items="memberRoleItems"
-                  variant="outlined"
-                  density="comfortable"
-                  :label="t('profile.team.memberRole')"
-                  hide-details
-                />
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="createDisplayName"
-                  variant="outlined"
-                  density="comfortable"
-                  :label="t('profile.team.displayName')"
-                  hide-details
-                />
-              </v-col>
-            </v-row>
-
-            <TeamForm
-              with-crest
-              :submit-label="creatingTeam ? t('profile.team.creating') : t('profile.team.create')"
-              :loading="creatingTeam"
-              :disabled="!createValid"
-              :error="createError"
-              @submit="handleCreate"
-            />
+              <v-progress-circular v-if="savingTeam" indeterminate size="16" width="2" color="white" />
+              <template v-else>{{ t('profile.team.save') }}</template>
+            </button>
           </v-card>
         </v-col>
       </v-row>
+
+      <!-- Has teams: show one card per membership. -->
+      <v-row v-if="myTeams.length > 0" class="mb-4">
+        <v-col v-for="{ membership, team } in myTeamCards" :key="membership.id" cols="12">
+          <v-card class="fp-card fp-team-card">
+            <div class="fp-crest-shield">
+              <img v-if="team.hasCrest" :src="teamsApi.crestUrl(team.id)" :alt="team.name" />
+              <v-icon v-else :icon="mdiShieldOutline" size="34" color="primary" />
+            </div>
+            <div class="fp-team-body">
+              <div class="fp-team-row1">
+                <span class="fp-team-name">{{ team.name }}</span>
+                <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
+              </div>
+              <div class="fp-chip-row">
+                <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
+                  {{ t(`profile.team.enums.${team.type}`) }}
+                </span>
+                <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                  {{ t(`profile.team.enums.${team.division}`) }}
+                </span>
+                <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                  {{ t(`profile.team.enums.${team.category}`) }}
+                </span>
+                <span class="fp-chip" style="background: #f1f5f9; color: #475569">{{ team.city }}</span>
+              </div>
+              <div class="fp-meta-row">
+                <span>
+                  <v-icon size="14" :icon="mdiAccountOutline" />
+                  {{ membership.displayName }}
+                </span>
+                <span v-if="team.venueName">
+                  <v-icon size="14" :icon="mdiSoccerField" />
+                  {{ team.venueName }}
+                </span>
+              </div>
+            </div>
+            <div class="fp-team-actions">
+              <v-tooltip :text="t('profile.team.viewDetails')" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <router-link
+                    v-bind="tooltipProps"
+                    :to="{ name: 'team-detail', params: { id: team.id } }"
+                    class="fp-icon-btn"
+                    :aria-label="t('profile.team.viewDetails')"
+                    @click.stop
+                  >
+                    <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
+                  </router-link>
+                </template>
+              </v-tooltip>
+              <v-tooltip :text="t('profile.team.editTitle')" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <button
+                    type="button"
+                    v-bind="tooltipProps"
+                    class="fp-icon-btn"
+                    :aria-label="t('profile.team.editTitle')"
+                    @click="openEdit(team.id)"
+                  >
+                    <v-icon :icon="mdiPencilOutline" size="18" />
+                  </button>
+                </template>
+              </v-tooltip>
+              <v-tooltip :text="t('profile.team.leave')" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <button
+                    type="button"
+                    v-bind="tooltipProps"
+                    class="fp-icon-btn fp-icon-btn--danger"
+                    :aria-label="t('profile.team.leave')"
+                    @click="leavingTeam = team"
+                  >
+                    <v-icon :icon="mdiAccountRemoveOutline" size="18" />
+                  </button>
+                </template>
+              </v-tooltip>
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Create a new team: always available, opens the step-by-step wizard. -->
+      <button
+        type="button"
+        class="fp-btn fp-btn-tonal fp-btn-block"
+        style="margin-top: 18px"
+        @click="wizardOpen = true"
+      >
+        <v-icon :icon="mdiPlusCircleOutline" size="18" />
+        {{ t('profile.team.createAnother') }}
+      </button>
     </v-container>
+
+    <!-- Create a new team -->
+    <TeamWizard
+      v-model="wizardOpen"
+      :loading="creatingTeam"
+      :error="createError"
+      @submit="handleCreate"
+    />
 
     <!-- Edit a team -->
     <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
-      <v-card v-if="editingTeam" border flat rounded="xl" class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.editTitle') }}</h2>
+      <v-card v-if="editingTeam" class="fp-card fp-modal-card pa-6">
+        <h2 class="fp-confirm-title" style="margin-bottom: 16px">{{ t('profile.team.editTitle') }}</h2>
         <TeamForm
           :initial="editingTeam"
           :submit-label="t('profile.team.saveChanges')"
@@ -459,87 +395,22 @@ async function confirmLeave() {
     </v-dialog>
 
     <!-- Confirm leaving a team -->
-    <v-dialog :model-value="!!leavingTeamId" max-width="420" @update:model-value="leavingTeamId = null">
-      <v-card border flat rounded="xl" class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-2">{{ t('profile.team.leaveConfirmTitle') }}</h2>
-        <p class="text-body-2 text-medium-emphasis mb-4">{{ t('profile.team.leaveConfirmHint') }}</p>
-        <v-alert v-if="leaveError" type="error" variant="tonal" density="compact" class="mb-4">
-          {{ leaveError }}
-        </v-alert>
-        <div class="d-flex ga-2 justify-end">
-          <v-btn variant="text" @click="leavingTeamId = null">{{ t('profile.team.cancel') }}</v-btn>
-          <v-btn color="error" variant="flat" @click="confirmLeave">{{ t('profile.team.leave') }}</v-btn>
+    <v-dialog :model-value="!!leavingTeam" max-width="400" @update:model-value="leavingTeam = null">
+      <v-card v-if="leavingTeam" class="fp-card fp-modal-card pa-6">
+        <h2 class="fp-confirm-title">
+          {{ t('profile.team.leaveConfirmTitle', { name: leavingTeam.name }) }}
+        </h2>
+        <p class="fp-confirm-hint">{{ t('profile.team.leaveConfirmHint') }}</p>
+        <div v-if="leaveError" class="fp-alert fp-alert-error mb-4">{{ leaveError }}</div>
+        <div class="fp-confirm-actions">
+          <button type="button" class="fp-btn fp-btn-text" @click="leavingTeam = null">
+            {{ t('profile.team.cancel') }}
+          </button>
+          <button type="button" class="fp-btn fp-btn-danger" @click="confirmLeave">
+            {{ t('profile.team.leave') }}
+          </button>
         </div>
       </v-card>
     </v-dialog>
   </v-main>
 </template>
-
-<style scoped>
-/* Club panel - shared visual language with the "Teams" list. */
-.bkt {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  overflow: hidden;
-}
-.bkt-crest {
-  flex-shrink: 0;
-}
-.bkt2 .bkt-crest {
-  margin-right: 0.75rem;
-}
-/* Slightly larger chip text without growing the fixed x-small chip height. */
-.bkt2 .bkt-chips :deep(.v-chip) {
-  font-size: 0.75rem;
-}
-.bkt-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.bkt-row1 {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-}
-.bkt-chips {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-.bkt-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-.bkt-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 0;
-}
-.bkt-actions {
-  flex-shrink: 0;
-  align-self: center;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-}
-
-/* Phones: let the actions drop below the body as a full-width, centred row. */
-@media (max-width: 599px) {
-  .bkt {
-    flex-wrap: wrap;
-  }
-  .bkt-actions {
-    width: 100%;
-    justify-content: center;
-  }
-}
-</style>
