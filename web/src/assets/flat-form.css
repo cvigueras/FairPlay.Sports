@@ -131,16 +131,17 @@
 }
 
 .fp-pill {
-  height: 38px;
-  padding: 0 16px;
+  height: 34px;
+  padding: 0 12px;
   border-radius: 999px;
   border: 1.5px solid #e2e8f0;
   background: rgb(var(--v-theme-surface));
   color: #334155;
   font: inherit;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 .fp-pill.fp-pill--selected {
   background: rgb(var(--v-theme-primary));
@@ -174,7 +175,7 @@
   font-weight: 700;
   font-size: 16px;
   color: #0f172a;
-  margin: 0 0 4px;
+  margin: 0;
 }
 .fp-section-hint {
   font-size: 13px;
@@ -198,7 +199,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--v-theme-primary), 0.1);
+  background: transparent;
 }
 .fp-crest-shield img {
   width: 100%;

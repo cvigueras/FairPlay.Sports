@@ -153,7 +153,7 @@
       "select": "Team",
       "selectPlaceholder": "Pick your team",
       "noCrest": "This team has no crest yet.",
-      "save": "Assign myself to this team",
+      "save": "Assign myself to the selected team",
       "saved": "Your team was updated.",
       "loadFailed": "Could not load the teams.",
       "saveFailed": "Could not update your team.",

@@ -14,7 +14,7 @@ const roles = computed(() =>
 </script>
 
 <template>
-  <div class="d-flex flex-wrap ga-2">
+  <div class="d-flex flex-wrap ga-1">
     <button
       v-for="role in roles"
       :key="role.value"

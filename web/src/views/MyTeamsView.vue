@@ -214,21 +214,26 @@ async function confirmLeave() {
       <v-row>
         <!-- Left: join an existing team, and found a new one. Always available -
              no toggle needed to reveal it. -->
-        <v-col cols="12" md="5" class="py-5">
+        <v-col cols="12" md="4" class="py-6">
           <v-card class="fp-card pa-6">
             <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
             <v-row dense>
               <v-col cols="12" sm="6">
                 <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
-                  <select
+                  <v-autocomplete
                     v-model="selectedTeamId"
-                    class="fp-select"
-                    :class="{ 'fp-invalid': joinErrors.team }"
-                  >
-                    <option :value="null">{{ t('profile.team.selectPlaceholder') }}</option>
-                    <option v-for="tm in joinableTeams" :key="tm.id" :value="tm.id">{{ tm.name }}</option>
-                  </select>
+                    :items="joinableTeams"
+                    item-title="name"
+                    item-value="id"
+                    :placeholder="t('profile.team.selectPlaceholder')"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    :error="!!joinErrors.team"
+                    class="fp-autocomplete"
+                  />
                 </FlatField>
               </v-col>
               <v-col cols="12" sm="6">
@@ -275,22 +280,21 @@ async function confirmLeave() {
               <v-progress-circular v-if="savingTeam" indeterminate size="16" width="2" color="white" />
               <template v-else>{{ t('profile.team.save') }}</template>
             </button>
-          </v-card>
 
-          <!-- Create a new team: always available, opens the step-by-step wizard. -->
-          <button
-            type="button"
-            class="fp-btn fp-btn-tonal fp-btn-block"
-            style="margin-top: 18px"
-            @click="wizardOpen = true"
-          >
-            <v-icon :icon="mdiPlusCircleOutline" size="18" />
-            {{ t('profile.team.createAnother') }}
-          </button>
+            <!-- Create a new team: always available, opens the step-by-step wizard. -->
+            <button
+              type="button"
+              class="fp-btn fp-btn-solid fp-btn-block mt-3"
+              @click="wizardOpen = true"
+            >
+              <v-icon :icon="mdiPlusCircleOutline" size="18" />
+              {{ t('profile.team.createAnother') }}
+            </button>
+          </v-card>
         </v-col>
 
         <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
-        <v-col v-if="myTeams.length > 0" cols="12" md="7" class="py-7">
+        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6">
           <div class="fp-team-list">
             <v-card v-for="{ membership, team } in myTeamCards" :key="membership.id" class="fp-card fp-team-card">
               <div class="fp-crest-shield">
