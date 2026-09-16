@@ -20,15 +20,7 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                 table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "DisplayName",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
                 name: "TeamId",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
-                name: "TeamRole",
                 table: "Users");
 
             migrationBuilder.CreateTable(
@@ -84,24 +76,10 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "TeamMembers");
 
-            migrationBuilder.AddColumn<string>(
-                name: "DisplayName",
-                table: "Users",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true);
-
             migrationBuilder.AddColumn<Guid>(
                 name: "TeamId",
                 table: "Users",
                 type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "TeamRole",
-                table: "Users",
-                type: "character varying(20)",
-                maxLength: 20,
                 nullable: true);
 
             migrationBuilder.CreateIndex(
