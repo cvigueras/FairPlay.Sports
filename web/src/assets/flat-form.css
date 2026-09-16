@@ -195,6 +195,10 @@
   align-items: center;
   gap: 20px;
   padding: 18px 22px;
+  /* Sits inside a flex column with a bounded max-height (.fp-team-list) -
+     without this, flex's default shrink squeezes every card shorter as
+     the list grows instead of letting the container scroll. */
+  flex-shrink: 0;
 }
 .fp-crest-shield {
   width: 64px;
