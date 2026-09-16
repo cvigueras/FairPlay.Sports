@@ -151,7 +151,7 @@
     "team": {
       "joinTitle": "Join an existing team",
       "select": "Team",
-      "selectPlaceholder": "Pick your team",
+      "selectPlaceholder": "Search or pick your team",
       "noCrest": "This team has no crest yet.",
       "save": "Assign myself to the selected team",
       "saved": "Your team was updated.",
@@ -242,7 +242,7 @@
         "stepKit": "Kit colours",
         "stepContact": "Contact",
         "clubSheetHint": "These details are already part of the club's public sheet.",
-        "nameLabel": "Name or nickname",
+        "nameLabel": "Team name",
         "nameHint": "It's the same value: the name of the club you're founding, and your name or nickname in it.",
         "crestHint": "PNG, JPG, WEBP or SVG",
         "back": "Back",

@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccountOutline,
+  mdiAccountPlusOutline,
   mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
   mdiPencilOutline,
@@ -41,7 +42,9 @@ const teamDetails = ref<Record<string, Team>>({})
 const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
 const joinRole = ref<TeamMemberRole | null>(null)
-const joinDisplayName = ref('')
+/** Fixed to the account's username - joining a team always uses it, not a
+ *  per-team nickname (that's what the create wizard's own name field is for). */
+const joinDisplayName = ref(auth.currentUser?.userName ?? '')
 const savingTeam = ref(false)
 const teamSaved = ref(false)
 const teamError = ref('')
@@ -93,7 +96,6 @@ function validateJoin(): boolean {
 
   if (!selectedTeamId.value) joinErrors.team = required
   if (!joinRole.value) joinErrors.role = required
-  if (!joinDisplayName.value.trim()) joinErrors.displayName = required
 
   return Object.keys(joinErrors).length === 0
 }
@@ -109,7 +111,6 @@ async function saveTeam() {
     teamSaved.value = true
     selectedTeamId.value = null
     joinRole.value = null
-    joinDisplayName.value = ''
   } catch (error) {
     teamError.value = error instanceof ApiError ? error.message : t('profile.team.saveFailed')
   } finally {
@@ -218,35 +219,36 @@ async function confirmLeave() {
           <v-card class="fp-card pa-6">
             <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
-            <v-row dense>
-              <v-col cols="12" sm="6">
-                <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
-                  <v-autocomplete
-                    v-model="selectedTeamId"
-                    :items="joinableTeams"
-                    item-title="name"
-                    item-value="id"
-                    :placeholder="t('profile.team.selectPlaceholder')"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    clearable
-                    :error="!!joinErrors.team"
-                    class="fp-autocomplete"
-                  />
-                </FlatField>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <FlatField :label="t('profile.team.displayName')" :error="joinErrors.displayName" class="mb-4">
-                  <input
-                    v-model="joinDisplayName"
-                    class="fp-input"
-                    :class="{ 'fp-invalid': joinErrors.displayName }"
-                    type="text"
-                  />
-                </FlatField>
-              </v-col>
-            </v-row>
+            <FlatField :label="t('profile.team.displayName')" class="mb-4">
+              <input v-model="joinDisplayName" class="fp-input" type="text" disabled />
+            </FlatField>
+
+            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
+              <v-autocomplete
+                v-model="selectedTeamId"
+                :items="joinableTeams"
+                item-title="name"
+                item-value="id"
+                :placeholder="t('profile.team.selectPlaceholder')"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                autocomplete="off"
+                :error="!!joinErrors.team"
+                class="fp-autocomplete"
+              >
+                <template #item="{ item, props: itemProps }">
+                  <v-list-item v-bind="itemProps" :title="item.name">
+                    <template #subtitle>
+                      {{ t(`profile.team.enums.${item.type}`) }} ·
+                      {{ t(`profile.team.enums.${item.division}`) }} ·
+                      {{ t(`profile.team.enums.${item.category}`) }}
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </FlatField>
 
             <div v-if="selectedTeam" class="mb-4 text-center">
               <v-img
@@ -278,7 +280,10 @@ async function confirmLeave() {
               @click="saveTeam"
             >
               <v-progress-circular v-if="savingTeam" indeterminate size="16" width="2" color="white" />
-              <template v-else>{{ t('profile.team.save') }}</template>
+              <template v-else>
+                <v-icon :icon="mdiAccountPlusOutline" size="18" />
+                {{ t('profile.team.save') }}
+              </template>
             </button>
 
             <!-- Create a new team: always available, opens the step-by-step wizard. -->

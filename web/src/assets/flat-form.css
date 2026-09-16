@@ -62,6 +62,12 @@
   outline: none;
   border-color: rgb(var(--v-theme-primary));
 }
+.fp-input:disabled,
+.fp-select:disabled {
+  background: rgb(var(--v-theme-background));
+  color: #64748b;
+  cursor: not-allowed;
+}
 .fp-input.fp-invalid,
 .fp-select.fp-invalid {
   border-color: rgb(var(--v-theme-error));

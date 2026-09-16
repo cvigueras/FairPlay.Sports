@@ -151,7 +151,7 @@
     "team": {
       "joinTitle": "Unirte a un equipo existente",
       "select": "Equipo",
-      "selectPlaceholder": "Elige tu equipo",
+      "selectPlaceholder": "Busca o elige tu equipo",
       "noCrest": "Este equipo aún no tiene escudo.",
       "save": "Asignarme equipo seleccionado",
       "saved": "Tu equipo se ha actualizado.",
@@ -242,7 +242,7 @@
         "stepKit": "Equipación",
         "stepContact": "Contacto",
         "clubSheetHint": "Estos datos ya forman parte de la ficha pública del club.",
-        "nameLabel": "Nombre o apodo",
+        "nameLabel": "Nombre de equipo",
         "nameHint": "Es el mismo dato: el nombre del club que fundas y tu nombre o apodo en él.",
         "crestHint": "PNG, JPG, WEBP o SVG",
         "back": "Atrás",
