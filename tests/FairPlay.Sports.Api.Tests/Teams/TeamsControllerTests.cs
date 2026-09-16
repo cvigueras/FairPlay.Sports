@@ -11,6 +11,9 @@ using FairPlay.Sports.Application.Teams.GetPage;
 using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Application.Teams.GetById;
 using FairPlay.Sports.Application.Teams.GetCrest;
+using FairPlay.Sports.Application.Teams.GetMembers;
+using FairPlay.Sports.Application.Teams.JoinTeam;
+using FairPlay.Sports.Application.Teams.LeaveTeam;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -310,6 +313,97 @@ public class TeamsControllerTests
             .Returns(Result<TeamCrest>.NotFound($"Team '{id}' has no crest."));
 
         var response = await _controller.GetCrest(id, CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task GetMembers_DispatchesQueryWithRouteId_AndReturnsOkWithHandlerValue()
+    {
+        var teamId = Guid.NewGuid();
+        var dtos = new List<TeamMemberDto> { TeamMemberMother.Dto(teamId: teamId) };
+        _sender.Send(Arg.Any<GetTeamMembersQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<TeamMemberDto>>.Success(dtos));
+
+        var response = await _controller.GetMembers(teamId, CancellationToken.None);
+
+        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dtos));
+        await _sender.Received(1).Send(
+            Arg.Is<GetTeamMembersQuery>(query => query.TeamId == teamId), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task GetMembers_WhenHandlerReturnsNotFound_Returns404()
+    {
+        _sender.Send(Arg.Any<GetTeamMembersQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<TeamMemberDto>>.NotFound("Team was not found."));
+
+        var response = await _controller.GetMembers(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task JoinTeam_DispatchesCommandWithRouteIdAndBody_AndReturnsOkWithHandlerValue()
+    {
+        var teamId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var dto = TeamMemberMother.Dto(teamId: teamId, userId: userId);
+        _sender.Send(Arg.Any<JoinTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamMemberDto>.Success(dto));
+
+        var response = await _controller.JoinTeam(
+            teamId,
+            new JoinTeamRequest(userId, TeamMemberMother.Role, TeamMemberMother.DisplayName),
+            CancellationToken.None);
+
+        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dto));
+        await _sender.Received(1).Send(
+            Arg.Is<JoinTeamCommand>(command =>
+                command.TeamId == teamId &&
+                command.UserId == userId &&
+                command.Role == TeamMemberMother.Role &&
+                command.DisplayName == TeamMemberMother.DisplayName),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task JoinTeam_WhenHandlerFails_ReturnsBadRequest()
+    {
+        _sender.Send(Arg.Any<JoinTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamMemberDto>.Failure(TeamMemberMother.AlreadyMember));
+
+        var response = await _controller.JoinTeam(
+            Guid.NewGuid(),
+            new JoinTeamRequest(Guid.NewGuid(), TeamMemberMother.Role, TeamMemberMother.DisplayName),
+            CancellationToken.None);
+
+        Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task LeaveTeam_DispatchesCommandWithRouteIds_AndReturnsNoContent()
+    {
+        var teamId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        _sender.Send(Arg.Any<LeaveTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _controller.LeaveTeam(teamId, userId, CancellationToken.None);
+
+        Assert.That(response, Is.InstanceOf<NoContentResult>());
+        await _sender.Received(1).Send(
+            Arg.Is<LeaveTeamCommand>(command => command.TeamId == teamId && command.UserId == userId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task LeaveTeam_WhenHandlerReturnsNotFound_Returns404()
+    {
+        _sender.Send(Arg.Any<LeaveTeamCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.NotFound("User is not a member of this team."));
+
+        var response = await _controller.LeaveTeam(Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
 
         Assert.That(response, Is.InstanceOf<NotFoundObjectResult>());
     }

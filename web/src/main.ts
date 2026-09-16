@@ -7,6 +7,7 @@ import i18n from './plugins/i18n'
 import vuetify from './plugins/vuetify'
 import { useAuthStore } from './stores/auth'
 import './assets/main.css'
+import './assets/flat-form.css'
 
 const app = createApp(App)
 

@@ -34,10 +34,6 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
             new("role", user.Role.ToString())
         ];
 
-        // Only users that belong to a team carry the claim.
-        if (user.TeamId is { } teamId)
-            claims.Add(new Claim("team", teamId.ToString()));
-
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey)),
             SecurityAlgorithms.HmacSha256);

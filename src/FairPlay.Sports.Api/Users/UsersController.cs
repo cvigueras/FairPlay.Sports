@@ -1,12 +1,13 @@
 using FairPlay.Sports.Api.Common;
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.ChangePassword;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.GetPhoto;
-using FairPlay.Sports.Application.Users.MoveToTeam;
+using FairPlay.Sports.Application.Users.GetTeams;
 using FairPlay.Sports.Application.Users.Register;
 using FairPlay.Sports.Application.Users.UpdateProfile;
 using FairPlay.Sports.Application.Users.UploadPhoto;
@@ -50,7 +51,7 @@ public sealed class UsersController(ISender sender) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> Register(RegisterUserRequest request, CancellationToken cancellationToken)
     {
-        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password, request.TeamId);
+        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
@@ -84,14 +85,13 @@ public sealed class UsersController(ISender sender) : ControllerBase
         return result.ToActionResult(this);
     }
 
-    /// <summary>Sets the team the user belongs to.</summary>
-    [HttpPut("{id:guid}/team")]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    /// <summary>Lists the teams the user belongs to.</summary>
+    [HttpGet("{id:guid}/teams")]
+    [ProducesResponseType(typeof(IReadOnlyList<TeamMemberDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserDto>> MoveToTeam(Guid id, MoveUserToTeamRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<TeamMemberDto>>> GetTeams(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new MoveUserToTeamCommand(id, request.TeamId), cancellationToken);
+        var result = await _sender.Send(new GetUserTeamsQuery(id), cancellationToken);
         return result.ToActionResult(this);
     }
 

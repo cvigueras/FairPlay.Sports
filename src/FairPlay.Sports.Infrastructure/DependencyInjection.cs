@@ -32,6 +32,7 @@ public static class DependencyInjection
         // DbContext, repositories and unit of work are all scoped (one per request).
         services.AddScoped<IUserRepository, EfUserRepository>();
         services.AddScoped<ITeamRepository, EfTeamRepository>();
+        services.AddScoped<ITeamMemberRepository, EfTeamMemberRepository>();
         services.AddScoped<IStandingRepository, EfStandingRepository>();
         services.AddScoped<IRefreshTokenRepository, EfRefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();

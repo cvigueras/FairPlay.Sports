@@ -1,5 +1,6 @@
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.TestSupport.Users;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Domain.Users;
@@ -11,13 +12,16 @@ namespace FairPlay.Sports.Application.Tests.Users.Activate;
 public class ActivateUserHandlerTests
 {
     private IUserRepository _repository = null!;
+    private ITeamMemberRepository _members = null!;
     private ActivateUserHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repository = Substitute.For<IUserRepository>();
-        _handler = new ActivateUserHandler(_repository);
+        _members = Substitute.For<ITeamMemberRepository>();
+        _members.ExistsForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
+        _handler = new ActivateUserHandler(_repository, _members);
     }
 
     [Test]
@@ -50,8 +54,9 @@ public class ActivateUserHandlerTests
     [Test]
     public async Task Handle_WhenUserHasNoTeam_ReturnsFailure_AndDoesNotActivate()
     {
-        var user = UserMother.DomainUser(active: false, withTeam: false);
+        var user = UserMother.DomainUser(active: false);
         _repository.GetByIdForUpdateAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+        _members.ExistsForUserAsync(user.Id, Arg.Any<CancellationToken>()).Returns(false);
 
         var result = await _handler.Handle(new ActivateUserCommand(user.Id), CancellationToken.None);
 

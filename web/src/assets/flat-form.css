@@ -1,0 +1,444 @@
+/* "Flat form" look for the My Teams create/join wizard, matching the
+   approved design mock: plain label-above fields instead of Vuetify's
+   Material floating-label outline, flatter cards, and solid pill buttons.
+   Scoped by the `fp-` prefix rather than by component, since the same
+   classes are shared across MyTeamsView, TeamWizard and RolePills. */
+
+.fp-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: rgb(var(--v-theme-surface));
+  /* Vuetify's default v-card elevation paints its own drop shadow on top of
+     this border, reading as an extra tinted outline - this design is flat. */
+  box-shadow: none !important;
+}
+
+.fp-modal-card {
+  border-radius: 20px !important;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.4) !important;
+  overflow: hidden;
+}
+
+.fp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fp-field > label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+}
+.fp-field .fp-hint {
+  font-size: 12px;
+  color: #64748b;
+}
+.fp-field .fp-error {
+  font-size: 12px;
+  color: rgb(var(--v-theme-error));
+}
+
+.fp-input,
+.fp-select {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  font: inherit;
+  font-size: 14px;
+  color: #0f172a;
+  background: rgb(var(--v-theme-surface));
+  width: 100%;
+  appearance: none;
+}
+.fp-select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'><path d='M5 8l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+.fp-input:focus,
+.fp-select:focus {
+  outline: none;
+  border-color: rgb(var(--v-theme-primary));
+}
+.fp-input:disabled,
+.fp-select:disabled {
+  background: rgb(var(--v-theme-background));
+  color: #64748b;
+  cursor: not-allowed;
+}
+.fp-input.fp-invalid,
+.fp-select.fp-invalid {
+  border-color: rgb(var(--v-theme-error));
+}
+
+.fp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+.fp-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fp-btn-solid {
+  background: rgb(var(--v-theme-primary));
+  color: #fff;
+}
+.fp-btn-solid:hover:not(:disabled) {
+  background: rgb(var(--v-theme-primary-darken-1));
+}
+.fp-btn-tonal {
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary-darken-1));
+}
+.fp-btn-tonal:hover:not(:disabled) {
+  background: rgba(var(--v-theme-primary), 0.18);
+}
+.fp-btn-outline {
+  background: rgb(var(--v-theme-surface));
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
+}
+.fp-btn-outline:hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+.fp-btn-text {
+  background: transparent;
+  color: #475569;
+  height: auto;
+  padding: 0;
+}
+.fp-btn-text:hover:not(:disabled) {
+  color: #0f172a;
+}
+.fp-btn-danger {
+  background: rgb(var(--v-theme-error));
+  color: #fff;
+}
+.fp-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+.fp-btn-block {
+  width: 100%;
+}
+
+.fp-pill {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.5px solid #e2e8f0;
+  background: rgb(var(--v-theme-surface));
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fp-pill.fp-pill--selected {
+  background: rgb(var(--v-theme-primary));
+  border-color: rgb(var(--v-theme-primary));
+  color: #fff;
+}
+
+.fp-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: rgb(var(--v-theme-surface));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.fp-icon-btn:hover {
+  border-color: #94a3b8;
+}
+.fp-icon-btn--danger {
+  color: rgb(var(--v-theme-error));
+  border-color: #fecaca;
+}
+
+.fp-section-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #0f172a;
+  margin: 0;
+}
+.fp-section-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 18px;
+}
+
+/* ---- team cards ---------------------------------------------------- */
+.fp-team-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 22px;
+  /* Sits inside a flex column with a bounded max-height (.fp-team-list) -
+     without this, flex's default shrink squeezes every card shorter as
+     the list grows instead of letting the container scroll. */
+  flex-shrink: 0;
+}
+.fp-crest-shield {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+.fp-crest-shield img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fp-team-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-team-row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fp-team-name {
+  font-weight: 700;
+  font-size: 19px;
+  color: #0f172a;
+}
+.fp-role-chip {
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary-darken-1));
+  font-size: 13px;
+  font-weight: 700;
+}
+.fp-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.fp-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 13px;
+  color: #64748b;
+}
+.fp-meta-row span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fp-team-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 599px) {
+  .fp-team-card {
+    flex-wrap: wrap;
+  }
+  .fp-team-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---- alerts ---------------------------------------------------------- */
+.fp-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.fp-alert-warning {
+  background: #fffbeb;
+  color: #92400e;
+}
+.fp-alert-success {
+  background: #f0fdf4;
+  color: #166534;
+}
+.fp-alert-error {
+  background: rgba(var(--v-theme-error), 0.08);
+  color: rgb(var(--v-theme-error));
+}
+
+/* ---- confirm / edit dialogs ------------------------------------------- */
+.fp-confirm-title {
+  font-weight: 700;
+  font-size: 17px;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+.fp-confirm-hint {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 20px;
+}
+.fp-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---- wizard chrome ----------------------------------------------------- */
+.fp-wizard-head {
+  padding: 22px 24px 0;
+  flex-shrink: 0;
+}
+.fp-wizard-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-primary-darken-1));
+  margin: 0 0 4px;
+}
+.fp-wizard-title {
+  font-weight: 700;
+  font-size: 19px;
+  color: #0f172a;
+  margin: 0;
+}
+.fp-wizard-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgb(var(--v-theme-background));
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.fp-stepper {
+  display: flex;
+  gap: 6px;
+  margin-top: 18px;
+}
+.fp-stepper-seg {
+  height: 4px;
+  flex: 1;
+  border-radius: 99px;
+  background: #e2e8f0;
+}
+.fp-stepper-seg--on {
+  background: rgb(var(--v-theme-primary));
+}
+.fp-wizard-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+.fp-wizard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.fp-crest-drop {
+  position: relative;
+  height: 92px;
+  border-radius: 12px;
+  border: 1.5px dashed #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+.fp-crest-drop input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.fp-crest-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.fp-crest-empty {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: rgb(var(--v-theme-background));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.fp-crest-copy strong {
+  display: block;
+  font-size: 13.5px;
+  color: #1e293b;
+}
+.fp-crest-copy span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.fp-color-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fp-color-hex {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+}

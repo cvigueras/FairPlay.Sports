@@ -11,7 +11,6 @@ public sealed class User
     public string UserName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
-    public Guid? TeamId { get; private set; }
     public UserRole Role { get; private set; }
 
     public byte[]? Photo { get; private set; }
@@ -27,7 +26,6 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        Guid? teamId,
         UserRole role,
         DateTime createdAt)
     {
@@ -35,7 +33,6 @@ public sealed class User
         UserName = userName;
         Email = email;
         PasswordHash = passwordHash;
-        TeamId = teamId;
         Role = role;
         CreatedAt = createdAt;
     }
@@ -45,16 +42,13 @@ public sealed class User
         string userName,
         string email,
         string passwordHash,
-        Guid? teamId,
         DateTime createdAtUtc,
         UserRole role = UserRole.Member)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), ValidateOptionalTeamId(teamId), role, createdAtUtc);
+        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), role, createdAtUtc);
     }
-
-    public void MoveToTeam(Guid teamId) => TeamId = ValidateTeamId(teamId);
 
     public void Activate() => Active = true;
 
@@ -105,17 +99,6 @@ public sealed class User
 
         return passwordHash;
     }
-
-    private static Guid ValidateTeamId(Guid teamId)
-    {
-        if (teamId == Guid.Empty)
-            throw new ArgumentException("Team id is required.", nameof(teamId));
-
-        return teamId;
-    }
-
-    private static Guid? ValidateOptionalTeamId(Guid? teamId) =>
-        teamId is null ? null : ValidateTeamId(teamId.Value);
 
     private static string ValidatePhotoContentType(string contentType)
     {

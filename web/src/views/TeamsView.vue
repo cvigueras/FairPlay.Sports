@@ -30,7 +30,10 @@ import type { PagedResult } from '@/types/pagination'
 
 const { t } = useI18n()
 const auth = useAuthStore()
-const { smAndDown } = useDisplay()
+const { smAndDown, xs } = useDisplay()
+// xs (< 600px, Vuetify's default sm threshold) matches the CSS's own
+// max-width: 599px mobile breakpoint below - smAndDown (< 960px) doesn't,
+// so template logic that must switch in lockstep with that CSS uses xs.
 
 const PAGE_SIZE = 20
 
@@ -98,12 +101,25 @@ const hasActiveFilters = computed(
     asTextFilter(cityText.value) !== undefined,
 )
 
-// Coach/city live behind "More filters"; a badge on that button surfaces how
-// many of them are active without opening the menu, and a removable chip
-// keeps them visible once set.
+// Desktop only (see .teams-more-btn, hidden on mobile): coach/city live
+// behind "More filters" there; a badge on that button surfaces how many of
+// them are active without opening the menu, and a removable chip keeps them
+// visible once set.
 const hiddenFilterCount = computed(
   () =>
     [asTextFilter(coachText.value), asTextFilter(cityText.value)].filter(
+      (value) => value !== undefined,
+    ).length,
+)
+
+// Mobile only: the whole filter bar (search + the visible selects, plus the
+// "more filters" menu) collapses behind a "Filters" toggle next to the sort
+// select - see .teams-filterbar below. A badge on that toggle surfaces how
+// many text filters are active without opening the panel.
+const mobileFiltersOpen = ref(false)
+const activeFilterCount = computed(
+  () =>
+    [asTextFilter(nameText.value), asTextFilter(coachText.value), asTextFilter(cityText.value)].filter(
       (value) => value !== undefined,
     ).length,
 )
@@ -189,9 +205,28 @@ function toggleTeamRow(id: string) {
           hide-details
           class="teams-mobile-sort"
         />
+        <!-- Mobile only: reveals .teams-filterbar below, which is otherwise
+             collapsed on mobile (see the max-width: 599px rules below). -->
+        <v-btn
+          :prepend-icon="mdiTuneVariant"
+          variant="outlined"
+          color="secondary"
+          class="teams-filters-toggle"
+          :aria-expanded="mobileFiltersOpen"
+          @click="mobileFiltersOpen = !mobileFiltersOpen"
+        >
+          {{ t('teams.filters') }}
+          <v-badge
+            v-if="activeFilterCount > 0"
+            :content="activeFilterCount"
+            color="primary"
+            inline
+            class="ms-2"
+          />
+        </v-btn>
       </div>
 
-      <div class="teams-filterbar">
+      <div class="teams-filterbar" :class="{ 'teams-filterbar--open': mobileFiltersOpen }">
         <v-text-field
           v-model="nameText"
           :placeholder="t('teams.searchPlaceholder')"
@@ -227,6 +262,32 @@ function toggleTeamRow(id: string) {
           variant="outlined"
           density="comfortable"
           hide-details
+          class="teams-filter-select"
+        />
+        <!-- Mobile only: coach/city live behind "More filters" on desktop
+             (see .teams-more-btn below), but that nested menu is one tap too
+             many on top of the filter panel toggle, so on mobile they're
+             flattened in here instead - same size as every other selector.
+             v-if (not CSS) keeps these out of the desktop DOM entirely, so
+             there are never two coach/city fields fighting over one model. -->
+        <v-text-field
+          v-if="xs"
+          v-model="coachText"
+          :label="t('teams.fields.coach')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
+          class="teams-filter-select"
+        />
+        <v-text-field
+          v-if="xs"
+          v-model="cityText"
+          :label="t('teams.fields.city')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          clearable
           class="teams-filter-select"
         />
         <v-menu :close-on-content-click="false" location="bottom end">
@@ -269,7 +330,35 @@ function toggleTeamRow(id: string) {
         </v-menu>
       </div>
 
-      <div v-if="hasActiveFilters" class="teams-active-chips">
+      <div v-if="hasActiveFilters || xs" class="teams-active-chips">
+        <!-- Mobile only: type/division/category sit inside the collapsed
+             filter panel (see .teams-filterbar below) same as everything
+             else, so without these the list would filter silently - no
+             visible sign of which segment is applied. Not closable: like
+             the selects themselves, these are always set, never cleared. -->
+        <template v-if="xs">
+          <v-chip size="small" variant="tonal" :color="MODALITY_COLOR[type]" :prepend-icon="mdiSoccer">
+            {{ t(`profile.team.enums.${type}`) }}
+          </v-chip>
+          <v-chip size="small" variant="tonal" :color="DIVISION_COLOR[division]" :prepend-icon="mdiTrophyOutline">
+            {{ t(`profile.team.enums.${division}`) }}
+          </v-chip>
+          <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[category]">
+            {{ t(`profile.team.enums.${category}`) }}
+          </v-chip>
+        </template>
+        <!-- On mobile the search box lives inside the collapsed filter panel
+             (see .teams-filterbar below), so this chip is the only sign a
+             name filter is active while the panel stays closed. -->
+        <v-chip
+          v-if="asTextFilter(nameText) !== undefined"
+          size="small"
+          variant="tonal"
+          closable
+          @click:close="nameText = ''"
+        >
+          {{ t('teams.fields.name') }}: {{ nameText }}
+        </v-chip>
         <v-chip
           v-if="asTextFilter(coachText) !== undefined"
           size="small"
@@ -288,7 +377,13 @@ function toggleTeamRow(id: string) {
         >
           {{ t('teams.fields.city') }}: {{ cityText }}
         </v-chip>
-        <v-btn variant="text" size="small" color="error" @click="clearFilters">
+        <v-btn
+          v-if="hasActiveFilters"
+          variant="text"
+          size="small"
+          color="error"
+          @click="clearFilters"
+        >
           {{ t('teams.clearFilters') }}
         </v-btn>
       </div>
@@ -584,6 +679,13 @@ function toggleTeamRow(id: string) {
   display: none;
 }
 
+/* Desktop shows every filter inline in .teams-filterbar already; this toggle
+   only exists to collapse that bar behind a button on mobile (see the
+   max-width: 599px rules below). */
+.teams-filters-toggle {
+  display: none;
+}
+
 .teams-filterbar {
   flex: 0 0 auto;
   display: flex;
@@ -731,26 +833,28 @@ function toggleTeamRow(id: string) {
 
 .teams-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 900px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 28%;
+  width: 25%;
 }
 
 .teams-col-stat {
-  width: 16%;
-}
-
-.teams-col-city {
   width: 14%;
 }
 
+.teams-col-city {
+  width: 13%;
+}
+
+/* Wide enough that the icon + label never get squeezed inside the button,
+   even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 10%;
+  width: 20%;
 }
 
 .teams-table thead th {
@@ -949,6 +1053,39 @@ function toggleTeamRow(id: string) {
   .teams-mobile-sort {
     display: block;
     flex: 1 1 200px;
+  }
+
+  .teams-filters-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  /* Collapsed by default (see .teams-filters-toggle above); opening it
+     stacks every filter - search, the three selects and coach/city - as one
+     column of equal-width controls instead of desktop's wrapping row. */
+  .teams-filterbar {
+    display: none;
+  }
+
+  .teams-filterbar--open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teams-filterbar--open .teams-search,
+  .teams-filterbar--open .teams-filter-select {
+    flex: 1 1 auto;
+    max-width: none;
+    width: 100%;
+  }
+
+  /* Coach/city are flattened straight into the panel above on mobile
+     instead (see the v-if="xs" fields in the template) - stacking this on
+     top would be a menu inside an already-collapsible panel, one tap too
+     many. */
+  .teams-more-btn {
+    display: none;
   }
 }
 </style>

@@ -23,6 +23,8 @@ public sealed class FairPlaySportsDbContext : DbContext
 
     public DbSet<Team> Teams => Set<Team>();
 
+    public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+
     public DbSet<Standing> Standings => Set<Standing>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

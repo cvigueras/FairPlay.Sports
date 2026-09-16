@@ -10,19 +10,16 @@ public static class UserMother
     public const string Email = "carlos@example.com";
     public const string Password = "not-a-real-password";
     public const string PasswordHash = "hashed-password";
-    public static readonly Guid TeamId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     public const string PhotoContentType = "image/png";
     public static byte[] PhotoBytes => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
-    public static RegisterUserCommand Command() => new(UserName, Email, Password, TeamId);
+    public static RegisterUserCommand Command() => new(UserName, Email, Password);
 
     public static User DomainUser(
         Guid? id = null,
         string? userName = null,
         string? email = null,
-        Guid? teamId = null,
-        bool withTeam = true,
         UserRole role = UserRole.Member,
         bool active = true)
     {
@@ -31,7 +28,6 @@ public static class UserMother
             userName ?? UserName,
             email ?? Email,
             PasswordHash,
-            withTeam ? teamId ?? TeamId : null,
             DateTime.UtcNow,
             role);
 
@@ -49,7 +45,7 @@ public static class UserMother
     }
 
     public static UserDto Dto(Guid? id = null, bool hasPhoto = false) =>
-        new(id ?? Guid.NewGuid(), UserName, Email, TeamId, UserRole.Member, DateTime.UtcNow, Active: true, HasPhoto: hasPhoto);
+        new(id ?? Guid.NewGuid(), UserName, Email, UserRole.Member, DateTime.UtcNow, Active: true, HasPhoto: hasPhoto);
 
     public static string EmailAlreadyRegistered => $"Email '{Email}' is already registered.";
 

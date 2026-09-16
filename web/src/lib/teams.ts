@@ -5,6 +5,8 @@ import type {
   Division,
   FootballType,
   Team,
+  TeamMemberRole,
+  TeamMembership,
   UpdateTeamPayload,
 } from '@/types/team'
 import { toQueryString, type PageParams, type PagedResult } from '@/types/pagination'
@@ -53,4 +55,21 @@ export const teamsApi = {
 
   /** Public endpoint that streams the crest image. */
   crestUrl: (teamId: string) => `${baseUrl}/api/Teams/${teamId}/crest`,
+
+  members: {
+    /** All members of a team, with their role and in-team display name. */
+    list: (teamId: string, token?: string | null) =>
+      http.get<TeamMembership[]>(`/api/Teams/${teamId}/members`, { token }),
+
+    /** Adds a user to the team with a given role - founding it or joining an existing one. */
+    join: (
+      teamId: string,
+      payload: { userId: string; role: TeamMemberRole; displayName: string },
+      token?: string | null,
+    ) => http.post<TeamMembership>(`/api/Teams/${teamId}/members`, payload, { token }),
+
+    /** Removes a user from the team. */
+    leave: (teamId: string, userId: string, token?: string | null) =>
+      http.del<void>(`/api/Teams/${teamId}/members/${userId}`, { token }),
+  },
 }

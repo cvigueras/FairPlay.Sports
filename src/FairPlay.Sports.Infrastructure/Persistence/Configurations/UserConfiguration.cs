@@ -1,4 +1,3 @@
-using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -29,13 +28,5 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(user => user.Email).IsUnique();
         builder.HasIndex(user => user.UserName).IsUnique();
-        builder.HasIndex(user => user.TeamId);
-
-        // FK for referential integrity only - no navigation property, the aggregates stay
-        // referenced by id. A team with members cannot be deleted.
-        builder.HasOne<Team>()
-            .WithMany()
-            .HasForeignKey(user => user.TeamId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

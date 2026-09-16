@@ -7,6 +7,8 @@ export interface LastListRoute {
   path: string
 }
 
+export type ToastColor = 'success' | 'error' | 'warning'
+
 /**
  * Cross-page UI state that doesn't belong in a domain store. `breadcrumbLabel`
  * lets a view (e.g. the team detail page) supply the human-readable label for
@@ -16,10 +18,25 @@ export interface LastListRoute {
  * `router/index.ts`) on every visit to a team-listing screen (Teams, My
  * teams, Standings), so a detail screen's breadcrumb can link back to
  * wherever the user actually came from instead of a hardcoded parent.
+ *
+ * `toast` backs the single app-wide snackbar (rendered in `App.vue`): any
+ * view calls `notify` instead of rendering its own inline success/error
+ * banner, so every transient result reads the same way (bottom-right,
+ * auto-dismissed) no matter which screen triggered it.
  */
 export const useUiStore = defineStore('ui', () => {
   const breadcrumbLabel = ref<string | null>(null)
   const lastListRoute = ref<LastListRoute | null>(null)
 
-  return { breadcrumbLabel, lastListRoute }
+  const toastShow = ref(false)
+  const toastMessage = ref('')
+  const toastColor = ref<ToastColor>('success')
+
+  function notify(message: string, color: ToastColor = 'success') {
+    toastMessage.value = message
+    toastColor.value = color
+    toastShow.value = true
+  }
+
+  return { breadcrumbLabel, lastListRoute, toastShow, toastMessage, toastColor, notify }
 })

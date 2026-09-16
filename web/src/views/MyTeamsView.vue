@@ -1,93 +1,137 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDisplay } from 'vuetify'
 import {
   mdiAccountOutline,
+  mdiAccountPlusOutline,
+  mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
-  mdiMapMarkerOutline,
-  mdiSoccer,
+  mdiPencilOutline,
+  mdiPlusCircleOutline,
+  mdiShieldOutline,
   mdiSoccerField,
-  mdiTrophyOutline,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
-import TeamCrest from '@/components/TeamCrest.vue'
+import FlatField from '@/components/FlatField.vue'
+import RolePills from '@/components/RolePills.vue'
 import TeamForm from '@/components/TeamForm.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
+import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
-import type { CreateTeamPayload, Team } from '@/types/team'
+import { useUiStore } from '@/stores/ui'
+import type { CreateTeamPayload, Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const { t } = useI18n()
-const { smAndDown } = useDisplay()
 
 const user = computed(() => auth.currentUser)
+const myTeams = computed(() => auth.myTeams)
 
-/* ---- My team(s) ----------------------------------------------------------
-   A user belongs to a single team today (`user.teamId`), rendered as one
-   card below. The page is still named/shaped for a list so a future
-   multi-team user sees several cards here without a redesign. */
+/* ---- My teams ----------------------------------------------------------
+   A user can belong to several teams. `myTeams` (the memberships) comes from
+   the auth store; the actual Team records are fetched by id here (fetched
+   individually rather than found in `teams` below, which is capped at the
+   backend's max page size). */
 
 const teams = ref<Team[]>([])
 const loadingTeams = ref(false)
+const teamDetails = ref<Record<string, Team>>({})
+const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
+const joinRole = ref<TeamMemberRole | null>(null)
+/** Fixed to the account's username - joining a team always uses it, not a
+ *  per-team nickname (that's what the create wizard's own name field is for). */
+const joinDisplayName = ref(auth.currentUser?.userName ?? '')
 const savingTeam = ref(false)
-const teamSaved = ref(false)
-const teamError = ref('')
+const joinErrors = reactive<Record<string, string>>({})
 
+const joinableTeams = computed(() =>
+  teams.value.filter((team) => !myTeams.value.some((membership) => membership.teamId === team.id)),
+)
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 
-/**
- * The team the user currently belongs to. Fetched by id rather than looked up
- * in `teams`, which is capped at the backend's max page size.
- */
-const myTeam = ref<Team | null>(null)
+/** Each membership paired with its resolved `Team`, once fetched. */
+const myTeamCards = computed(() =>
+  myTeams.value
+    .map((membership) => ({ membership, team: teamDetails.value[membership.teamId] }))
+    .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team),
+)
+
+async function loadMyTeamDetails() {
+  loadingMyTeams.value = true
+  try {
+    const details = await Promise.all(
+      myTeams.value.map((membership) => teamsApi.byId(membership.teamId, auth.accessToken)),
+    )
+    teamDetails.value = Object.fromEntries(details.map((team) => [team.id, team]))
+  } catch (error) {
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
+  } finally {
+    loadingMyTeams.value = false
+  }
+}
 
 onMounted(async () => {
-  selectedTeamId.value = user.value?.teamId ?? null
   loadingTeams.value = true
   try {
-    const [list, mine] = await Promise.all([
-      teamsApi.list(auth.accessToken),
-      user.value?.teamId
-        ? teamsApi.byId(user.value.teamId, auth.accessToken)
-        : Promise.resolve(null),
-    ])
+    const [list] = await Promise.all([teamsApi.list(auth.accessToken), auth.loadMyTeams()])
     teams.value = list
-    myTeam.value = mine
   } catch (error) {
-    teamError.value = error instanceof ApiError ? error.message : t('profile.team.loadFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
   } finally {
     loadingTeams.value = false
   }
+
+  await loadMyTeamDetails()
 })
 
+function validateJoin(): boolean {
+  const required = t('profile.team.required')
+  for (const key of Object.keys(joinErrors)) delete joinErrors[key]
+
+  if (!selectedTeamId.value) joinErrors.team = required
+  if (!joinRole.value) joinErrors.role = required
+
+  return Object.keys(joinErrors).length === 0
+}
+
 async function saveTeam() {
-  if (!selectedTeamId.value) return
-  teamError.value = ''
-  teamSaved.value = false
+  if (!validateJoin() || !selectedTeamId.value || !joinRole.value) return
   savingTeam.value = true
   try {
-    await auth.setTeam(selectedTeamId.value)
-    myTeam.value = selectedTeam.value ?? myTeam.value
-    teamSaved.value = true
+    await auth.joinTeam(selectedTeamId.value, joinRole.value, joinDisplayName.value.trim())
+    await loadMyTeamDetails()
+    ui.notify(t('profile.team.saved'), 'success')
+    selectedTeamId.value = null
+    joinRole.value = null
   } catch (error) {
-    teamError.value = error instanceof ApiError ? error.message : t('profile.team.saveFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.saveFailed'), 'error')
   } finally {
     savingTeam.value = false
   }
 }
 
-/* ---- Create a new team ---------------------------------------------------- */
+/* ---- Create a new team (wizard) --------------------------------------- */
 
+const wizardOpen = ref(false)
 const creatingTeam = ref(false)
-const createError = ref('')
 
-async function handleCreate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
-  createError.value = ''
+async function handleCreate({
+  payload,
+  role,
+  displayName,
+  crest,
+}: {
+  payload: CreateTeamPayload
+  role: TeamMemberRole
+  displayName: string
+  crest: File | null
+}) {
   creatingTeam.value = true
   try {
     const created = await teamsApi.create(payload, auth.accessToken)
@@ -95,165 +139,109 @@ async function handleCreate({ payload, crest }: { payload: CreateTeamPayload; cr
 
     const withCrest = { ...created, hasCrest: !!crest }
     teams.value = [...teams.value, withCrest].sort((a, b) => a.name.localeCompare(b.name))
-    selectedTeamId.value = created.id
-    await auth.setTeam(created.id)
-    myTeam.value = withCrest
-    teamSaved.value = true
+    await auth.joinTeam(created.id, role, displayName)
+    teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
+    wizardOpen.value = false
   } catch (error) {
-    createError.value = error instanceof ApiError ? error.message : t('profile.team.createFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.createFailed'), 'error')
   } finally {
     creatingTeam.value = false
   }
 }
 
-/* ---- Edit my team ------------------------------------------------------------ */
+/* ---- Edit a team ------------------------------------------------------------ */
 
-const editOpen = ref(false)
+const editingTeamId = ref<string | null>(null)
+const editingTeam = computed(() =>
+  editingTeamId.value ? (teamDetails.value[editingTeamId.value] ?? null) : null,
+)
 const savingEdit = ref(false)
-const editError = ref('')
+
+function openEdit(teamId: string) {
+  editingTeamId.value = teamId
+}
 
 async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: File | null }) {
-  if (!myTeam.value) return
-  editError.value = ''
+  if (!editingTeam.value) return
   savingEdit.value = true
   try {
-    const updated = await teamsApi.update(myTeam.value.id, payload, auth.accessToken)
-    myTeam.value = updated
+    const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
+    teamDetails.value = { ...teamDetails.value, [updated.id]: updated }
     teams.value = teams.value.map((tm) => (tm.id === updated.id ? updated : tm))
-    editOpen.value = false
+    editingTeamId.value = null
   } catch (error) {
-    editError.value = error instanceof ApiError ? error.message : t('profile.team.updateFailed')
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
   } finally {
     savingEdit.value = false
+  }
+}
+
+/* ---- Leave a team ------------------------------------------------------------ */
+
+/** Snapshot of the team being left, captured when the dialog opens - kept stable
+ *  through the dialog's closing transition even after `teamDetails` is pruned. */
+const leavingTeam = ref<Team | null>(null)
+
+async function confirmLeave() {
+  if (!leavingTeam.value) return
+  const teamId = leavingTeam.value.id
+  try {
+    await auth.leaveTeam(teamId)
+    const { [teamId]: _removed, ...rest } = teamDetails.value
+    teamDetails.value = rest
+    leavingTeam.value = null
+    ui.notify(t('profile.team.leftSuccess'), 'success')
+  } catch (error) {
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.leaveFailed'), 'error')
   }
 }
 </script>
 
 <template>
   <v-main>
-    <v-container v-if="user" class="py-6 py-md-10 profile-container">
+    <v-container v-if="user" class="my-teams-container">
       <!-- The page title moved to the breadcrumb (see AppShell). -->
-      <v-alert
-        v-if="!user.teamId"
-        type="warning"
-        variant="tonal"
-        density="comfortable"
-        class="mb-5"
-      >
+      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning mb-5">
         {{ t('profile.activation.needsTeam') }}
-      </v-alert>
+      </div>
 
-      <!-- Has a team: show its details. -->
-      <template v-if="user.teamId">
-        <v-card
-          v-if="myTeam"
-          border
-          flat
-          rounded="xl"
-          class="bkt bkt2 px-4 py-3 px-md-6"
-        >
-          <div class="bkt-crest">
-            <TeamCrest :team="myTeam" :size="76" />
-          </div>
-          <div class="bkt-body">
-            <div class="bkt-row1">
-              <span class="text-subtitle-1 font-weight-bold">{{ myTeam.name }}</span>
-              <span class="text-disabled">·</span>
-              <span
-                class="text-subtitle-1 font-weight-bold"
-                :style="{ color: AGE_CATEGORY_COLOR[myTeam.category] }"
-              >
-                {{ t(`profile.team.enums.${myTeam.category}`) }}
-              </span>
-            </div>
-            <div class="bkt-chips">
-              <v-chip
-                size="x-small"
-                variant="tonal"
-                :color="MODALITY_COLOR[myTeam.type]"
-                :prepend-icon="mdiSoccer"
-              >
-                {{ t(`profile.team.enums.${myTeam.type}`) }}
-              </v-chip>
-              <v-chip
-                size="x-small"
-                variant="tonal"
-                :color="DIVISION_COLOR[myTeam.division]"
-                :prepend-icon="mdiTrophyOutline"
-              >
-                {{ t(`profile.team.enums.${myTeam.division}`) }}
-              </v-chip>
-              <v-chip size="x-small" variant="tonal" :prepend-icon="mdiMapMarkerOutline">
-                {{ myTeam.city }}
-              </v-chip>
-            </div>
-            <div class="bkt-meta text-body-2 text-medium-emphasis">
-              <span>
-                <v-icon size="14" :icon="mdiAccountOutline" color="#5D4037" />
-                {{ myTeam.coach }}
-              </span>
-              <span v-if="myTeam.venueName">
-                <v-icon size="14" :icon="mdiSoccerField" color="#2E7D32" />
-                {{ myTeam.venueName }}
-              </span>
-            </div>
-          </div>
-          <div class="bkt-actions">
-            <!-- Mobile: a bigger, labelled button is an easier tap target. -->
-            <v-btn
-              v-if="smAndDown"
-              :to="{ name: 'team-detail', params: { id: myTeam.id } }"
-              :prepend-icon="mdiCardAccountDetailsOutline"
-              color="blue"
-              variant="outlined"
-              block
-            >
-              {{ t('profile.team.viewDetails') }}
-            </v-btn>
-            <v-tooltip v-else :text="t('profile.team.viewDetails')" location="top">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  v-bind="tooltipProps"
-                  :to="{ name: 'team-detail', params: { id: myTeam.id } }"
-                  :icon="mdiCardAccountDetailsOutline"
-                  color="blue"
-                  variant="outlined"
-                  size="small"
-                  :aria-label="t('profile.team.viewDetails')"
-                />
-              </template>
-            </v-tooltip>
-          </div>
-        </v-card>
+      <v-row class="my-teams-row">
+        <!-- Left: join an existing team, and found a new one. Always available -
+             no toggle needed to reveal it. -->
+        <v-col cols="12" md="4" class="py-6">
+          <v-card class="fp-card pa-6">
+            <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
-        <v-card v-else border flat rounded="xl" class="px-4 py-4 px-md-8 py-md-1">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            class="d-block mx-auto my-10"
-          />
-        </v-card>
-      </template>
+            <FlatField :label="t('profile.team.displayName')" class="mb-4">
+              <input v-model="joinDisplayName" class="fp-input" type="text" disabled />
+            </FlatField>
 
-      <!-- No team: join an existing one, or register a new one. -->
-      <v-row v-if="!user.teamId">
-        <!-- Join an existing team -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <v-select
-              v-model="selectedTeamId"
-              :items="teams"
-              item-title="name"
-              item-value="id"
-              variant="outlined"
-              density="comfortable"
-              :label="t('profile.team.select')"
-              :placeholder="t('profile.team.selectPlaceholder')"
-              persistent-placeholder
-              :loading="loadingTeams"
-              hide-details="auto"
-              class="mb-4"
-            />
+            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
+              <v-autocomplete
+                v-model="selectedTeamId"
+                :items="joinableTeams"
+                item-title="name"
+                item-value="id"
+                :placeholder="t('profile.team.selectPlaceholder')"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                autocomplete="off"
+                :error="!!joinErrors.team"
+                class="fp-autocomplete"
+              >
+                <template #item="{ item, props: itemProps }">
+                  <v-list-item v-bind="itemProps" :title="item.name">
+                    <template #subtitle>
+                      {{ t(`profile.team.enums.${item.type}`) }} ·
+                      {{ t(`profile.team.enums.${item.division}`) }} ·
+                      {{ t(`profile.team.enums.${item.category}`) }}
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </FlatField>
 
             <div v-if="selectedTeam" class="mb-4 text-center">
               <v-img
@@ -269,133 +257,194 @@ async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: Fi
               </p>
             </div>
 
-            <v-alert
-              v-if="teamError"
-              type="error"
-              variant="tonal"
-              density="compact"
-              class="mb-4"
-            >
-              {{ teamError }}
-            </v-alert>
-            <v-alert
-              v-else-if="teamSaved"
-              type="success"
-              variant="tonal"
-              density="compact"
-              class="mb-4"
-            >
-              {{ t('profile.team.saved') }}
-            </v-alert>
+            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" class="mb-4">
+              <RolePills v-model="joinRole" />
+            </FlatField>
 
-            <v-btn
-              block
-              size="large"
-              :loading="savingTeam"
-              :disabled="!selectedTeamId || selectedTeamId === user.teamId"
+            <button
+              type="button"
+              class="fp-btn fp-btn-tonal fp-btn-block"
+              :disabled="savingTeam"
               @click="saveTeam"
             >
-              {{ t('profile.team.save') }}
-            </v-btn>
+              <v-progress-circular v-if="savingTeam" indeterminate size="16" width="2" color="white" />
+              <template v-else>
+                <v-icon :icon="mdiAccountPlusOutline" size="18" />
+                {{ t('profile.team.save') }}
+              </template>
+            </button>
+
+            <!-- Create a new team: always available, opens the step-by-step wizard. -->
+            <button
+              type="button"
+              class="fp-btn fp-btn-solid fp-btn-block mt-3"
+              @click="wizardOpen = true"
+            >
+              <v-icon :icon="mdiPlusCircleOutline" size="18" />
+              {{ t('profile.team.createAnother') }}
+            </button>
           </v-card>
         </v-col>
 
-        <!-- Register a new team -->
-        <v-col cols="12" md="6">
-          <v-card border flat rounded="xl" class="pa-6 h-100">
-            <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.createTitle') }}</h2>
-
-            <TeamForm
-              with-crest
-              :submit-label="creatingTeam ? t('profile.team.creating') : t('profile.team.create')"
-              :loading="creatingTeam"
-              :error="createError"
-              @submit="handleCreate"
-            />
-          </v-card>
+        <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
+        <v-col v-if="myTeams.length > 0" cols="12" md="8" class="py-6 d-flex flex-column my-teams-list-col">
+          <div class="fp-team-list">
+            <v-card v-for="{ membership, team } in myTeamCards" :key="membership.id" class="fp-card fp-team-card">
+              <div class="fp-crest-shield">
+                <img v-if="team.hasCrest" :src="teamsApi.crestUrl(team.id)" :alt="team.name" />
+                <v-icon v-else :icon="mdiShieldOutline" size="34" color="primary" />
+              </div>
+              <div class="fp-team-body">
+                <div class="fp-team-row1">
+                  <span class="fp-team-name">{{ team.name }}</span>
+                  <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
+                </div>
+                <div class="fp-chip-row">
+                  <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
+                    {{ t(`profile.team.enums.${team.type}`) }}
+                  </span>
+                  <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                    {{ t(`profile.team.enums.${team.division}`) }}
+                  </span>
+                  <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                    {{ t(`profile.team.enums.${team.category}`) }}
+                  </span>
+                  <span class="fp-chip" style="background: #f1f5f9; color: #475569">{{ team.city }}</span>
+                </div>
+                <div class="fp-meta-row">
+                  <span>
+                    <v-icon size="14" :icon="mdiAccountOutline" />
+                    {{ membership.displayName }}
+                  </span>
+                  <span v-if="team.venueName">
+                    <v-icon size="14" :icon="mdiSoccerField" />
+                    {{ team.venueName }}
+                  </span>
+                </div>
+              </div>
+              <div class="fp-team-actions">
+                <v-tooltip :text="t('profile.team.viewDetails')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <router-link
+                      v-bind="tooltipProps"
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      class="fp-icon-btn"
+                      :aria-label="t('profile.team.viewDetails')"
+                      @click.stop
+                    >
+                      <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
+                    </router-link>
+                  </template>
+                </v-tooltip>
+                <v-tooltip :text="t('profile.team.editTitle')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <button
+                      type="button"
+                      v-bind="tooltipProps"
+                      class="fp-icon-btn"
+                      :aria-label="t('profile.team.editTitle')"
+                      @click="openEdit(team.id)"
+                    >
+                      <v-icon :icon="mdiPencilOutline" size="18" />
+                    </button>
+                  </template>
+                </v-tooltip>
+                <v-tooltip :text="t('profile.team.leave')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <button
+                      type="button"
+                      v-bind="tooltipProps"
+                      class="fp-icon-btn fp-icon-btn--danger"
+                      :aria-label="t('profile.team.leave')"
+                      @click="leavingTeam = team"
+                    >
+                      <v-icon :icon="mdiAccountRemoveOutline" size="18" />
+                    </button>
+                  </template>
+                </v-tooltip>
+              </div>
+            </v-card>
+          </div>
         </v-col>
       </v-row>
     </v-container>
 
-    <!-- Edit my team -->
-    <v-dialog v-model="editOpen" max-width="560" scrollable>
-      <v-card v-if="myTeam" border flat rounded="xl" class="pa-6">
-        <h2 class="text-h6 font-weight-bold mb-4">{{ t('profile.team.editTitle') }}</h2>
+    <!-- Create a new team -->
+    <TeamWizard v-model="wizardOpen" :loading="creatingTeam" @submit="handleCreate" />
+
+    <!-- Edit a team -->
+    <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
+      <v-card v-if="editingTeam" class="fp-card fp-modal-card pa-6">
+        <h2 class="fp-confirm-title" style="margin-bottom: 16px">{{ t('profile.team.editTitle') }}</h2>
         <TeamForm
-          :initial="myTeam"
+          :initial="editingTeam"
           :submit-label="t('profile.team.saveChanges')"
           :loading="savingEdit"
-          :error="editError"
           @submit="handleUpdate"
         />
+      </v-card>
+    </v-dialog>
+
+    <!-- Confirm leaving a team -->
+    <v-dialog :model-value="!!leavingTeam" max-width="400" @update:model-value="leavingTeam = null">
+      <v-card v-if="leavingTeam" class="fp-card fp-modal-card pa-6">
+        <h2 class="fp-confirm-title">
+          {{ t('profile.team.leaveConfirmTitle', { name: leavingTeam.name }) }}
+        </h2>
+        <p class="fp-confirm-hint">{{ t('profile.team.leaveConfirmHint') }}</p>
+        <div class="fp-confirm-actions">
+          <button type="button" class="fp-btn fp-btn-text" @click="leavingTeam = null">
+            {{ t('profile.team.cancel') }}
+          </button>
+          <button type="button" class="fp-btn fp-btn-danger" @click="confirmLeave">
+            {{ t('profile.team.leave') }}
+          </button>
+        </div>
       </v-card>
     </v-dialog>
   </v-main>
 </template>
 
 <style scoped>
-/* Club panel - shared visual language with the "Teams" list. */
-.bkt {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  overflow: hidden;
-}
-.bkt-crest {
-  flex-shrink: 0;
-}
-.bkt2 .bkt-crest {
-  margin-right: 0.75rem;
-}
-/* Slightly larger chip text without growing the fixed x-small chip height. */
-.bkt2 .bkt-chips :deep(.v-chip) {
-  font-size: 0.75rem;
-}
-.bkt-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.bkt-row1 {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-.bkt-chips {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-.bkt-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-.bkt-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 0;
-}
-.bkt-actions {
-  flex-shrink: 0;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Matches the max-width of the other list pages (Teams, Standings), now that
+   this view is a two-column layout rather than a single narrow form. */
+.my-teams-container {
+  max-width: 1600px;
+  /* Vuetify's v-container adds 16px top/bottom padding by default; left as
+     is, that's 32px more than the viewport-height row below leaves room
+     for, which is exactly what was pushing the whole page into scrolling
+     instead of only .fp-team-list. The columns' own py-6 already gives
+     top/bottom breathing room, so the container doesn't need to add more. */
+  padding-block: 0;
 }
 
-/* Phones: let the action drop below the body as a full-width, centred row. */
-@media (max-width: 599px) {
-  .bkt {
-    flex-wrap: wrap;
-  }
-  .bkt-actions {
-    width: 100%;
-    justify-content: center;
-  }
+/* Pinned to the viewport height below the app bar (64px) - there's no
+   pagination to cap the list at a guessed height, so it may as well use
+   all the room the window actually gives it. A fixed `height` (not
+   `min-height`) plus `overflow: hidden` keeps the row itself, and the join
+   form beside the list, from ever growing past that and scrolling the
+   whole page - only .fp-team-list's own overflow scrolls. */
+.my-teams-row {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+/* Vuetify's v-col doesn't reliably stretch to a flex row's cross size (its
+   own default flex-grow/shrink: 0 seems to win out even with min-height:
+   0), so the column is pinned to the same explicit height as the row
+   instead of depending on stretch to propagate it down. */
+.my-teams-list-col {
+  height: calc(100vh - 64px);
+  min-height: 0;
+}
+
+.fp-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 </style>

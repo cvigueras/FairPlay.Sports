@@ -1,14 +1,16 @@
 using System.Text;
 using FairPlay.Sports.Api.Users;
+using FairPlay.Sports.TestSupport.Teams;
 using FairPlay.Sports.TestSupport.Users;
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Application.Users.Activate;
 using FairPlay.Sports.Application.Users.ChangePassword;
 using FairPlay.Sports.Application.Users.GetAll;
 using FairPlay.Sports.Application.Users.GetById;
 using FairPlay.Sports.Application.Users.GetPhoto;
-using FairPlay.Sports.Application.Users.MoveToTeam;
+using FairPlay.Sports.Application.Users.GetTeams;
 using FairPlay.Sports.Application.Users.Register;
 using FairPlay.Sports.Application.Users.UpdateProfile;
 using FairPlay.Sports.Application.Users.UploadPhoto;
@@ -97,8 +99,7 @@ public class UsersControllerTests
             Arg.Is<RegisterUserCommand>(command =>
                 command.UserName == request.UserName &&
                 command.Email == request.Email &&
-                command.Password == request.Password &&
-                command.TeamId == request.TeamId),
+                command.Password == request.Password),
             Arg.Any<CancellationToken>());
     }
 
@@ -222,29 +223,27 @@ public class UsersControllerTests
     }
 
     [Test]
-    public async Task MoveToTeam_DispatchesCommandWithRouteIdAndBody_AndReturnsOkWithHandlerValue()
+    public async Task GetTeams_DispatchesQueryWithRouteId_AndReturnsOkWithHandlerValue()
     {
         var userId = Guid.NewGuid();
-        var teamId = Guid.NewGuid();
-        var dto = UserMother.Dto(userId);
-        _sender.Send(Arg.Any<MoveUserToTeamCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<UserDto>.Success(dto));
+        var dtos = new List<TeamMemberDto> { TeamMemberMother.Dto(userId: userId) };
+        _sender.Send(Arg.Any<GetUserTeamsQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<TeamMemberDto>>.Success(dtos));
 
-        var response = await _controller.MoveToTeam(userId, new MoveUserToTeamRequest(teamId), CancellationToken.None);
+        var response = await _controller.GetTeams(userId, CancellationToken.None);
 
-        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dto));
+        Assert.That((response.Result as OkObjectResult)?.Value, Is.SameAs(dtos));
         await _sender.Received(1).Send(
-            Arg.Is<MoveUserToTeamCommand>(command => command.UserId == userId && command.TeamId == teamId),
-            Arg.Any<CancellationToken>());
+            Arg.Is<GetUserTeamsQuery>(query => query.UserId == userId), Arg.Any<CancellationToken>());
     }
 
     [Test]
-    public async Task MoveToTeam_WhenHandlerReturnsNotFound_Returns404()
+    public async Task GetTeams_WhenHandlerReturnsNotFound_Returns404()
     {
-        _sender.Send(Arg.Any<MoveUserToTeamCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<UserDto>.NotFound("Team was not found."));
+        _sender.Send(Arg.Any<GetUserTeamsQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<TeamMemberDto>>.NotFound("User was not found."));
 
-        var response = await _controller.MoveToTeam(Guid.NewGuid(), new MoveUserToTeamRequest(Guid.NewGuid()), CancellationToken.None);
+        var response = await _controller.GetTeams(Guid.NewGuid(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
     }

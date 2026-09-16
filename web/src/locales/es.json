@@ -11,11 +11,15 @@
     "profile": "Perfil",
     "myTeams": "Mis equipos",
     "teams": "Equipos",
-    "standings": "Clasificación"
+    "standings": "Clasificación",
+    "challenges": "Desafíos"
   },
   "home": {
     "greeting": "Hola, {name}",
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
+  },
+  "challenges": {
+    "placeholder": "Aquí tus retos"
   },
   "teams": {
     "count": "{n} equipos",
@@ -23,6 +27,7 @@
     "noResults": "La búsqueda no muestra resultados.",
     "clearFilters": "Limpiar filtros",
     "searchPlaceholder": "Buscar equipo por nombre…",
+    "filters": "Filtros",
     "moreFilters": "Más filtros",
     "loadFailed": "No se han podido cargar los equipos.",
     "fields": {
@@ -148,14 +153,21 @@
       "memberSince": "Miembro desde"
     },
     "team": {
+      "joinTitle": "Unirte a un equipo existente",
       "select": "Equipo",
-      "selectPlaceholder": "Elige tu equipo",
+      "selectPlaceholder": "Busca o elige tu equipo",
       "noCrest": "Este equipo aún no tiene escudo.",
-      "save": "Guardar equipo",
+      "save": "Asignarme equipo seleccionado",
       "saved": "Tu equipo se ha actualizado.",
       "loadFailed": "No se han podido cargar los equipos.",
       "saveFailed": "No se ha podido actualizar tu equipo.",
-      "createTitle": "Crear un equipo nuevo",
+      "createAnother": "Crear un nuevo equipo",
+      "leave": "Salir del equipo",
+      "leftSuccess": "Has salido del equipo correctamente.",
+      "leaveFailed": "No se ha podido salir del equipo.",
+      "leaveConfirmTitle": "¿Salir de {name}?",
+      "leaveConfirmHint": "Podrás volver a unirte más adelante.",
+      "cancel": "Cancelar",
       "editTitle": "Editar equipo",
       "saveChanges": "Guardar cambios",
       "updateFailed": "No se han podido guardar los cambios.",
@@ -165,10 +177,10 @@
       "type": "Modalidad",
       "division": "División",
       "category": "Categoría",
-      "crest": "Imagen del escudo",
-      "create": "Crear y asignar",
-      "creating": "Creando...",
+      "crest": "Escudo del equipo",
       "createFailed": "No se ha podido crear el equipo.",
+      "memberRole": "Tu rol en el equipo",
+      "displayName": "Tu nombre o apodo",
       "required": "Obligatorio.",
       "crestRequired": "La imagen del escudo es obligatoria.",
       "urlInvalid": "Introduce un enlace http(s) completo.",
@@ -193,6 +205,13 @@
       "viewDetails": "Ver detalles",
       "challenge": "Desafiar",
       "viewSheet": "Ver ficha",
+      "memberRoles": {
+        "Delegate": "Delegado",
+        "Coach": "Entrenador",
+        "President": "Presidente",
+        "TechnicalStaff": "Técnico",
+        "Player": "Jugador"
+      },
       "surfaces": {
         "NaturalGrass": "Césped natural",
         "ArtificialTurf": "Césped artificial",
@@ -219,6 +238,21 @@
         "Juveniles": "Juveniles",
         "Aficionados": "Aficionados",
         "Veteranos": "Veteranos"
+      },
+      "wizard": {
+        "stepOf": "Paso {step} de {total}",
+        "stepDetails": "Datos del equipo",
+        "stepClub": "Ficha del club",
+        "stepVenue": "Campo",
+        "stepKit": "Equipación",
+        "stepContact": "Contacto",
+        "clubSheetHint": "Estos datos ya forman parte de la ficha pública del club.",
+        "nameLabel": "Nombre de equipo",
+        "nameHint": "Es el mismo dato: el nombre del club que fundas y tu nombre o apodo en él.",
+        "crestHint": "PNG, JPG, WEBP o SVG",
+        "back": "Atrás",
+        "next": "Siguiente",
+        "finish": "Crear equipo"
       }
     }
   },
