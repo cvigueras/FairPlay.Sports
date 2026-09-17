@@ -32,7 +32,19 @@ public interface ITeamRepository
 
     Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Whether a team with this name already exists in the same modality, division and category -
+    /// the same name is fine across different classifications, and different clubs in the same
+    /// classification tell themselves apart with a suffix (e.g. "Real Madrid A" / "Real Madrid B").
+    /// <paramref name="excludeTeamId"/> excludes the team being updated from its own check.
+    /// </summary>
+    Task<bool> ExistsByNameAsync(
+        string name,
+        FootballType type,
+        Division division,
+        AgeCategory category,
+        Guid? excludeTeamId = null,
+        CancellationToken cancellationToken = default);
 
     Task<TeamCrest?> GetCrestAsync(Guid id, CancellationToken cancellationToken = default);
 

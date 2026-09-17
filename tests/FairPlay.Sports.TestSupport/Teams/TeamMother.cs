@@ -137,5 +137,6 @@ public static class TeamMother
             AlternateShortsColor: null,
             AlternateKitPattern: null);
 
-    public static string NameAlreadyExists => $"Team '{Name}' already exists.";
+    public static string NameAlreadyExists =>
+        $"A team named '{Name}' already exists in this modality, division and category.";
 }

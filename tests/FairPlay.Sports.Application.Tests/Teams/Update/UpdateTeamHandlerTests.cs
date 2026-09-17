@@ -67,7 +67,9 @@ public class UpdateTeamHandlerTests
     {
         var team = TeamMother.DomainTeam();
         _repository.GetByIdForUpdateAsync(team.Id, Arg.Any<CancellationToken>()).Returns(team);
-        _repository.ExistsByNameAsync("Taken FC", Arg.Any<CancellationToken>()).Returns(true);
+        _repository.ExistsByNameAsync(
+            "Taken FC", Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(),
+            Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var command = TeamMother.UpdateCommand(team.Id) with { Name = "Taken FC" };
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -80,14 +82,20 @@ public class UpdateTeamHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenNameUnchanged_DoesNotCheckUniqueness()
+    public async Task Handle_WhenNothingChanges_ExcludesTheTeamItselfFromTheUniquenessCheck()
     {
         var team = TeamMother.DomainTeam();
         _repository.GetByIdForUpdateAsync(team.Id, Arg.Any<CancellationToken>()).Returns(team);
+        _repository.ExistsByNameAsync(
+            Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(),
+            Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
 
-        await _handler.Handle(TeamMother.UpdateCommand(team.Id), CancellationToken.None);
+        var result = await _handler.Handle(TeamMother.UpdateCommand(team.Id), CancellationToken.None);
 
-        await _repository.DidNotReceive().ExistsByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.That(result.IsSuccess, Is.True);
+        await _repository.Received(1).ExistsByNameAsync(
+            TeamMother.Name, TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory,
+            team.Id, Arg.Any<CancellationToken>());
     }
 
     [Test]

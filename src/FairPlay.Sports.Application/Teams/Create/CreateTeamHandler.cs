@@ -12,8 +12,9 @@ public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) 
 
     public async Task<Result<TeamDto>> Handle(CreateTeamCommand request, CancellationToken cancellationToken)
     {
-        if (await _repository.ExistsByNameAsync(request.Name, cancellationToken))
-            return Result<TeamDto>.Failure($"Team '{request.Name}' already exists.");
+        var name = request.Name.Trim();
+        if (await _repository.ExistsByNameAsync(name, request.Type, request.Division, request.Category, cancellationToken: cancellationToken))
+            return Result<TeamDto>.Failure($"A team named '{name}' already exists in this modality, division and category.");
 
         var team = Team.Create(
             Guid.NewGuid(),
