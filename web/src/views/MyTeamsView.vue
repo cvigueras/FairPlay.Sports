@@ -6,6 +6,7 @@ import {
   mdiAccountPlusOutline,
   mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
+  mdiClose,
   mdiPencilOutline,
   mdiPlusCircleOutline,
   mdiShieldOutline,
@@ -377,14 +378,28 @@ async function confirmLeave() {
 
     <!-- Edit a team -->
     <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
-      <v-card v-if="editingTeam" class="fp-card fp-modal-card pa-6">
-        <h2 class="fp-confirm-title" style="margin-bottom: 16px">{{ t('profile.team.editTitle') }}</h2>
-        <TeamForm
-          :initial="editingTeam"
-          :submit-label="t('profile.team.saveChanges')"
-          :loading="savingEdit"
-          @submit="handleUpdate"
-        />
+      <v-card v-if="editingTeam" class="fp-card fp-modal-card">
+        <div class="fp-wizard-head">
+          <div class="d-flex align-start justify-space-between ga-3">
+            <h2 class="fp-wizard-title">{{ t('profile.team.editTitle') }}</h2>
+            <button
+              type="button"
+              class="fp-wizard-close"
+              :aria-label="t('profile.team.cancel')"
+              @click="editingTeamId = null"
+            >
+              <v-icon :icon="mdiClose" size="16" />
+            </button>
+          </div>
+        </div>
+        <v-card-text class="fp-wizard-body">
+          <TeamForm
+            :initial="editingTeam"
+            :submit-label="t('profile.team.saveChanges')"
+            :loading="savingEdit"
+            @submit="handleUpdate"
+          />
+        </v-card-text>
       </v-card>
     </v-dialog>
 
