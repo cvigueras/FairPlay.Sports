@@ -4,8 +4,12 @@ import { useI18n } from 'vue-i18n'
 import { mdiChevronDown } from '@mdi/js'
 import { KIT_COLOR_PALETTE } from '@/lib/kitColors'
 
-defineProps<{ modelValue: string }>()
+const props = defineProps<{ modelValue: string; excludeValue?: string }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+function isDisabled(value: string): boolean {
+  return !!props.excludeValue && value.toLowerCase() === props.excludeValue.toLowerCase()
+}
 
 const { t } = useI18n()
 const open = ref(false)
@@ -40,7 +44,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
         :key="color.value"
         type="button"
         class="fp-color-option"
-        :class="{ 'fp-color-option--selected': color.value.toLowerCase() === modelValue.toLowerCase() }"
+        :class="{
+          'fp-color-option--selected': color.value.toLowerCase() === modelValue.toLowerCase(),
+          'fp-color-option--disabled': isDisabled(color.value),
+        }"
+        :disabled="isDisabled(color.value)"
         @click="select(color.value)"
       >
         <span class="fp-color-bar fp-color-bar--option" :style="{ background: color.value }" />
@@ -119,6 +127,13 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
   background: rgba(var(--v-theme-primary), 0.08);
   color: rgb(var(--v-theme-primary-darken-1));
   font-weight: 700;
+}
+.fp-color-option--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.fp-color-option--disabled:hover {
+  background: transparent;
 }
 
 .fp-color-option .fp-color-bar--option {

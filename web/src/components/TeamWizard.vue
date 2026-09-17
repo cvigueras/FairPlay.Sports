@@ -464,12 +464,12 @@ function goNext() {
           <v-row dense>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorPrimary')">
-                <ColorSelect v-model="model.colorPrimary" />
+                <ColorSelect v-model="model.colorPrimary" :exclude-value="model.colorSecondary" />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorSecondary')">
-                <ColorSelect v-model="model.colorSecondary" />
+                <ColorSelect v-model="model.colorSecondary" :exclude-value="model.colorPrimary" />
               </FlatField>
             </v-col>
           </v-row>
