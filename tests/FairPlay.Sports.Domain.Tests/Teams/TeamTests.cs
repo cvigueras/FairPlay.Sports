@@ -122,8 +122,8 @@ public class TeamTests
             ShortName: "  FPF  ",
             FoundedYear: 1998,
             HomeVenue: new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x"),
-            Colors: new KitColors("Blue", "White", KitPattern.Stripes),
-            AlternateColors: new KitColors("Black", "Red", KitPattern.Halves),
+            Colors: new KitColors("Blue", "White", "Navy", KitPattern.Stripes),
+            AlternateColors: new KitColors("Black", "Red", "White", KitPattern.Halves),
             ContactEmail: "  INFO@Club.Example  ",
             ContactPhone: "  600 000 000  ",
             Website: "  https://club.example  ");
@@ -156,8 +156,8 @@ public class TeamTests
             Assert.That(team.ShortName, Is.EqualTo("FPF"));
             Assert.That(team.FoundedYear, Is.EqualTo(1998));
             Assert.That(team.HomeVenue, Is.EqualTo(new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x")));
-            Assert.That(team.Colors, Is.EqualTo(new KitColors("Blue", "White", KitPattern.Stripes)));
-            Assert.That(team.AlternateColors, Is.EqualTo(new KitColors("Black", "Red", KitPattern.Halves)));
+            Assert.That(team.Colors, Is.EqualTo(new KitColors("Blue", "White", "Navy", KitPattern.Stripes)));
+            Assert.That(team.AlternateColors, Is.EqualTo(new KitColors("Black", "Red", "White", KitPattern.Halves)));
             Assert.That(team.ContactEmail, Is.EqualTo("info@club.example"));
             Assert.That(team.ContactPhone, Is.EqualTo("600 000 000"));
             Assert.That(team.Website, Is.EqualTo("https://club.example"));

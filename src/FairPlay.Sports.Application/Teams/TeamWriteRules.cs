@@ -43,11 +43,12 @@ internal static class TeamWriteRules
             .WithMessage("Maps link must be an absolute http(s) URL.")
             .When(x => !string.IsNullOrWhiteSpace(x.VenueMapsUrl));
 
-        // Kit: filling any facet (either colour or the pattern) makes all three required.
+        // Kit: filling any facet (a colour, the shorts colour, or the pattern) makes all four required.
         validator.When(x => HasAnyKitField(x), () =>
         {
             validator.RuleFor(x => x.ColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
             validator.RuleFor(x => x.ColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.ShortsColor).NotEmpty().MaximumLength(KitColors.MaxColourLength);
             validator.RuleFor(x => x.KitPattern)
                 .NotNull()
                 .Must(pattern => pattern is not null && pattern != KitPattern.Default && Enum.IsDefined(pattern.Value))
@@ -59,6 +60,7 @@ internal static class TeamWriteRules
         {
             validator.RuleFor(x => x.AlternateColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
             validator.RuleFor(x => x.AlternateColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateShortsColor).NotEmpty().MaximumLength(KitColors.MaxColourLength);
             validator.RuleFor(x => x.AlternateKitPattern)
                 .NotNull()
                 .Must(pattern => pattern is not null && pattern != KitPattern.Default && Enum.IsDefined(pattern.Value))
@@ -88,11 +90,13 @@ internal static class TeamWriteRules
     private static bool HasAnyKitField(ITeamWriteFields x) =>
         !string.IsNullOrWhiteSpace(x.ColorPrimary) ||
         !string.IsNullOrWhiteSpace(x.ColorSecondary) ||
+        !string.IsNullOrWhiteSpace(x.ShortsColor) ||
         x.KitPattern is not null and not KitPattern.Default;
 
     private static bool HasAnyAlternateKitField(ITeamWriteFields x) =>
         !string.IsNullOrWhiteSpace(x.AlternateColorPrimary) ||
         !string.IsNullOrWhiteSpace(x.AlternateColorSecondary) ||
+        !string.IsNullOrWhiteSpace(x.AlternateShortsColor) ||
         x.AlternateKitPattern is not null and not KitPattern.Default;
 
     private static bool BeAbsoluteHttpUrl(string? value) =>

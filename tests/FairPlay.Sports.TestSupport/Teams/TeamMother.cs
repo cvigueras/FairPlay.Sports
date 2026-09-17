@@ -22,9 +22,11 @@ public static class TeamMother
     public const string VenueMapsUrl = "https://maps.google.com/?q=Pabell%C3%B3n+Municipal";
     public const string ColorPrimary = "Blue";
     public const string ColorSecondary = "White";
+    public const string ShortsColor = "Navy";
     public const KitPattern KitPattern = KitPattern.Stripes;
     public const string AlternateColorPrimary = "Black";
     public const string AlternateColorSecondary = "Red";
+    public const string AlternateShortsColor = "White";
     public const KitPattern AlternateKitPattern = KitPattern.Halves;
     public const string ContactEmail = "info@fairplayfc.example";
     public const string ContactPhone = "+34 600 000 000";
@@ -35,9 +37,10 @@ public static class TeamMother
 
     public static Venue Venue() => new(VenueName, VenueAddress, VenueSurface, VenueMapsUrl);
 
-    public static KitColors Colors() => new(ColorPrimary, ColorSecondary, KitPattern);
+    public static KitColors Colors() => new(ColorPrimary, ColorSecondary, ShortsColor, KitPattern);
 
-    public static KitColors AlternateColors() => new(AlternateColorPrimary, AlternateColorSecondary, AlternateKitPattern);
+    public static KitColors AlternateColors() =>
+        new(AlternateColorPrimary, AlternateColorSecondary, AlternateShortsColor, AlternateKitPattern);
 
     public static TeamProfile Profile() =>
         new(ShortName, FoundedYear, Venue(), Colors(), AlternateColors(), ContactEmail, ContactPhone, Website);
@@ -52,7 +55,8 @@ public static class TeamMother
             VenueName, VenueAddress, VenueSurface, VenueMapsUrl,
             ColorPrimary, ColorSecondary, KitPattern,
             ContactEmail, ContactPhone, Website,
-            AlternateColorPrimary, AlternateColorSecondary, AlternateKitPattern);
+            AlternateColorPrimary, AlternateColorSecondary, AlternateKitPattern,
+            ShortsColor, AlternateShortsColor);
 
     public static UpdateTeamCommand UpdateCommand(Guid id) =>
         new(
@@ -61,7 +65,8 @@ public static class TeamMother
             VenueName, VenueAddress, VenueSurface, VenueMapsUrl,
             ColorPrimary, ColorSecondary, KitPattern,
             ContactEmail, ContactPhone, Website,
-            AlternateColorPrimary, AlternateColorSecondary, AlternateKitPattern);
+            AlternateColorPrimary, AlternateColorSecondary, AlternateKitPattern,
+            ShortsColor, AlternateShortsColor);
 
     public static Team DomainTeam(
         Guid? id = null,
@@ -122,12 +127,14 @@ public static class TeamMother
             VenueMapsUrl: null,
             ColorPrimary: null,
             ColorSecondary: null,
+            ShortsColor: null,
             KitPattern: null,
             ContactEmail: null,
             ContactPhone: null,
             Website: null,
             AlternateColorPrimary: null,
             AlternateColorSecondary: null,
+            AlternateShortsColor: null,
             AlternateKitPattern: null);
 
     public static string NameAlreadyExists => $"Team '{Name}' already exists.";

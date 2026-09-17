@@ -36,7 +36,9 @@ internal static class TeamRequestMother
             TeamMother.Website,
             TeamMother.AlternateColorPrimary,
             TeamMother.AlternateColorSecondary,
-            TeamMother.AlternateKitPattern);
+            TeamMother.AlternateKitPattern,
+            TeamMother.ShortsColor,
+            TeamMother.AlternateShortsColor);
 
     public static UpdateTeamRequest UpdateRequest() =>
         new(
@@ -60,5 +62,7 @@ internal static class TeamRequestMother
             TeamMother.Website,
             TeamMother.AlternateColorPrimary,
             TeamMother.AlternateColorSecondary,
-            TeamMother.AlternateKitPattern);
+            TeamMother.AlternateKitPattern,
+            TeamMother.ShortsColor,
+            TeamMother.AlternateShortsColor);
 }

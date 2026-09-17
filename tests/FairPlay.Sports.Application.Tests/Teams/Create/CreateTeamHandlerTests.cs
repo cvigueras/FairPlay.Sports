@@ -108,20 +108,24 @@ public class CreateTeamHandlerTests
             Assert.That(result.Value!.VenueMapsUrl, Is.EqualTo(TeamMother.VenueMapsUrl));
             Assert.That(result.Value!.ColorPrimary, Is.EqualTo(TeamMother.ColorPrimary));
             Assert.That(result.Value!.ColorSecondary, Is.EqualTo(TeamMother.ColorSecondary));
+            Assert.That(result.Value!.ShortsColor, Is.EqualTo(TeamMother.ShortsColor));
             Assert.That(result.Value!.KitPattern, Is.EqualTo(TeamMother.KitPattern));
             Assert.That(result.Value!.ContactEmail, Is.EqualTo(TeamMother.ContactEmail));
             Assert.That(result.Value!.ContactPhone, Is.EqualTo(TeamMother.ContactPhone));
             Assert.That(result.Value!.Website, Is.EqualTo(TeamMother.Website));
             Assert.That(result.Value!.AlternateColorPrimary, Is.EqualTo(TeamMother.AlternateColorPrimary));
             Assert.That(result.Value!.AlternateColorSecondary, Is.EqualTo(TeamMother.AlternateColorSecondary));
+            Assert.That(result.Value!.AlternateShortsColor, Is.EqualTo(TeamMother.AlternateShortsColor));
             Assert.That(result.Value!.AlternateKitPattern, Is.EqualTo(TeamMother.AlternateKitPattern));
         });
         Assert.Multiple(() =>
         {
             Assert.That(persisted!.HomeVenue!.Surface, Is.EqualTo(TeamMother.VenueSurface));
             Assert.That(persisted!.Colors!.Primary, Is.EqualTo(TeamMother.ColorPrimary));
+            Assert.That(persisted!.Colors!.ShortsColor, Is.EqualTo(TeamMother.ShortsColor));
             Assert.That(persisted!.Colors!.Pattern, Is.EqualTo(TeamMother.KitPattern));
             Assert.That(persisted!.AlternateColors!.Primary, Is.EqualTo(TeamMother.AlternateColorPrimary));
+            Assert.That(persisted!.AlternateColors!.ShortsColor, Is.EqualTo(TeamMother.AlternateShortsColor));
             Assert.That(persisted!.AlternateColors!.Pattern, Is.EqualTo(TeamMother.AlternateKitPattern));
         });
     }

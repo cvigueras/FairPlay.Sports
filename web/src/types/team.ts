@@ -55,9 +55,11 @@ export interface TeamProfileFields {
   venueMapsUrl?: string | null
   colorPrimary?: string | null
   colorSecondary?: string | null
+  shortsColor?: string | null
   kitPattern?: KitPattern | null
   alternateColorPrimary?: string | null
   alternateColorSecondary?: string | null
+  alternateShortsColor?: string | null
   alternateKitPattern?: KitPattern | null
   contactEmail?: string | null
   contactPhone?: string | null

@@ -27,6 +27,7 @@ public interface ITeamWriteFields
 
     string? ColorPrimary { get; }
     string? ColorSecondary { get; }
+    string? ShortsColor { get; }
     KitPattern? KitPattern { get; }
 
     string? ContactEmail { get; }
@@ -35,5 +36,6 @@ public interface ITeamWriteFields
 
     string? AlternateColorPrimary { get; }
     string? AlternateColorSecondary { get; }
+    string? AlternateShortsColor { get; }
     KitPattern? AlternateKitPattern { get; }
 }

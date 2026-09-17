@@ -52,8 +52,10 @@ public class UpdateTeamHandlerTests
             Assert.That(team.ShortName, Is.EqualTo(TeamMother.ShortName));
             Assert.That(team.HomeVenue!.Surface, Is.EqualTo(TeamMother.VenueSurface));
             Assert.That(team.Colors!.Primary, Is.EqualTo(TeamMother.ColorPrimary));
+            Assert.That(team.Colors!.ShortsColor, Is.EqualTo(TeamMother.ShortsColor));
             Assert.That(team.Colors!.Pattern, Is.EqualTo(TeamMother.KitPattern));
             Assert.That(team.AlternateColors!.Primary, Is.EqualTo(TeamMother.AlternateColorPrimary));
+            Assert.That(team.AlternateColors!.ShortsColor, Is.EqualTo(TeamMother.AlternateShortsColor));
             Assert.That(team.AlternateColors!.Pattern, Is.EqualTo(TeamMother.AlternateKitPattern));
             Assert.That(result.Value!.City, Is.EqualTo("Cartagena"));
             Assert.That(result.Value!.VenueMapsUrl, Is.EqualTo(TeamMother.VenueMapsUrl));

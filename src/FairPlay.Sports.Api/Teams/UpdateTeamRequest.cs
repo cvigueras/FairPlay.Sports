@@ -23,4 +23,6 @@ public sealed record UpdateTeamRequest(
     string? Website = null,
     string? AlternateColorPrimary = null,
     string? AlternateColorSecondary = null,
-    KitPattern? AlternateKitPattern = null);
+    KitPattern? AlternateKitPattern = null,
+    string? ShortsColor = null,
+    string? AlternateShortsColor = null);

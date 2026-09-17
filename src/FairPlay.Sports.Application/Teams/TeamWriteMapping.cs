@@ -44,23 +44,26 @@ internal static class TeamWriteMapping
     {
         if (string.IsNullOrWhiteSpace(fields.ColorPrimary) &&
             string.IsNullOrWhiteSpace(fields.ColorSecondary) &&
+            string.IsNullOrWhiteSpace(fields.ShortsColor) &&
             fields.KitPattern is null or KitPattern.Default)
         {
             return null;
         }
 
-        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!, fields.KitPattern!.Value);
+        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!, fields.ShortsColor!, fields.KitPattern!.Value);
     }
 
     private static KitColors? BuildAlternateColors(ITeamWriteFields fields)
     {
         if (string.IsNullOrWhiteSpace(fields.AlternateColorPrimary) &&
             string.IsNullOrWhiteSpace(fields.AlternateColorSecondary) &&
+            string.IsNullOrWhiteSpace(fields.AlternateShortsColor) &&
             fields.AlternateKitPattern is null or KitPattern.Default)
         {
             return null;
         }
 
-        return new KitColors(fields.AlternateColorPrimary!, fields.AlternateColorSecondary!, fields.AlternateKitPattern!.Value);
+        return new KitColors(
+            fields.AlternateColorPrimary!, fields.AlternateColorSecondary!, fields.AlternateShortsColor!, fields.AlternateKitPattern!.Value);
     }
 }

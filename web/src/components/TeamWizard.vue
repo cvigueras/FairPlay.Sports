@@ -2,10 +2,11 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
-import ColorSelect from '@/components/ColorSelect.vue'
 import FlatField from '@/components/FlatField.vue'
+import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
 import RolePills from '@/components/RolePills.vue'
+import { KIT_COLOR_PALETTE } from '@/lib/kitColors'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -68,9 +69,11 @@ const model = reactive({
   venueMapsUrl: '',
   colorPrimary: '#16a34a',
   colorSecondary: '#ffffff',
+  shortsColor: '#1e293b',
   kitPattern: 'Plain' as KitPattern,
   alternateColorPrimary: '#0f172a',
   alternateColorSecondary: '#ffffff',
+  alternateShortsColor: '#1e293b',
   alternateKitPattern: 'Plain' as KitPattern,
   noSecondKit: false,
   contactEmail: '',
@@ -82,9 +85,26 @@ const crest = ref<File | null>(null)
 const crestPreviewUrl = ref('')
 const errors = reactive<Record<string, string>>({})
 
+/** Which of the two shirt-colour slots the palette strip underneath is
+ *  currently editing - one shared strip per kit, not a picker per colour. */
+const kitColorSlot = ref<'primary' | 'secondary'>('primary')
+const alternateKitColorSlot = ref<'primary' | 'secondary'>('primary')
+
+function pickKitColor(color: string) {
+  if (kitColorSlot.value === 'primary') model.colorPrimary = color
+  else model.colorSecondary = color
+}
+
+function pickAlternateKitColor(color: string) {
+  if (alternateKitColorSlot.value === 'primary') model.alternateColorPrimary = color
+  else model.alternateColorSecondary = color
+}
+
 function resetForm() {
   step.value = 1
   isEdit.value = false
+  kitColorSlot.value = 'primary'
+  alternateKitColorSlot.value = 'primary'
   Object.assign(model, {
     name: '',
     role: null,
@@ -101,9 +121,11 @@ function resetForm() {
     venueMapsUrl: '',
     colorPrimary: '#16a34a',
     colorSecondary: '#ffffff',
+    shortsColor: '#1e293b',
     kitPattern: 'Plain',
     alternateColorPrimary: '#0f172a',
     alternateColorSecondary: '#ffffff',
+    alternateShortsColor: '#1e293b',
     alternateKitPattern: 'Plain',
     noSecondKit: false,
     contactEmail: '',
@@ -118,6 +140,8 @@ function resetForm() {
 function applyInitial(team: Team) {
   step.value = 1
   isEdit.value = true
+  kitColorSlot.value = 'primary'
+  alternateKitColorSlot.value = 'primary'
   Object.assign(model, {
     name: team.name,
     role: null,
@@ -134,9 +158,11 @@ function applyInitial(team: Team) {
     venueMapsUrl: team.venueMapsUrl ?? '',
     colorPrimary: team.colorPrimary || '#16a34a',
     colorSecondary: team.colorSecondary || '#ffffff',
+    shortsColor: team.shortsColor || '#1e293b',
     kitPattern: team.kitPattern ?? 'Plain',
     alternateColorPrimary: team.alternateColorPrimary || '#0f172a',
     alternateColorSecondary: team.alternateColorSecondary || '#ffffff',
+    alternateShortsColor: team.alternateShortsColor || '#1e293b',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
     contactEmail: team.contactEmail ?? '',
@@ -194,8 +220,8 @@ const STEP_FIELDS: Record<number, string[]> = {
   1: ['name', 'role', 'coach', 'city', 'crest'],
   2: ['foundedYear'],
   3: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl'],
-  4: ['colorPrimary', 'colorSecondary', 'kitPattern'],
-  5: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateKitPattern'],
+  4: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
+  5: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
   6: ['website'],
 }
 
@@ -226,10 +252,12 @@ function validate(): boolean {
 
   if (!model.colorPrimary.trim()) errors.colorPrimary = required
   if (!model.colorSecondary.trim()) errors.colorSecondary = required
+  if (!model.shortsColor.trim()) errors.shortsColor = required
 
   if (!model.noSecondKit) {
     if (!model.alternateColorPrimary.trim()) errors.alternateColorPrimary = required
     if (!model.alternateColorSecondary.trim()) errors.alternateColorSecondary = required
+    if (!model.alternateShortsColor.trim()) errors.alternateShortsColor = required
   }
 
   if (model.website.trim() && !isHttpUrl(model.website)) errors.website = t('profile.team.urlInvalid')
@@ -285,9 +313,11 @@ function submit() {
     venueMapsUrl: trimmedOrUndefined(model.venueMapsUrl),
     colorPrimary: trimmedOrUndefined(model.colorPrimary),
     colorSecondary: trimmedOrUndefined(model.colorSecondary),
+    shortsColor: trimmedOrUndefined(model.shortsColor),
     kitPattern: model.kitPattern,
     alternateColorPrimary: model.noSecondKit ? undefined : trimmedOrUndefined(model.alternateColorPrimary),
     alternateColorSecondary: model.noSecondKit ? undefined : trimmedOrUndefined(model.alternateColorSecondary),
+    alternateShortsColor: model.noSecondKit ? undefined : trimmedOrUndefined(model.alternateShortsColor),
     alternateKitPattern: model.noSecondKit ? undefined : model.alternateKitPattern,
     contactEmail: trimmedOrUndefined(model.contactEmail),
     contactPhone: trimmedOrUndefined(model.contactPhone),
@@ -311,7 +341,7 @@ function goNext() {
 <template>
   <v-dialog
     :model-value="modelValue"
-    max-width="620"
+    max-width="680"
     persistent
     scrollable
     @update:model-value="emit('update:modelValue', $event)"
@@ -478,86 +508,257 @@ function goNext() {
 
         <!-- Step 4: 1ª equipación -->
         <template v-else-if="step === 4">
-          <v-row dense>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorPrimary')" :error="errors.colorPrimary">
-                <ColorSelect v-model="model.colorPrimary" :exclude-value="model.colorSecondary" />
-              </FlatField>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorSecondary')" :error="errors.colorSecondary">
-                <ColorSelect v-model="model.colorSecondary" :exclude-value="model.colorPrimary" />
-              </FlatField>
-            </v-col>
-          </v-row>
-
-          <FlatField :label="t('profile.team.kitPattern')" class="mt-3">
-            <div class="fp-kit-patterns">
-              <button
-                v-for="pattern in KIT_PATTERNS"
-                :key="pattern"
-                type="button"
-                class="fp-kit-pattern"
-                :class="{ 'fp-kit-pattern--selected': model.kitPattern === pattern }"
-                :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
-                :title="t(`profile.team.kitPatterns.${pattern}`)"
-                @click="model.kitPattern = pattern"
-              >
-                <KitSwatch :pattern="pattern" :primary="model.colorPrimary" :secondary="model.colorSecondary" />
-              </button>
+          <div class="fp-kit-layout">
+            <div class="fp-kit-preview-col">
+              <div class="fp-kit-preview-card">
+                <KitPreview
+                  :pattern="model.kitPattern"
+                  :primary="model.colorPrimary"
+                  :secondary="model.colorSecondary"
+                  :shorts="model.shortsColor"
+                  :size="130"
+                />
+              </div>
+              <div class="fp-kit-preview-caption">{{ t('profile.team.kitPreviewCaption') }}</div>
             </div>
-          </FlatField>
+
+            <div class="fp-kit-controls">
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.shirtColorsGroup') }}</div>
+                <div class="fp-kit-swatch-row">
+                  <button
+                    type="button"
+                    class="fp-kit-swatch-slot"
+                    :class="{ 'fp-kit-swatch-slot--active': kitColorSlot === 'primary' }"
+                    @click="kitColorSlot = 'primary'"
+                  >
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.colorPrimary }" />
+                    {{ t('profile.team.colorPrimary') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="fp-kit-swatch-slot"
+                    :class="{ 'fp-kit-swatch-slot--active': kitColorSlot === 'secondary' }"
+                    @click="kitColorSlot = 'secondary'"
+                  >
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.colorSecondary }" />
+                    {{ t('profile.team.colorSecondary') }}
+                  </button>
+                </div>
+                <div class="fp-kit-palette">
+                  <div class="fp-kit-palette-row">
+                    <button
+                      v-for="c in KIT_COLOR_PALETTE"
+                      :key="c.value"
+                      type="button"
+                      class="fp-kit-palette-swatch"
+                      :style="{ background: c.value }"
+                      :disabled="
+                        (kitColorSlot === 'primary' ? model.colorSecondary : model.colorPrimary).toLowerCase() ===
+                        c.value.toLowerCase()
+                      "
+                      :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
+                      :title="t(`profile.team.colorNames.${c.labelKey}`)"
+                      @click="pickKitColor(c.value)"
+                    />
+                  </div>
+                </div>
+                <span v-if="errors.colorPrimary || errors.colorSecondary" class="fp-error">
+                  {{ errors.colorPrimary || errors.colorSecondary }}
+                </span>
+              </div>
+
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.kitPattern') }}</div>
+                <div class="fp-kit-patterns">
+                  <button
+                    v-for="pattern in KIT_PATTERNS"
+                    :key="pattern"
+                    type="button"
+                    class="fp-kit-pattern"
+                    :class="{ 'fp-kit-pattern--selected': model.kitPattern === pattern }"
+                    :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
+                    :title="t(`profile.team.kitPatterns.${pattern}`)"
+                    @click="model.kitPattern = pattern"
+                  >
+                    <KitSwatch :pattern="pattern" :primary="model.colorPrimary" :secondary="model.colorSecondary" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.shortsColor') }}</div>
+                <div class="fp-kit-section-hint">{{ t('profile.team.shortsColorHint') }}</div>
+                <div class="fp-kit-swatch-row">
+                  <span class="fp-kit-swatch-slot fp-kit-swatch-slot--single">
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.shortsColor }" />
+                    {{ t('profile.team.shortsColor') }}
+                  </span>
+                </div>
+                <div class="fp-kit-palette">
+                  <div class="fp-kit-palette-row">
+                    <button
+                      v-for="c in KIT_COLOR_PALETTE"
+                      :key="c.value"
+                      type="button"
+                      class="fp-kit-palette-swatch"
+                      :style="{ background: c.value }"
+                      :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
+                      :title="t(`profile.team.colorNames.${c.labelKey}`)"
+                      @click="model.shortsColor = c.value"
+                    />
+                  </div>
+                </div>
+                <span v-if="errors.shortsColor" class="fp-error">{{ errors.shortsColor }}</span>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- Step 5: 2ª equipación -->
         <template v-else-if="step === 5">
-          <v-row dense>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorPrimary')" :error="errors.alternateColorPrimary">
-                <ColorSelect
-                  v-model="model.alternateColorPrimary"
-                  :exclude-value="model.alternateColorSecondary"
-                  :disabled="model.noSecondKit"
-                />
-              </FlatField>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorSecondary')" :error="errors.alternateColorSecondary">
-                <ColorSelect
-                  v-model="model.alternateColorSecondary"
-                  :exclude-value="model.alternateColorPrimary"
-                  :disabled="model.noSecondKit"
-                />
-              </FlatField>
-            </v-col>
-          </v-row>
-
-          <FlatField :label="t('profile.team.kitPattern')" class="mt-3">
-            <div class="fp-kit-patterns" :class="{ 'fp-kit-patterns--disabled': model.noSecondKit }">
+          <div class="fp-kit-toggle-row">
+            <div>
+              <div class="fp-kit-toggle-title">{{ t('profile.team.hasSecondKitQuestion') }}</div>
+              <div class="fp-kit-toggle-hint">{{ t('profile.team.hasSecondKitHint') }}</div>
+            </div>
+            <div class="fp-kit-toggle-pill">
               <button
-                v-for="pattern in KIT_PATTERNS"
-                :key="pattern"
                 type="button"
-                class="fp-kit-pattern"
-                :class="{ 'fp-kit-pattern--selected': model.alternateKitPattern === pattern }"
-                :disabled="model.noSecondKit"
-                :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
-                :title="t(`profile.team.kitPatterns.${pattern}`)"
-                @click="model.alternateKitPattern = pattern"
+                :class="{ 'fp-kit-toggle-pill--active': !model.noSecondKit }"
+                @click="model.noSecondKit = false"
               >
-                <KitSwatch :pattern="pattern" :primary="model.alternateColorPrimary" :secondary="model.alternateColorSecondary" />
+                {{ t('profile.team.yes') }}
+              </button>
+              <button
+                type="button"
+                :class="{ 'fp-kit-toggle-pill--active': model.noSecondKit }"
+                @click="model.noSecondKit = true"
+              >
+                {{ t('profile.team.no') }}
               </button>
             </div>
-          </FlatField>
+          </div>
 
-          <v-checkbox
-            v-model="model.noSecondKit"
-            :label="t('profile.team.noSecondKit')"
-            color="primary"
-            density="comfortable"
-            hide-details
-            class="mt-3"
-          />
+          <div v-if="!model.noSecondKit" class="fp-kit-layout">
+            <div class="fp-kit-preview-col">
+              <div class="fp-kit-preview-card">
+                <KitPreview
+                  :pattern="model.alternateKitPattern"
+                  :primary="model.alternateColorPrimary"
+                  :secondary="model.alternateColorSecondary"
+                  :shorts="model.alternateShortsColor"
+                  :size="130"
+                />
+              </div>
+              <div class="fp-kit-preview-caption">{{ t('profile.team.kitPreviewCaption') }}</div>
+            </div>
+
+            <div class="fp-kit-controls">
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.shirtColorsGroup') }}</div>
+                <div class="fp-kit-swatch-row">
+                  <button
+                    type="button"
+                    class="fp-kit-swatch-slot"
+                    :class="{ 'fp-kit-swatch-slot--active': alternateKitColorSlot === 'primary' }"
+                    @click="alternateKitColorSlot = 'primary'"
+                  >
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.alternateColorPrimary }" />
+                    {{ t('profile.team.colorPrimary') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="fp-kit-swatch-slot"
+                    :class="{ 'fp-kit-swatch-slot--active': alternateKitColorSlot === 'secondary' }"
+                    @click="alternateKitColorSlot = 'secondary'"
+                  >
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.alternateColorSecondary }" />
+                    {{ t('profile.team.colorSecondary') }}
+                  </button>
+                </div>
+                <div class="fp-kit-palette">
+                  <div class="fp-kit-palette-row">
+                    <button
+                      v-for="c in KIT_COLOR_PALETTE"
+                      :key="c.value"
+                      type="button"
+                      class="fp-kit-palette-swatch"
+                      :style="{ background: c.value }"
+                      :disabled="
+                        (alternateKitColorSlot === 'primary'
+                          ? model.alternateColorSecondary
+                          : model.alternateColorPrimary
+                        ).toLowerCase() === c.value.toLowerCase()
+                      "
+                      :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
+                      :title="t(`profile.team.colorNames.${c.labelKey}`)"
+                      @click="pickAlternateKitColor(c.value)"
+                    />
+                  </div>
+                </div>
+                <span v-if="errors.alternateColorPrimary || errors.alternateColorSecondary" class="fp-error">
+                  {{ errors.alternateColorPrimary || errors.alternateColorSecondary }}
+                </span>
+              </div>
+
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.kitPattern') }}</div>
+                <div class="fp-kit-patterns">
+                  <button
+                    v-for="pattern in KIT_PATTERNS"
+                    :key="pattern"
+                    type="button"
+                    class="fp-kit-pattern"
+                    :class="{ 'fp-kit-pattern--selected': model.alternateKitPattern === pattern }"
+                    :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
+                    :title="t(`profile.team.kitPatterns.${pattern}`)"
+                    @click="model.alternateKitPattern = pattern"
+                  >
+                    <KitSwatch
+                      :pattern="pattern"
+                      :primary="model.alternateColorPrimary"
+                      :secondary="model.alternateColorSecondary"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="fp-kit-section-title">{{ t('profile.team.shortsColor') }}</div>
+                <div class="fp-kit-section-hint">{{ t('profile.team.shortsColorHint') }}</div>
+                <div class="fp-kit-swatch-row">
+                  <span class="fp-kit-swatch-slot fp-kit-swatch-slot--single">
+                    <span class="fp-kit-swatch-dot" :style="{ background: model.alternateShortsColor }" />
+                    {{ t('profile.team.shortsColor') }}
+                  </span>
+                </div>
+                <div class="fp-kit-palette">
+                  <div class="fp-kit-palette-row">
+                    <button
+                      v-for="c in KIT_COLOR_PALETTE"
+                      :key="c.value"
+                      type="button"
+                      class="fp-kit-palette-swatch"
+                      :style="{ background: c.value }"
+                      :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
+                      :title="t(`profile.team.colorNames.${c.labelKey}`)"
+                      @click="model.alternateShortsColor = c.value"
+                    />
+                  </div>
+                </div>
+                <span v-if="errors.alternateShortsColor" class="fp-error">{{ errors.alternateShortsColor }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="fp-kit-empty">
+            <div class="fp-kit-empty-icon">
+              <KitSwatch pattern="Plain" primary="#cbd5e1" secondary="#cbd5e1" :size="34" />
+            </div>
+            <div class="fp-kit-empty-title">{{ t('profile.team.noSecondKitTitle') }}</div>
+            <div class="fp-kit-empty-text">{{ t('profile.team.noSecondKitHint') }}</div>
+          </div>
         </template>
 
         <!-- Step 6: Contacto -->
@@ -645,11 +846,204 @@ function goNext() {
   border-radius: 6px;
 }
 
-.fp-kit-patterns--disabled .fp-kit-pattern {
-  opacity: 0.5;
+.fp-kit-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.fp-kit-preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fp-kit-preview-card {
+  min-height: 220px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  background: radial-gradient(circle at 50% 18%, rgb(var(--v-theme-surface)) 0%, rgb(var(--v-theme-background)) 74%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.fp-kit-preview-caption {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.fp-kit-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.fp-kit-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(var(--v-theme-on-surface));
+  margin-bottom: 10px;
+}
+
+.fp-kit-section-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: -6px;
+  margin-bottom: 10px;
+}
+
+.fp-kit-swatch-row {
+  display: flex;
+  gap: 10px;
+}
+
+.fp-kit-swatch-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: rgb(var(--v-theme-surface));
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.fp-kit-swatch-slot--single {
+  cursor: default;
+  width: 100%;
+}
+
+.fp-kit-swatch-slot--active {
+  border-color: rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.08);
+}
+
+.fp-kit-swatch-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  box-shadow: inset 0 0 0 3px rgb(var(--v-theme-surface));
+  flex-shrink: 0;
+}
+
+.fp-kit-palette {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-background));
+  border: 1px solid #e2e8f0;
+}
+
+.fp-kit-palette-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fp-kit-palette-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+
+.fp-kit-palette-swatch:disabled {
+  opacity: 0.25;
   cursor: not-allowed;
 }
-.fp-kit-patterns--disabled .fp-kit-pattern:hover {
-  border-color: #e2e8f0;
+
+.fp-kit-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgb(var(--v-theme-background));
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.fp-kit-toggle-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.fp-kit-toggle-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.fp-kit-toggle-pill {
+  display: flex;
+  gap: 4px;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.fp-kit-toggle-pill button {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fp-kit-toggle-pill button.fp-kit-toggle-pill--active {
+  background: rgb(var(--v-theme-primary));
+  color: #fff;
+}
+
+.fp-kit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.fp-kit-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgb(var(--v-theme-background));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fp-kit-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgb(var(--v-theme-on-surface));
+  max-width: 340px;
+}
+
+.fp-kit-empty-text {
+  font-size: 12px;
+  color: #64748b;
+  max-width: 320px;
 }
 </style>
