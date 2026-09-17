@@ -16,13 +16,13 @@ import {
   mdiSwordCross,
   mdiTagOutline,
   mdiTrophyOutline,
-  mdiTshirtCrew,
   mdiWeb,
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
@@ -80,14 +80,30 @@ const hasVenue = computed(
   () => !!team.value && (team.value.venueName || team.value.venueAddress || team.value.venueSurface),
 )
 
-const hasKit = computed(() => !!team.value && !!(team.value.colorPrimary || team.value.colorSecondary))
+const firstKit = computed(() => {
+  const t = team.value
+  if (!t?.colorPrimary || !t.colorSecondary || !t.kitPattern || !t.shortsColor) return null
+  return { pattern: t.kitPattern, primary: t.colorPrimary, secondary: t.colorSecondary, shorts: t.shortsColor }
+})
+
+const secondKit = computed(() => {
+  const t = team.value
+  if (!t?.alternateColorPrimary || !t.alternateColorSecondary || !t.alternateKitPattern || !t.alternateShortsColor) {
+    return null
+  }
+  return {
+    pattern: t.alternateKitPattern,
+    primary: t.alternateColorPrimary,
+    secondary: t.alternateColorSecondary,
+    shorts: t.alternateShortsColor,
+  }
+})
+
+const hasKit = computed(() => !!firstKit.value || !!secondKit.value)
 
 const hasContact = computed(
   () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
 )
-
-const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
-const isHexColor = (value: string) => HEX_COLOR.test(value.trim())
 
 function challengeTeam() {
   // TODO: wire up the team-vs-team challenge flow.
@@ -205,18 +221,26 @@ function challengeTeam() {
             </h2>
 
             <div v-if="hasKit" class="team-sheet-kit">
-              <span v-if="team.colorPrimary" class="team-sheet-kit-item">
-                <svg v-if="isHexColor(team.colorPrimary)" width="48" height="48" viewBox="0 0 24 24" class="team-sheet-jersey">
-                  <path :d="mdiTshirtCrew" :fill="team.colorPrimary" />
-                </svg>
-                <span class="team-sheet-kit-label">{{ t('profile.team.colorPrimary') }}</span>
-              </span>
-              <span v-if="team.colorSecondary" class="team-sheet-kit-item">
-                <svg v-if="isHexColor(team.colorSecondary)" width="48" height="48" viewBox="0 0 24 24" class="team-sheet-jersey">
-                  <path :d="mdiTshirtCrew" :fill="team.colorSecondary" />
-                </svg>
-                <span class="team-sheet-kit-label">{{ t('profile.team.colorSecondary') }}</span>
-              </span>
+              <div v-if="firstKit" class="team-sheet-kit-item">
+                <KitPreview
+                  :pattern="firstKit.pattern"
+                  :primary="firstKit.primary"
+                  :secondary="firstKit.secondary"
+                  :shorts="firstKit.shorts"
+                  :size="96"
+                />
+                <span class="team-sheet-kit-label">{{ t('profile.team.wizard.stepKit') }}</span>
+              </div>
+              <div v-if="secondKit" class="team-sheet-kit-item">
+                <KitPreview
+                  :pattern="secondKit.pattern"
+                  :primary="secondKit.primary"
+                  :secondary="secondKit.secondary"
+                  :shorts="secondKit.shorts"
+                  :size="96"
+                />
+                <span class="team-sheet-kit-label">{{ t('profile.team.wizard.stepKitSecondary') }}</span>
+              </div>
             </div>
             <p v-else class="text-body-2 text-medium-emphasis">
               {{ t('teams.detail.noProfile') }}
@@ -402,8 +426,9 @@ function challengeTeam() {
 
 .team-sheet-kit-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .team-sheet-kit-label {
@@ -411,14 +436,6 @@ function challengeTeam() {
   font-size: 1rem;
   font-weight: 600;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-}
-
-/* A thin outline on the jersey shape itself, so a near-white kit colour
-   still reads as a jersey instead of disappearing into the white card. */
-.team-sheet-jersey path {
-  stroke: rgba(var(--v-border-color), var(--v-border-opacity));
-  stroke-width: 0.75;
-  stroke-linejoin: round;
 }
 
 .team-sheet-head {

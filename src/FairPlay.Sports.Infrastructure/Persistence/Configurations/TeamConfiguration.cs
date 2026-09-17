@@ -87,6 +87,11 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(team => team.CreatedAt).IsRequired();
         builder.Property(team => team.Active).IsRequired();
 
-        builder.HasIndex(team => team.Name).IsUnique();
+        // A club can field the same name across different classifications (e.g. a "Real Madrid"
+        // in Juveniles and another in Cadetes); within one classification, teams sharing a name
+        // tell themselves apart with a suffix (Real Madrid A / B), so the uniqueness is scoped
+        // to the (name, type, division, category) tuple rather than the name alone. EF Core can't
+        // express an index over a complex type's members through this fluent config, so the
+        // unique index itself is hand-added straight onto the columns in its migration.
     }
 }

@@ -163,6 +163,21 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task Commit_withDuplicateName_inADifferentClassification_isAllowed()
+    {
+        await SeedAsync(TeamMother.DomainTeam(
+            name: "Dupe FC", type: FootballType.Futsal, division: Division.First, category: AgeCategory.Juveniles));
+
+        await using var context = NewContext();
+        var repository = new EfTeamRepository(context);
+        var unitOfWork = new UnitOfWork(context);
+        await repository.AddAsync(TeamMother.DomainTeam(
+            name: "Dupe FC", type: FootballType.Football11, division: Division.First, category: AgeCategory.Juveniles));
+
+        Assert.That(async () => await unitOfWork.SaveChangesAsync(), Throws.Nothing);
+    }
+
+    [Test]
     public async Task Commit_withNameOverMaxLength_throwsDbUpdateException()
     {
         await using var context = NewContext();
@@ -422,14 +437,52 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     }
 
     [Test]
-    public async Task ExistsByNameAsync_reflectsWhetherRowExists()
+    public async Task ExistsByNameAsync_reflectsWhetherRowExists_withinTheSameClassification()
     {
         await SeedAsync(TeamMother.DomainTeam(name: "Known FC"));
 
         await using var context = NewContext();
         var repository = new EfTeamRepository(context);
 
-        Assert.That(await repository.ExistsByNameAsync("Known FC"), Is.True);
-        Assert.That(await repository.ExistsByNameAsync("Unknown FC"), Is.False);
+        await Assert.MultipleAsync(async () =>
+        {
+            Assert.That(
+                await repository.ExistsByNameAsync(
+                    "Known FC", TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory),
+                Is.True);
+            Assert.That(
+                await repository.ExistsByNameAsync(
+                    "Unknown FC", TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory),
+                Is.False);
+        });
+    }
+
+    [Test]
+    public async Task ExistsByNameAsync_isFalse_whenTheSameNameIsInADifferentClassification()
+    {
+        await SeedAsync(TeamMother.DomainTeam(
+            name: "Known FC", type: FootballType.Futsal, division: Division.First, category: AgeCategory.Juveniles));
+
+        await using var context = NewContext();
+        var repository = new EfTeamRepository(context);
+
+        Assert.That(
+            await repository.ExistsByNameAsync("Known FC", FootballType.Football11, Division.First, AgeCategory.Juveniles),
+            Is.False);
+    }
+
+    [Test]
+    public async Task ExistsByNameAsync_excludesTheGivenTeamId()
+    {
+        var team = TeamMother.DomainTeam(name: "Known FC");
+        await SeedAsync(team);
+
+        await using var context = NewContext();
+        var repository = new EfTeamRepository(context);
+
+        Assert.That(
+            await repository.ExistsByNameAsync(
+                "Known FC", TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory, team.Id),
+            Is.False);
     }
 }

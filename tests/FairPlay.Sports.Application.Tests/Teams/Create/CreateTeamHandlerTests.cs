@@ -28,7 +28,9 @@ public class CreateTeamHandlerTests
     [Test]
     public async Task Handle_WhenNameTaken_ReturnsFailure_AndDoesNotPersist()
     {
-        _repository.ExistsByNameAsync(TeamMother.Name, Arg.Any<CancellationToken>()).Returns(true);
+        _repository.ExistsByNameAsync(
+            TeamMother.Name, TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory,
+            Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var result = await _handler.Handle(TeamMother.Command(), CancellationToken.None);
 
@@ -44,7 +46,7 @@ public class CreateTeamHandlerTests
     [Test]
     public async Task Handle_WhenNameFree_PersistsTeam_AndReturnsDto()
     {
-        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
 
         var result = await _handler.Handle(TeamMother.Command(), CancellationToken.None);
 
@@ -81,17 +83,19 @@ public class CreateTeamHandlerTests
     [Test]
     public async Task Handle_ChecksNameUniquenessBeforePersisting()
     {
-        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
 
         await _handler.Handle(TeamMother.Command(), CancellationToken.None);
 
-        await _repository.Received(1).ExistsByNameAsync(TeamMother.Name, Arg.Any<CancellationToken>());
+        await _repository.Received(1).ExistsByNameAsync(
+            TeamMother.Name, TeamMother.DefaultType, TeamMother.DefaultDivision, TeamMother.DefaultCategory,
+            Arg.Any<Guid?>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
     public async Task Handle_WithProfileFields_MapsThemOntoTheAggregateAndDto()
     {
-        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
         Team? persisted = null;
         await _repository.AddAsync(Arg.Do<Team>(t => persisted = t), Arg.Any<CancellationToken>());
 

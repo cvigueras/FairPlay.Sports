@@ -69,8 +69,20 @@ internal sealed class EfTeamRepository : ITeamRepository
     public Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams.AnyAsync(team => team.Id == id, cancellationToken);
 
-    public Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default) =>
-        _context.Teams.AnyAsync(team => team.Name == name, cancellationToken);
+    public Task<bool> ExistsByNameAsync(
+        string name,
+        FootballType type,
+        Division division,
+        AgeCategory category,
+        Guid? excludeTeamId = null,
+        CancellationToken cancellationToken = default) =>
+        _context.Teams.AnyAsync(team =>
+            team.Name == name &&
+            team.Classification.Type == type &&
+            team.Classification.Division == division &&
+            team.Classification.Category == category &&
+            team.Id != excludeTeamId,
+            cancellationToken);
 
     public Task<TeamCrest?> GetCrestAsync(Guid id, CancellationToken cancellationToken = default) =>
         _context.Teams

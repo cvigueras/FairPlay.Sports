@@ -15,10 +15,9 @@ public sealed class UpdateTeamHandler(ITeamRepository repository) : IRequestHand
             return Result<TeamDto>.NotFound($"Team '{request.Id}' was not found.");
 
         var name = request.Name.Trim();
-        if (!string.Equals(name, team.Name, StringComparison.Ordinal) &&
-            await _repository.ExistsByNameAsync(name, cancellationToken))
+        if (await _repository.ExistsByNameAsync(name, request.Type, request.Division, request.Category, team.Id, cancellationToken))
         {
-            return Result<TeamDto>.Failure($"Team '{name}' already exists.");
+            return Result<TeamDto>.Failure($"A team named '{name}' already exists in this modality, division and category.");
         }
 
         team.Update(
