@@ -51,6 +51,11 @@ const checkerCells = computed(() => {
         <rect v-for="i in [0, 1, 2]" :key="i" x="0" :y="11.5 + i * 3.6" width="24" height="2" :fill="secondary" />
       </template>
 
+      <template v-else-if="pattern === 'FullHoops'">
+        <!-- Same idea as Hoops but spans collar to hem, no solid band on top. -->
+        <rect v-for="i in [0, 1, 2, 3, 4]" :key="i" x="0" :y="3 + i * 3.6" width="24" height="2" :fill="secondary" />
+      </template>
+
       <template v-else-if="pattern === 'Halves'">
         <rect x="12" y="0" width="12" height="24" :fill="secondary" />
       </template>

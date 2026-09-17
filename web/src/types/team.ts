@@ -13,7 +13,16 @@ export type AgeCategory =
 export type PitchSurface = 'NaturalGrass' | 'ArtificialTurf' | 'Hybrid' | 'Earth' | 'Indoor'
 
 /** How the kit's two colours are laid out on the shirt. */
-export type KitPattern = 'Plain' | 'Stripes' | 'Hoops' | 'Halves' | 'Sash' | 'Checkered' | 'Sleeves' | 'Fade'
+export type KitPattern =
+  | 'Plain'
+  | 'Stripes'
+  | 'Hoops'
+  | 'FullHoops'
+  | 'Halves'
+  | 'Sash'
+  | 'Checkered'
+  | 'Sleeves'
+  | 'Fade'
 
 /** The capacity a user takes part in a team as, chosen when founding/joining it. */
 export type TeamMemberRole = 'Delegate' | 'Coach' | 'President' | 'TechnicalStaff' | 'Player'
@@ -102,6 +111,7 @@ export const KIT_PATTERNS: KitPattern[] = [
   'Plain',
   'Stripes',
   'Hoops',
+  'FullHoops',
   'Halves',
   'Sash',
   'Checkered',

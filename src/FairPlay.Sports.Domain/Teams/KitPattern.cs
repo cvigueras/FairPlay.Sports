@@ -15,8 +15,11 @@ public enum KitPattern
     /// <summary>Vertical stripes.</summary>
     Stripes,
 
-    /// <summary>Horizontal stripes ("hoops").</summary>
+    /// <summary>Horizontal stripes ("hoops") confined to the torso.</summary>
     Hoops,
+
+    /// <summary>Horizontal stripes covering the whole shirt, collar to hem.</summary>
+    FullHoops,
 
     /// <summary>Left/right halves in each colour.</summary>
     Halves,
