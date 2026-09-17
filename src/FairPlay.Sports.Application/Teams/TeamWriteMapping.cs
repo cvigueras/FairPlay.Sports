@@ -18,6 +18,7 @@ internal static class TeamWriteMapping
             FoundedYear: fields.FoundedYear,
             HomeVenue: BuildVenue(fields),
             Colors: BuildColors(fields),
+            AlternateColors: BuildAlternateColors(fields),
             ContactEmail: fields.ContactEmail,
             ContactPhone: fields.ContactPhone,
             Website: fields.Website);
@@ -41,9 +42,28 @@ internal static class TeamWriteMapping
 
     private static KitColors? BuildColors(ITeamWriteFields fields)
     {
-        if (string.IsNullOrWhiteSpace(fields.ColorPrimary) && string.IsNullOrWhiteSpace(fields.ColorSecondary))
+        if (string.IsNullOrWhiteSpace(fields.ColorPrimary) &&
+            string.IsNullOrWhiteSpace(fields.ColorSecondary) &&
+            string.IsNullOrWhiteSpace(fields.ShortsColor) &&
+            fields.KitPattern is null or KitPattern.Default)
+        {
             return null;
+        }
 
-        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!);
+        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!, fields.ShortsColor!, fields.KitPattern!.Value);
+    }
+
+    private static KitColors? BuildAlternateColors(ITeamWriteFields fields)
+    {
+        if (string.IsNullOrWhiteSpace(fields.AlternateColorPrimary) &&
+            string.IsNullOrWhiteSpace(fields.AlternateColorSecondary) &&
+            string.IsNullOrWhiteSpace(fields.AlternateShortsColor) &&
+            fields.AlternateKitPattern is null or KitPattern.Default)
+        {
+            return null;
+        }
+
+        return new KitColors(
+            fields.AlternateColorPrimary!, fields.AlternateColorSecondary!, fields.AlternateShortsColor!, fields.AlternateKitPattern!.Value);
     }
 }

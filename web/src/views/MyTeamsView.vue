@@ -15,7 +15,6 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
-import TeamForm from '@/components/TeamForm.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
@@ -55,11 +54,14 @@ const joinableTeams = computed(() =>
 )
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 
-/** Each membership paired with its resolved `Team`, once fetched. */
+/** Each membership paired with its resolved `Team`, once fetched. Newest
+ *  membership first, so a just-created (and just-joined) team lands at the
+ *  top of the list rather than wherever the backend happens to return it. */
 const myTeamCards = computed(() =>
   myTeams.value
     .map((membership) => ({ membership, team: teamDetails.value[membership.teamId] }))
-    .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team),
+    .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team)
+    .sort((a, b) => new Date(b.membership.createdAt).getTime() - new Date(a.membership.createdAt).getTime()),
 )
 
 async function loadMyTeamDetails() {
@@ -161,13 +163,16 @@ function openEdit(teamId: string) {
   editingTeamId.value = teamId
 }
 
-async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: File | null }) {
+async function handleUpdate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
   if (!editingTeam.value) return
   savingEdit.value = true
   try {
     const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
-    teamDetails.value = { ...teamDetails.value, [updated.id]: updated }
-    teams.value = teams.value.map((tm) => (tm.id === updated.id ? updated : tm))
+    if (crest) await teamsApi.uploadCrest(updated.id, crest, auth.accessToken)
+
+    const withCrest = crest ? { ...updated, hasCrest: true } : updated
+    teamDetails.value = { ...teamDetails.value, [withCrest.id]: withCrest }
+    teams.value = teams.value.map((tm) => (tm.id === withCrest.id ? withCrest : tm))
     editingTeamId.value = null
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
@@ -372,18 +377,15 @@ async function confirmLeave() {
     <!-- Create a new team -->
     <TeamWizard v-model="wizardOpen" :loading="creatingTeam" @submit="handleCreate" />
 
-    <!-- Edit a team -->
-    <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
-      <v-card v-if="editingTeam" class="fp-card fp-modal-card pa-6">
-        <h2 class="fp-confirm-title" style="margin-bottom: 16px">{{ t('profile.team.editTitle') }}</h2>
-        <TeamForm
-          :initial="editingTeam"
-          :submit-label="t('profile.team.saveChanges')"
-          :loading="savingEdit"
-          @submit="handleUpdate"
-        />
-      </v-card>
-    </v-dialog>
+    <!-- Edit a team: the same wizard as creation, pre-filled from the team
+         being edited (see TeamWizard's `initial` prop). -->
+    <TeamWizard
+      :model-value="!!editingTeam"
+      :initial="editingTeam"
+      :loading="savingEdit"
+      @update:model-value="(open) => { if (!open) editingTeamId = null }"
+      @update="handleUpdate"
+    />
 
     <!-- Confirm leaving a team -->
     <v-dialog :model-value="!!leavingTeam" max-width="400" @update:model-value="leavingTeam = null">

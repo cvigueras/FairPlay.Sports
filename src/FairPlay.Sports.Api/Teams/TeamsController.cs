@@ -78,9 +78,15 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.VenueMapsUrl,
             request.ColorPrimary,
             request.ColorSecondary,
+            request.KitPattern,
             request.ContactEmail,
             request.ContactPhone,
-            request.Website);
+            request.Website,
+            request.AlternateColorPrimary,
+            request.AlternateColorSecondary,
+            request.AlternateKitPattern,
+            request.ShortsColor,
+            request.AlternateShortsColor);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
@@ -116,9 +122,15 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.VenueMapsUrl,
             request.ColorPrimary,
             request.ColorSecondary,
+            request.KitPattern,
             request.ContactEmail,
             request.ContactPhone,
-            request.Website);
+            request.Website,
+            request.AlternateColorPrimary,
+            request.AlternateColorSecondary,
+            request.AlternateKitPattern,
+            request.ShortsColor,
+            request.AlternateShortsColor);
 
         var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);

@@ -35,3 +35,43 @@ h6,
 .profile-container {
   max-width: 1120px;
 }
+
+/* App-wide scrollbar: slate-300, the same neutral already used for borders
+   and chips across the app (see flat-form.css, TeamsView, StandingsView),
+   so it reads as part of the UI instead of a clashing accent. Applies
+   everywhere scroll can appear; per-view rules (.teams-list, .standings-list)
+   match this color rather than defining their own. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Vuetify's own v-select/v-autocomplete (TeamsView/StandingsView filters,
+   the "join a team" picker in MyTeamsView) don't go through flat-form.css -
+   their outlined box and dropdown arrow default to Vuetify's Material gray,
+   so they're pinned to the same slate-300 as the scrollbar and the
+   .fp-select boxes here instead. :not(.v-field--error) leaves the
+   error-state red border alone. */
+.v-select .v-field--variant-outlined:not(.v-field--error) .v-field__outline,
+.v-autocomplete .v-field--variant-outlined:not(.v-field--error) .v-field__outline {
+  color: #cbd5e1;
+}
+
+.v-select__menu-icon,
+.v-autocomplete__menu-icon {
+  color: #cbd5e1;
+}

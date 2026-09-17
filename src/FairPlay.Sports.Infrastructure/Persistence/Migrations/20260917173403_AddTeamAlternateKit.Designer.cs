@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FairPlay.Sports.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FairPlaySportsDbContext))]
-    partial class FairPlaySportsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260917173403_AddTeamAlternateKit")]
+    partial class AddTeamAlternateKit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -314,12 +317,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("AlternateColorSecondary");
 
-                            b1.Property<string>("ShortsColor")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("AlternateShortsColor");
-
                             b1.HasKey("TeamId");
 
                             b1.ToTable("Teams");
@@ -350,12 +347,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                                 .HasMaxLength(50)
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("ColorSecondary");
-
-                            b1.Property<string>("ShortsColor")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("ShortsColor");
 
                             b1.HasKey("TeamId");
 

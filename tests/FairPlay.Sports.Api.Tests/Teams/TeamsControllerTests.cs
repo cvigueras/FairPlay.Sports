@@ -186,9 +186,15 @@ public class TeamsControllerTests
                 command.VenueMapsUrl == request.VenueMapsUrl &&
                 command.ColorPrimary == request.ColorPrimary &&
                 command.ColorSecondary == request.ColorSecondary &&
+                command.ShortsColor == request.ShortsColor &&
+                command.KitPattern == request.KitPattern &&
                 command.ContactEmail == request.ContactEmail &&
                 command.ContactPhone == request.ContactPhone &&
-                command.Website == request.Website),
+                command.Website == request.Website &&
+                command.AlternateColorPrimary == request.AlternateColorPrimary &&
+                command.AlternateColorSecondary == request.AlternateColorSecondary &&
+                command.AlternateShortsColor == request.AlternateShortsColor &&
+                command.AlternateKitPattern == request.AlternateKitPattern),
             Arg.Any<CancellationToken>());
     }
 
@@ -213,7 +219,12 @@ public class TeamsControllerTests
                 command.Coach == request.Coach &&
                 command.VenueSurface == request.VenueSurface &&
                 command.VenueMapsUrl == request.VenueMapsUrl &&
-                command.ColorPrimary == request.ColorPrimary),
+                command.ColorPrimary == request.ColorPrimary &&
+                command.ShortsColor == request.ShortsColor &&
+                command.KitPattern == request.KitPattern &&
+                command.AlternateColorPrimary == request.AlternateColorPrimary &&
+                command.AlternateShortsColor == request.AlternateShortsColor &&
+                command.AlternateKitPattern == request.AlternateKitPattern),
             Arg.Any<CancellationToken>());
     }
 

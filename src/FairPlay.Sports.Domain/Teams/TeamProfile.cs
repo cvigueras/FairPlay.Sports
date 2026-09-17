@@ -13,6 +13,7 @@ public sealed record TeamProfile(
     int? FoundedYear = null,
     Venue? HomeVenue = null,
     KitColors? Colors = null,
+    KitColors? AlternateColors = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
     string? Website = null)

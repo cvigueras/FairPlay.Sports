@@ -12,6 +12,18 @@ export type AgeCategory =
   | 'Veteranos'
 export type PitchSurface = 'NaturalGrass' | 'ArtificialTurf' | 'Hybrid' | 'Earth' | 'Indoor'
 
+/** How the kit's two colours are laid out on the shirt. */
+export type KitPattern =
+  | 'Plain'
+  | 'Stripes'
+  | 'Hoops'
+  | 'FullHoops'
+  | 'Halves'
+  | 'Sash'
+  | 'Checkered'
+  | 'Sleeves'
+  | 'Fade'
+
 /** The capacity a user takes part in a team as, chosen when founding/joining it. */
 export type TeamMemberRole = 'Delegate' | 'Coach' | 'President' | 'TechnicalStaff' | 'Player'
 
@@ -43,6 +55,12 @@ export interface TeamProfileFields {
   venueMapsUrl?: string | null
   colorPrimary?: string | null
   colorSecondary?: string | null
+  shortsColor?: string | null
+  kitPattern?: KitPattern | null
+  alternateColorPrimary?: string | null
+  alternateColorSecondary?: string | null
+  alternateShortsColor?: string | null
+  alternateKitPattern?: KitPattern | null
   contactEmail?: string | null
   contactPhone?: string | null
   website?: string | null
@@ -93,4 +111,15 @@ export const PITCH_SURFACES: PitchSurface[] = [
   'Hybrid',
   'Earth',
   'Indoor',
+]
+export const KIT_PATTERNS: KitPattern[] = [
+  'Plain',
+  'Stripes',
+  'Hoops',
+  'FullHoops',
+  'Halves',
+  'Sash',
+  'Checkered',
+  'Sleeves',
+  'Fade',
 ]

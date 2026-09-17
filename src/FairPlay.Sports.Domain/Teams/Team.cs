@@ -24,6 +24,7 @@ public sealed class Team
     public int? FoundedYear { get; private set; }
     public Venue? HomeVenue { get; private set; }
     public KitColors? Colors { get; private set; }
+    public KitColors? AlternateColors { get; private set; }
     public string? ContactEmail { get; private set; }
     public string? ContactPhone { get; private set; }
     public string? Website { get; private set; }
@@ -110,6 +111,7 @@ public sealed class Team
         FoundedYear = ValidateFoundedYear(profile.FoundedYear);
         HomeVenue = profile.HomeVenue;
         Colors = profile.Colors;
+        AlternateColors = profile.AlternateColors;
         ContactEmail = ValidateContactEmail(profile.ContactEmail);
         ContactPhone = TrimOptional(profile.ContactPhone, MaxContactPhoneLength, "Contact phone");
         Website = ValidateWebsite(profile.Website);

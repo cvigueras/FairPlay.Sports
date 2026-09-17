@@ -43,14 +43,29 @@ internal static class TeamWriteRules
             .WithMessage("Maps link must be an absolute http(s) URL.")
             .When(x => !string.IsNullOrWhiteSpace(x.VenueMapsUrl));
 
-        // Kit colours: both or neither.
-        validator.When(
-            x => !string.IsNullOrWhiteSpace(x.ColorPrimary) || !string.IsNullOrWhiteSpace(x.ColorSecondary),
-            () =>
-            {
-                validator.RuleFor(x => x.ColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
-                validator.RuleFor(x => x.ColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
-            });
+        // Kit: filling any facet (a colour, the shorts colour, or the pattern) makes all four required.
+        validator.When(x => HasAnyKitField(x), () =>
+        {
+            validator.RuleFor(x => x.ColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.ColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.ShortsColor).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.KitPattern)
+                .NotNull()
+                .Must(pattern => pattern is not null && pattern != KitPattern.Default && Enum.IsDefined(pattern.Value))
+                .WithMessage("A valid kit pattern is required.");
+        });
+
+        // Alternate kit: same all-or-nothing rule, independent of the main kit.
+        validator.When(x => HasAnyAlternateKitField(x), () =>
+        {
+            validator.RuleFor(x => x.AlternateColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateShortsColor).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateKitPattern)
+                .NotNull()
+                .Must(pattern => pattern is not null && pattern != KitPattern.Default && Enum.IsDefined(pattern.Value))
+                .WithMessage("A valid alternate kit pattern is required.");
+        });
 
         validator.RuleFor(x => x.ContactEmail)
             .EmailAddress()
@@ -71,6 +86,18 @@ internal static class TeamWriteRules
         !string.IsNullOrWhiteSpace(x.VenueAddress) ||
         x.VenueSurface is not null and not PitchSurface.Default ||
         !string.IsNullOrWhiteSpace(x.VenueMapsUrl);
+
+    private static bool HasAnyKitField(ITeamWriteFields x) =>
+        !string.IsNullOrWhiteSpace(x.ColorPrimary) ||
+        !string.IsNullOrWhiteSpace(x.ColorSecondary) ||
+        !string.IsNullOrWhiteSpace(x.ShortsColor) ||
+        x.KitPattern is not null and not KitPattern.Default;
+
+    private static bool HasAnyAlternateKitField(ITeamWriteFields x) =>
+        !string.IsNullOrWhiteSpace(x.AlternateColorPrimary) ||
+        !string.IsNullOrWhiteSpace(x.AlternateColorSecondary) ||
+        !string.IsNullOrWhiteSpace(x.AlternateShortsColor) ||
+        x.AlternateKitPattern is not null and not KitPattern.Default;
 
     private static bool BeAbsoluteHttpUrl(string? value) =>
         string.IsNullOrWhiteSpace(value) ||

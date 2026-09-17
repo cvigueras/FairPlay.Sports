@@ -21,9 +21,15 @@ public sealed record TeamDto(
     string? VenueMapsUrl,
     string? ColorPrimary,
     string? ColorSecondary,
+    string? ShortsColor,
+    KitPattern? KitPattern,
     string? ContactEmail,
     string? ContactPhone,
-    string? Website)
+    string? Website,
+    string? AlternateColorPrimary,
+    string? AlternateColorSecondary,
+    string? AlternateShortsColor,
+    KitPattern? AlternateKitPattern)
 {
     public static TeamDto FromDomain(Team team) =>
         new(
@@ -45,7 +51,13 @@ public sealed record TeamDto(
             team.HomeVenue?.MapsUrl,
             team.Colors?.Primary,
             team.Colors?.Secondary,
+            team.Colors?.ShortsColor,
+            team.Colors?.Pattern,
             team.ContactEmail,
             team.ContactPhone,
-            team.Website);
+            team.Website,
+            team.AlternateColors?.Primary,
+            team.AlternateColors?.Secondary,
+            team.AlternateColors?.ShortsColor,
+            team.AlternateColors?.Pattern);
 }

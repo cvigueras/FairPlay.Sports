@@ -17,6 +17,12 @@ public sealed record UpdateTeamRequest(
     string? VenueMapsUrl = null,
     string? ColorPrimary = null,
     string? ColorSecondary = null,
+    KitPattern? KitPattern = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
-    string? Website = null);
+    string? Website = null,
+    string? AlternateColorPrimary = null,
+    string? AlternateColorSecondary = null,
+    KitPattern? AlternateKitPattern = null,
+    string? ShortsColor = null,
+    string? AlternateShortsColor = null);
