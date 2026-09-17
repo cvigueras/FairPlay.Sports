@@ -25,5 +25,11 @@ public enum KitPattern
     Sash,
 
     /// <summary>Checkered pattern.</summary>
-    Checkered
+    Checkered,
+
+    /// <summary>Sleeves in the secondary colour, body in the primary.</summary>
+    Sleeves,
+
+    /// <summary>Gradient fade from the primary colour into the secondary.</summary>
+    Fade
 }

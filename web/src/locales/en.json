@@ -226,7 +226,9 @@
         "Hoops": "Hoops",
         "Halves": "Halves",
         "Sash": "Sash",
-        "Checkered": "Checkered"
+        "Checkered": "Checkered",
+        "Sleeves": "Contrast sleeves",
+        "Fade": "Fade"
       },
       "enums": {
         "Football11": "11-a-side",

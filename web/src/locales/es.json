@@ -226,7 +226,9 @@
         "Hoops": "Franjas",
         "Halves": "Mitades",
         "Sash": "Banda",
-        "Checkered": "Cuadros"
+        "Checkered": "Cuadros",
+        "Sleeves": "Mangas de color",
+        "Fade": "Degradado"
       },
       "enums": {
         "Football11": "Fútbol 11",
