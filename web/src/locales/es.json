@@ -231,6 +231,22 @@
         "Sleeves": "Mangas de color",
         "Fade": "Degradado"
       },
+      "colorNames": {
+        "white": "Blanco",
+        "black": "Negro",
+        "red": "Rojo",
+        "maroon": "Granate",
+        "orange": "Naranja",
+        "yellow": "Amarillo",
+        "green": "Verde",
+        "teal": "Verde azulado",
+        "skyBlue": "Celeste",
+        "blue": "Azul",
+        "navy": "Azul marino",
+        "purple": "Morado",
+        "pink": "Rosa",
+        "grey": "Gris"
+      },
       "enums": {
         "Football11": "Fútbol 11",
         "Football8": "Fútbol 8",

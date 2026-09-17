@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
+import ColorSelect from '@/components/ColorSelect.vue'
 import FlatField from '@/components/FlatField.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
 import RolePills from '@/components/RolePills.vue'
@@ -463,18 +464,12 @@ function goNext() {
           <v-row dense>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorPrimary')">
-                <div class="fp-color-field">
-                  <input v-model="model.colorPrimary" type="color" class="color-swatch" />
-                  <span class="fp-color-hex">{{ model.colorPrimary }}</span>
-                </div>
+                <ColorSelect v-model="model.colorPrimary" />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorSecondary')">
-                <div class="fp-color-field">
-                  <input v-model="model.colorSecondary" type="color" class="color-swatch" />
-                  <span class="fp-color-hex">{{ model.colorSecondary }}</span>
-                </div>
+                <ColorSelect v-model="model.colorSecondary" />
               </FlatField>
             </v-col>
           </v-row>
@@ -487,10 +482,11 @@ function goNext() {
                 type="button"
                 class="fp-kit-pattern"
                 :class="{ 'fp-kit-pattern--selected': model.kitPattern === pattern }"
+                :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
+                :title="t(`profile.team.kitPatterns.${pattern}`)"
                 @click="model.kitPattern = pattern"
               >
                 <KitSwatch :pattern="pattern" :primary="model.colorPrimary" :secondary="model.colorSecondary" />
-                <span>{{ t(`profile.team.kitPatterns.${pattern}`) }}</span>
               </button>
             </div>
           </FlatField>
@@ -548,17 +544,6 @@ function goNext() {
 </template>
 
 <style scoped>
-.color-swatch {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  padding: 0;
-  cursor: pointer;
-  background: none;
-  flex-shrink: 0;
-}
-
 .fp-kit-patterns {
   display: flex;
   flex-wrap: wrap;
@@ -567,20 +552,15 @@ function goNext() {
 
 .fp-kit-pattern {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: 76px;
-  padding: 10px 6px;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 6px;
   border-radius: 12px;
   border: 1.5px solid #e2e8f0;
   background: rgb(var(--v-theme-surface));
   cursor: pointer;
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #475569;
-  text-align: center;
 }
 
 .fp-kit-pattern:hover {

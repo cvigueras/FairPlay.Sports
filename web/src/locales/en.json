@@ -231,6 +231,22 @@
         "Sleeves": "Contrast sleeves",
         "Fade": "Fade"
       },
+      "colorNames": {
+        "white": "White",
+        "black": "Black",
+        "red": "Red",
+        "maroon": "Maroon",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "teal": "Teal",
+        "skyBlue": "Sky blue",
+        "blue": "Blue",
+        "navy": "Navy",
+        "purple": "Purple",
+        "pink": "Pink",
+        "grey": "Grey"
+      },
       "enums": {
         "Football11": "11-a-side",
         "Football8": "8-a-side",
