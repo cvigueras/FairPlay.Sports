@@ -72,6 +72,7 @@ const model = reactive({
   alternateColorPrimary: '#0f172a',
   alternateColorSecondary: '#ffffff',
   alternateKitPattern: 'Plain' as KitPattern,
+  noSecondKit: false,
   contactEmail: '',
   contactPhone: '',
   website: '',
@@ -104,6 +105,7 @@ function resetForm() {
     alternateColorPrimary: '#0f172a',
     alternateColorSecondary: '#ffffff',
     alternateKitPattern: 'Plain',
+    noSecondKit: false,
     contactEmail: '',
     contactPhone: '',
     website: '',
@@ -136,6 +138,7 @@ function applyInitial(team: Team) {
     alternateColorPrimary: team.alternateColorPrimary || '#0f172a',
     alternateColorSecondary: team.alternateColorSecondary || '#ffffff',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
+    noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
     contactEmail: team.contactEmail ?? '',
     contactPhone: team.contactPhone ?? '',
     website: team.website ?? '',
@@ -187,11 +190,6 @@ const anyVenueField = computed(
   () =>
     !!model.venueName.trim() || !!model.venueAddress.trim() || !!model.venueSurface || !!model.venueMapsUrl.trim(),
 )
-const anyColour = computed(() => !!model.colorPrimary.trim() || !!model.colorSecondary.trim())
-const anyAlternateColour = computed(
-  () => !!model.alternateColorPrimary.trim() || !!model.alternateColorSecondary.trim(),
-)
-
 const STEP_FIELDS: Record<number, string[]> = {
   1: ['name', 'role', 'coach', 'city', 'crest'],
   2: ['foundedYear'],
@@ -226,12 +224,10 @@ function validate(): boolean {
     errors.venueMapsUrl = t('profile.team.urlInvalid')
   }
 
-  if (anyColour.value) {
-    if (!model.colorPrimary.trim()) errors.colorPrimary = required
-    if (!model.colorSecondary.trim()) errors.colorSecondary = required
-  }
+  if (!model.colorPrimary.trim()) errors.colorPrimary = required
+  if (!model.colorSecondary.trim()) errors.colorSecondary = required
 
-  if (anyAlternateColour.value) {
+  if (!model.noSecondKit) {
     if (!model.alternateColorPrimary.trim()) errors.alternateColorPrimary = required
     if (!model.alternateColorSecondary.trim()) errors.alternateColorSecondary = required
   }
@@ -290,9 +286,9 @@ function submit() {
     colorPrimary: trimmedOrUndefined(model.colorPrimary),
     colorSecondary: trimmedOrUndefined(model.colorSecondary),
     kitPattern: model.kitPattern,
-    alternateColorPrimary: trimmedOrUndefined(model.alternateColorPrimary),
-    alternateColorSecondary: trimmedOrUndefined(model.alternateColorSecondary),
-    alternateKitPattern: model.alternateKitPattern,
+    alternateColorPrimary: model.noSecondKit ? undefined : trimmedOrUndefined(model.alternateColorPrimary),
+    alternateColorSecondary: model.noSecondKit ? undefined : trimmedOrUndefined(model.alternateColorSecondary),
+    alternateKitPattern: model.noSecondKit ? undefined : model.alternateKitPattern,
     contactEmail: trimmedOrUndefined(model.contactEmail),
     contactPhone: trimmedOrUndefined(model.contactPhone),
     website: trimmedOrUndefined(model.website),
@@ -518,24 +514,33 @@ function goNext() {
           <v-row dense>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorPrimary')" :error="errors.alternateColorPrimary">
-                <ColorSelect v-model="model.alternateColorPrimary" :exclude-value="model.alternateColorSecondary" />
+                <ColorSelect
+                  v-model="model.alternateColorPrimary"
+                  :exclude-value="model.alternateColorSecondary"
+                  :disabled="model.noSecondKit"
+                />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.colorSecondary')" :error="errors.alternateColorSecondary">
-                <ColorSelect v-model="model.alternateColorSecondary" :exclude-value="model.alternateColorPrimary" />
+                <ColorSelect
+                  v-model="model.alternateColorSecondary"
+                  :exclude-value="model.alternateColorPrimary"
+                  :disabled="model.noSecondKit"
+                />
               </FlatField>
             </v-col>
           </v-row>
 
           <FlatField :label="t('profile.team.kitPattern')" class="mt-3">
-            <div class="fp-kit-patterns">
+            <div class="fp-kit-patterns" :class="{ 'fp-kit-patterns--disabled': model.noSecondKit }">
               <button
                 v-for="pattern in KIT_PATTERNS"
                 :key="pattern"
                 type="button"
                 class="fp-kit-pattern"
                 :class="{ 'fp-kit-pattern--selected': model.alternateKitPattern === pattern }"
+                :disabled="model.noSecondKit"
                 :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
                 :title="t(`profile.team.kitPatterns.${pattern}`)"
                 @click="model.alternateKitPattern = pattern"
@@ -544,6 +549,15 @@ function goNext() {
               </button>
             </div>
           </FlatField>
+
+          <v-checkbox
+            v-model="model.noSecondKit"
+            :label="t('profile.team.noSecondKit')"
+            color="primary"
+            density="comfortable"
+            hide-details
+            class="mt-3"
+          />
         </template>
 
         <!-- Step 6: Contacto -->
@@ -629,5 +643,13 @@ function goNext() {
 
 .fp-kit-pattern svg {
   border-radius: 6px;
+}
+
+.fp-kit-patterns--disabled .fp-kit-pattern {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fp-kit-patterns--disabled .fp-kit-pattern:hover {
+  border-color: #e2e8f0;
 }
 </style>

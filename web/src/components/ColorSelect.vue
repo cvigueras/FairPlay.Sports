@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { mdiChevronDown } from '@mdi/js'
 import { KIT_COLOR_PALETTE } from '@/lib/kitColors'
 
-const props = defineProps<{ modelValue: string; excludeValue?: string }>()
+const props = defineProps<{ modelValue: string; excludeValue?: string; disabled?: boolean }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 function isDisabled(value: string): boolean {
@@ -16,6 +16,7 @@ const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 
 function toggle() {
+  if (props.disabled) return
   open.value = !open.value
 }
 
@@ -33,8 +34,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
 </script>
 
 <template>
-  <div ref="root" class="fp-color-select">
-    <button type="button" class="fp-color-trigger" :aria-expanded="open" @click="toggle">
+  <div ref="root" class="fp-color-select" :class="{ 'fp-color-select--disabled': disabled }">
+    <button type="button" class="fp-color-trigger" :aria-expanded="open" :disabled="disabled" @click="toggle">
       <span class="fp-color-bar" :style="{ background: modelValue }" />
       <v-icon :icon="mdiChevronDown" size="18" />
     </button>
@@ -78,6 +79,14 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
 }
 .fp-color-trigger:hover {
   border-color: #94a3b8;
+}
+
+.fp-color-select--disabled .fp-color-trigger {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fp-color-select--disabled .fp-color-trigger:hover {
+  border-color: #cbd5e1;
 }
 
 .fp-color-bar {

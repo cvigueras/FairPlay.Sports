@@ -197,6 +197,7 @@
       "colorsGroup": "Kit colours",
       "colorPrimary": "Primary colour",
       "colorSecondary": "Secondary colour",
+      "noSecondKit": "My team doesn't have a second kit",
       "kitPattern": "Kit pattern",
       "contactGroup": "Contact",
       "contactEmail": "Email",

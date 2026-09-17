@@ -197,6 +197,7 @@
       "colorsGroup": "Equipación",
       "colorPrimary": "Color principal",
       "colorSecondary": "Color secundario",
+      "noSecondKit": "Mi equipo no tiene segunda equipación",
       "kitPattern": "Diseño de la equipación",
       "contactGroup": "Contacto",
       "contactEmail": "Email",
