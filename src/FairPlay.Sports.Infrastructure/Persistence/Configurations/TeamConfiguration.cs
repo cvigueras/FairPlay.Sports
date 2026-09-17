@@ -69,6 +69,17 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         });
         builder.Navigation(team => team.Colors).IsRequired(false);
 
+        builder.OwnsOne(team => team.AlternateColors, colors =>
+        {
+            colors.Property(c => c.Primary).HasColumnName("AlternateColorPrimary").HasMaxLength(KitColors.MaxColourLength);
+            colors.Property(c => c.Secondary).HasColumnName("AlternateColorSecondary").HasMaxLength(KitColors.MaxColourLength);
+            colors.Property(c => c.Pattern)
+                .HasColumnName("AlternateKitPattern")
+                .HasMaxLength(20)
+                .HasConversion<string>();
+        });
+        builder.Navigation(team => team.AlternateColors).IsRequired(false);
+
         // byte[] maps to PostgreSQL 'bytea' by convention - no explicit column type needed.
         builder.Property(team => team.CrestContentType).HasMaxLength(100);
         builder.Property(team => team.CreatedAt).IsRequired();

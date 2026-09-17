@@ -33,7 +33,10 @@ internal static class TeamRequestMother
             TeamMother.KitPattern,
             TeamMother.ContactEmail,
             TeamMother.ContactPhone,
-            TeamMother.Website);
+            TeamMother.Website,
+            TeamMother.AlternateColorPrimary,
+            TeamMother.AlternateColorSecondary,
+            TeamMother.AlternateKitPattern);
 
     public static UpdateTeamRequest UpdateRequest() =>
         new(
@@ -54,5 +57,8 @@ internal static class TeamRequestMother
             TeamMother.KitPattern,
             TeamMother.ContactEmail,
             TeamMother.ContactPhone,
-            TeamMother.Website);
+            TeamMother.Website,
+            TeamMother.AlternateColorPrimary,
+            TeamMother.AlternateColorSecondary,
+            TeamMother.AlternateKitPattern);
 }

@@ -18,6 +18,7 @@ internal static class TeamWriteMapping
             FoundedYear: fields.FoundedYear,
             HomeVenue: BuildVenue(fields),
             Colors: BuildColors(fields),
+            AlternateColors: BuildAlternateColors(fields),
             ContactEmail: fields.ContactEmail,
             ContactPhone: fields.ContactPhone,
             Website: fields.Website);
@@ -49,5 +50,17 @@ internal static class TeamWriteMapping
         }
 
         return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!, fields.KitPattern!.Value);
+    }
+
+    private static KitColors? BuildAlternateColors(ITeamWriteFields fields)
+    {
+        if (string.IsNullOrWhiteSpace(fields.AlternateColorPrimary) &&
+            string.IsNullOrWhiteSpace(fields.AlternateColorSecondary) &&
+            fields.AlternateKitPattern is null or KitPattern.Default)
+        {
+            return null;
+        }
+
+        return new KitColors(fields.AlternateColorPrimary!, fields.AlternateColorSecondary!, fields.AlternateKitPattern!.Value);
     }
 }

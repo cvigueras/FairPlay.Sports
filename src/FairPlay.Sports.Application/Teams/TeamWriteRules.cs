@@ -54,6 +54,17 @@ internal static class TeamWriteRules
                 .WithMessage("A valid kit pattern is required.");
         });
 
+        // Alternate kit: same all-or-nothing rule, independent of the main kit.
+        validator.When(x => HasAnyAlternateKitField(x), () =>
+        {
+            validator.RuleFor(x => x.AlternateColorPrimary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateColorSecondary).NotEmpty().MaximumLength(KitColors.MaxColourLength);
+            validator.RuleFor(x => x.AlternateKitPattern)
+                .NotNull()
+                .Must(pattern => pattern is not null && pattern != KitPattern.Default && Enum.IsDefined(pattern.Value))
+                .WithMessage("A valid alternate kit pattern is required.");
+        });
+
         validator.RuleFor(x => x.ContactEmail)
             .EmailAddress()
             .MaximumLength(Team.MaxContactEmailLength)
@@ -78,6 +89,11 @@ internal static class TeamWriteRules
         !string.IsNullOrWhiteSpace(x.ColorPrimary) ||
         !string.IsNullOrWhiteSpace(x.ColorSecondary) ||
         x.KitPattern is not null and not KitPattern.Default;
+
+    private static bool HasAnyAlternateKitField(ITeamWriteFields x) =>
+        !string.IsNullOrWhiteSpace(x.AlternateColorPrimary) ||
+        !string.IsNullOrWhiteSpace(x.AlternateColorSecondary) ||
+        x.AlternateKitPattern is not null and not KitPattern.Default;
 
     private static bool BeAbsoluteHttpUrl(string? value) =>
         string.IsNullOrWhiteSpace(value) ||

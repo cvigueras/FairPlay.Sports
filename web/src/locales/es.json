@@ -273,6 +273,7 @@
         "stepClub": "Ficha del club",
         "stepVenue": "Campo",
         "stepKit": "1ª equipación",
+        "stepKitSecondary": "2ª equipación",
         "stepContact": "Contacto",
         "clubSheetHint": "Estos datos ya forman parte de la ficha pública del club.",
         "nameLabel": "Nombre de equipo",

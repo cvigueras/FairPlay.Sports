@@ -273,6 +273,7 @@
         "stepClub": "Club sheet",
         "stepVenue": "Home venue",
         "stepKit": "1st kit",
+        "stepKitSecondary": "2nd kit",
         "stepContact": "Contact",
         "clubSheetHint": "These details are already part of the club's public sheet.",
         "nameLabel": "Team name",

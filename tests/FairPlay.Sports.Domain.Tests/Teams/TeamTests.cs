@@ -123,6 +123,7 @@ public class TeamTests
             FoundedYear: 1998,
             HomeVenue: new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x"),
             Colors: new KitColors("Blue", "White", KitPattern.Stripes),
+            AlternateColors: new KitColors("Black", "Red", KitPattern.Halves),
             ContactEmail: "  INFO@Club.Example  ",
             ContactPhone: "  600 000 000  ",
             Website: "  https://club.example  ");
@@ -138,6 +139,7 @@ public class TeamTests
             Assert.That(team.FoundedYear, Is.Null);
             Assert.That(team.HomeVenue, Is.Null);
             Assert.That(team.Colors, Is.Null);
+            Assert.That(team.AlternateColors, Is.Null);
             Assert.That(team.ContactEmail, Is.Null);
             Assert.That(team.ContactPhone, Is.Null);
             Assert.That(team.Website, Is.Null);
@@ -155,6 +157,7 @@ public class TeamTests
             Assert.That(team.FoundedYear, Is.EqualTo(1998));
             Assert.That(team.HomeVenue, Is.EqualTo(new Venue("Pabellón", "Calle 1", PitchSurface.Indoor, "https://maps.google.com/?q=x")));
             Assert.That(team.Colors, Is.EqualTo(new KitColors("Blue", "White", KitPattern.Stripes)));
+            Assert.That(team.AlternateColors, Is.EqualTo(new KitColors("Black", "Red", KitPattern.Halves)));
             Assert.That(team.ContactEmail, Is.EqualTo("info@club.example"));
             Assert.That(team.ContactPhone, Is.EqualTo("600 000 000"));
             Assert.That(team.Website, Is.EqualTo("https://club.example"));
@@ -207,6 +210,7 @@ public class TeamTests
             Assert.That(team.ShortName, Is.EqualTo("FPF"));
             Assert.That(team.HomeVenue!.Surface, Is.EqualTo(PitchSurface.Indoor));
             Assert.That(team.Colors!.Primary, Is.EqualTo("Blue"));
+            Assert.That(team.AlternateColors!.Primary, Is.EqualTo("Black"));
         });
     }
 
@@ -222,6 +226,7 @@ public class TeamTests
             Assert.That(team.ShortName, Is.Null);
             Assert.That(team.HomeVenue, Is.Null);
             Assert.That(team.Colors, Is.Null);
+            Assert.That(team.AlternateColors, Is.Null);
             Assert.That(team.ContactEmail, Is.Null);
         });
     }

@@ -20,4 +20,7 @@ public sealed record UpdateTeamRequest(
     KitPattern? KitPattern = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
-    string? Website = null);
+    string? Website = null,
+    string? AlternateColorPrimary = null,
+    string? AlternateColorSecondary = null,
+    KitPattern? AlternateKitPattern = null);

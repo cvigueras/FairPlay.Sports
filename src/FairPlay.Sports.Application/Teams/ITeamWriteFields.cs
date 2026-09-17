@@ -32,4 +32,8 @@ public interface ITeamWriteFields
     string? ContactEmail { get; }
     string? ContactPhone { get; }
     string? Website { get; }
+
+    string? AlternateColorPrimary { get; }
+    string? AlternateColorSecondary { get; }
+    KitPattern? AlternateKitPattern { get; }
 }

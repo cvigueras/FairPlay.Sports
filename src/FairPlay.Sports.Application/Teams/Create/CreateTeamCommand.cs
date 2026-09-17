@@ -22,4 +22,7 @@ public sealed record CreateTeamCommand(
     KitPattern? KitPattern = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
-    string? Website = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;
+    string? Website = null,
+    string? AlternateColorPrimary = null,
+    string? AlternateColorSecondary = null,
+    KitPattern? AlternateKitPattern = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;

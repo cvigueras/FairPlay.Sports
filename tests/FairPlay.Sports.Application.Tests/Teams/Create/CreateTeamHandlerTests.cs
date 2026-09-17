@@ -112,12 +112,17 @@ public class CreateTeamHandlerTests
             Assert.That(result.Value!.ContactEmail, Is.EqualTo(TeamMother.ContactEmail));
             Assert.That(result.Value!.ContactPhone, Is.EqualTo(TeamMother.ContactPhone));
             Assert.That(result.Value!.Website, Is.EqualTo(TeamMother.Website));
+            Assert.That(result.Value!.AlternateColorPrimary, Is.EqualTo(TeamMother.AlternateColorPrimary));
+            Assert.That(result.Value!.AlternateColorSecondary, Is.EqualTo(TeamMother.AlternateColorSecondary));
+            Assert.That(result.Value!.AlternateKitPattern, Is.EqualTo(TeamMother.AlternateKitPattern));
         });
         Assert.Multiple(() =>
         {
             Assert.That(persisted!.HomeVenue!.Surface, Is.EqualTo(TeamMother.VenueSurface));
             Assert.That(persisted!.Colors!.Primary, Is.EqualTo(TeamMother.ColorPrimary));
             Assert.That(persisted!.Colors!.Pattern, Is.EqualTo(TeamMother.KitPattern));
+            Assert.That(persisted!.AlternateColors!.Primary, Is.EqualTo(TeamMother.AlternateColorPrimary));
+            Assert.That(persisted!.AlternateColors!.Pattern, Is.EqualTo(TeamMother.AlternateKitPattern));
         });
     }
 }

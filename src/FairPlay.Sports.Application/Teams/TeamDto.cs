@@ -24,7 +24,10 @@ public sealed record TeamDto(
     KitPattern? KitPattern,
     string? ContactEmail,
     string? ContactPhone,
-    string? Website)
+    string? Website,
+    string? AlternateColorPrimary,
+    string? AlternateColorSecondary,
+    KitPattern? AlternateKitPattern)
 {
     public static TeamDto FromDomain(Team team) =>
         new(
@@ -49,5 +52,8 @@ public sealed record TeamDto(
             team.Colors?.Pattern,
             team.ContactEmail,
             team.ContactPhone,
-            team.Website);
+            team.Website,
+            team.AlternateColors?.Primary,
+            team.AlternateColors?.Secondary,
+            team.AlternateColors?.Pattern);
 }

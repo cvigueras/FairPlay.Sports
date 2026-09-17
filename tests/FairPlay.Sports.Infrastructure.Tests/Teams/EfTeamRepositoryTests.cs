@@ -74,6 +74,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
             Assert.That(persisted.Website, Is.EqualTo(TeamMother.Website));
             Assert.That(persisted.HomeVenue, Is.EqualTo(TeamMother.Venue()));
             Assert.That(persisted.Colors, Is.EqualTo(TeamMother.Colors()));
+            Assert.That(persisted.AlternateColors, Is.EqualTo(TeamMother.AlternateColors()));
         });
     }
 
@@ -99,6 +100,7 @@ public class EfTeamRepositoryTests : RepositoryTestBase
             Assert.That(persisted.ShortName, Is.Null);
             Assert.That(persisted.HomeVenue, Is.Null);
             Assert.That(persisted.Colors, Is.Null);
+            Assert.That(persisted.AlternateColors, Is.Null);
             Assert.That(persisted.ContactEmail, Is.Null);
         });
     }

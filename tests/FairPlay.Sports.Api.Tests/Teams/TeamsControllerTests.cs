@@ -189,7 +189,10 @@ public class TeamsControllerTests
                 command.KitPattern == request.KitPattern &&
                 command.ContactEmail == request.ContactEmail &&
                 command.ContactPhone == request.ContactPhone &&
-                command.Website == request.Website),
+                command.Website == request.Website &&
+                command.AlternateColorPrimary == request.AlternateColorPrimary &&
+                command.AlternateColorSecondary == request.AlternateColorSecondary &&
+                command.AlternateKitPattern == request.AlternateKitPattern),
             Arg.Any<CancellationToken>());
     }
 
@@ -215,7 +218,9 @@ public class TeamsControllerTests
                 command.VenueSurface == request.VenueSurface &&
                 command.VenueMapsUrl == request.VenueMapsUrl &&
                 command.ColorPrimary == request.ColorPrimary &&
-                command.KitPattern == request.KitPattern),
+                command.KitPattern == request.KitPattern &&
+                command.AlternateColorPrimary == request.AlternateColorPrimary &&
+                command.AlternateKitPattern == request.AlternateKitPattern),
             Arg.Any<CancellationToken>());
     }
 

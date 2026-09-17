@@ -49,7 +49,7 @@ const auth = useAuthStore()
  *  parent clears `initial` right after a successful save. */
 const isEdit = ref(false)
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
 const step = ref(1)
 
 const model = reactive({
@@ -69,6 +69,9 @@ const model = reactive({
   colorPrimary: '#16a34a',
   colorSecondary: '#ffffff',
   kitPattern: 'Plain' as KitPattern,
+  alternateColorPrimary: '#0f172a',
+  alternateColorSecondary: '#ffffff',
+  alternateKitPattern: 'Plain' as KitPattern,
   contactEmail: '',
   contactPhone: '',
   website: '',
@@ -98,6 +101,9 @@ function resetForm() {
     colorPrimary: '#16a34a',
     colorSecondary: '#ffffff',
     kitPattern: 'Plain',
+    alternateColorPrimary: '#0f172a',
+    alternateColorSecondary: '#ffffff',
+    alternateKitPattern: 'Plain',
     contactEmail: '',
     contactPhone: '',
     website: '',
@@ -127,6 +133,9 @@ function applyInitial(team: Team) {
     colorPrimary: team.colorPrimary || '#16a34a',
     colorSecondary: team.colorSecondary || '#ffffff',
     kitPattern: team.kitPattern ?? 'Plain',
+    alternateColorPrimary: team.alternateColorPrimary || '#0f172a',
+    alternateColorSecondary: team.alternateColorSecondary || '#ffffff',
+    alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     contactEmail: team.contactEmail ?? '',
     contactPhone: team.contactPhone ?? '',
     website: team.website ?? '',
@@ -162,7 +171,7 @@ const divisionItems = computed(() => enumItems(DIVISIONS, 'profile.team.enums'))
 const categoryItems = computed(() => enumItems(AGE_CATEGORIES, 'profile.team.enums'))
 const surfaceItems = computed(() => enumItems(PITCH_SURFACES, 'profile.team.surfaces'))
 
-const STEP_TITLE_KEYS = ['stepDetails', 'stepClub', 'stepVenue', 'stepKit', 'stepContact']
+const STEP_TITLE_KEYS = ['stepDetails', 'stepClub', 'stepVenue', 'stepKit', 'stepKitSecondary', 'stepContact']
 const stepTitle = computed(() => t(`profile.team.wizard.${STEP_TITLE_KEYS[step.value - 1]}`))
 
 function isHttpUrl(value: string): boolean {
@@ -179,13 +188,17 @@ const anyVenueField = computed(
     !!model.venueName.trim() || !!model.venueAddress.trim() || !!model.venueSurface || !!model.venueMapsUrl.trim(),
 )
 const anyColour = computed(() => !!model.colorPrimary.trim() || !!model.colorSecondary.trim())
+const anyAlternateColour = computed(
+  () => !!model.alternateColorPrimary.trim() || !!model.alternateColorSecondary.trim(),
+)
 
 const STEP_FIELDS: Record<number, string[]> = {
   1: ['name', 'role', 'coach', 'city', 'crest'],
   2: ['foundedYear'],
   3: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl'],
   4: ['colorPrimary', 'colorSecondary', 'kitPattern'],
-  5: ['website'],
+  5: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateKitPattern'],
+  6: ['website'],
 }
 
 function validate(): boolean {
@@ -216,6 +229,11 @@ function validate(): boolean {
   if (anyColour.value) {
     if (!model.colorPrimary.trim()) errors.colorPrimary = required
     if (!model.colorSecondary.trim()) errors.colorSecondary = required
+  }
+
+  if (anyAlternateColour.value) {
+    if (!model.alternateColorPrimary.trim()) errors.alternateColorPrimary = required
+    if (!model.alternateColorSecondary.trim()) errors.alternateColorSecondary = required
   }
 
   if (model.website.trim() && !isHttpUrl(model.website)) errors.website = t('profile.team.urlInvalid')
@@ -272,6 +290,9 @@ function submit() {
     colorPrimary: trimmedOrUndefined(model.colorPrimary),
     colorSecondary: trimmedOrUndefined(model.colorSecondary),
     kitPattern: model.kitPattern,
+    alternateColorPrimary: trimmedOrUndefined(model.alternateColorPrimary),
+    alternateColorSecondary: trimmedOrUndefined(model.alternateColorSecondary),
+    alternateKitPattern: model.alternateKitPattern,
     contactEmail: trimmedOrUndefined(model.contactEmail),
     contactPhone: trimmedOrUndefined(model.contactPhone),
     website: trimmedOrUndefined(model.website),
@@ -459,16 +480,16 @@ function goNext() {
           </v-row>
         </template>
 
-        <!-- Step 4: Equipación -->
+        <!-- Step 4: 1ª equipación -->
         <template v-else-if="step === 4">
           <v-row dense>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorPrimary')">
+              <FlatField :label="t('profile.team.colorPrimary')" :error="errors.colorPrimary">
                 <ColorSelect v-model="model.colorPrimary" :exclude-value="model.colorSecondary" />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.colorSecondary')">
+              <FlatField :label="t('profile.team.colorSecondary')" :error="errors.colorSecondary">
                 <ColorSelect v-model="model.colorSecondary" :exclude-value="model.colorPrimary" />
               </FlatField>
             </v-col>
@@ -492,7 +513,40 @@ function goNext() {
           </FlatField>
         </template>
 
-        <!-- Step 5: Contacto -->
+        <!-- Step 5: 2ª equipación -->
+        <template v-else-if="step === 5">
+          <v-row dense>
+            <v-col cols="12" sm="6">
+              <FlatField :label="t('profile.team.colorPrimary')" :error="errors.alternateColorPrimary">
+                <ColorSelect v-model="model.alternateColorPrimary" :exclude-value="model.alternateColorSecondary" />
+              </FlatField>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <FlatField :label="t('profile.team.colorSecondary')" :error="errors.alternateColorSecondary">
+                <ColorSelect v-model="model.alternateColorSecondary" :exclude-value="model.alternateColorPrimary" />
+              </FlatField>
+            </v-col>
+          </v-row>
+
+          <FlatField :label="t('profile.team.kitPattern')" class="mt-3">
+            <div class="fp-kit-patterns">
+              <button
+                v-for="pattern in KIT_PATTERNS"
+                :key="pattern"
+                type="button"
+                class="fp-kit-pattern"
+                :class="{ 'fp-kit-pattern--selected': model.alternateKitPattern === pattern }"
+                :aria-label="t(`profile.team.kitPatterns.${pattern}`)"
+                :title="t(`profile.team.kitPatterns.${pattern}`)"
+                @click="model.alternateKitPattern = pattern"
+              >
+                <KitSwatch :pattern="pattern" :primary="model.alternateColorPrimary" :secondary="model.alternateColorSecondary" />
+              </button>
+            </div>
+          </FlatField>
+        </template>
+
+        <!-- Step 6: Contacto -->
         <template v-else>
           <FlatField :label="t('profile.team.contactEmail')" class="mb-3">
             <input v-model="model.contactEmail" class="fp-input" type="email" />
