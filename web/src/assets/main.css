@@ -60,11 +60,12 @@ h6,
   border-radius: 4px;
 }
 
-/* Vuetify's own v-select/v-autocomplete (TeamForm, MyTeamsView) don't go
-   through flat-form.css - their outlined box and dropdown arrow default to
-   Vuetify's Material gray, so they're pinned to the same slate-300 as the
-   scrollbar and the .fp-select boxes here instead. :not(.v-field--error)
-   leaves the error-state red border alone. */
+/* Vuetify's own v-select/v-autocomplete (TeamsView/StandingsView filters,
+   the "join a team" picker in MyTeamsView) don't go through flat-form.css -
+   their outlined box and dropdown arrow default to Vuetify's Material gray,
+   so they're pinned to the same slate-300 as the scrollbar and the
+   .fp-select boxes here instead. :not(.v-field--error) leaves the
+   error-state red border alone. */
 .v-select .v-field--variant-outlined:not(.v-field--error) .v-field__outline,
 .v-autocomplete .v-field--variant-outlined:not(.v-field--error) .v-field__outline {
   color: #cbd5e1;

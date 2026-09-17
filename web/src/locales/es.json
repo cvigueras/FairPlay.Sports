@@ -185,7 +185,7 @@
       "crestRequired": "La imagen del escudo es obligatoria.",
       "urlInvalid": "Introduce un enlace http(s) completo.",
       "foundedYearRange": "Introduce un año entre 1850 y {max}.",
-      "optionalTitle": "Ficha del club (opcional)",
+      "optionalTitle": "Ficha del club",
       "shortName": "Siglas",
       "foundedYear": "Fundación",
       "venueGroup": "Campo",

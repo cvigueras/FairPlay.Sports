@@ -185,7 +185,7 @@
       "crestRequired": "A crest image is required.",
       "urlInvalid": "Enter a full http(s) link.",
       "foundedYearRange": "Enter a year between 1850 and {max}.",
-      "optionalTitle": "Club sheet (optional)",
+      "optionalTitle": "Club sheet",
       "shortName": "Short name",
       "foundedYear": "Founded",
       "venueGroup": "Home venue",

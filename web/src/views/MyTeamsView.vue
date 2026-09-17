@@ -6,7 +6,6 @@ import {
   mdiAccountPlusOutline,
   mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
-  mdiClose,
   mdiPencilOutline,
   mdiPlusCircleOutline,
   mdiShieldOutline,
@@ -16,7 +15,6 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
-import TeamForm from '@/components/TeamForm.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
@@ -165,13 +163,16 @@ function openEdit(teamId: string) {
   editingTeamId.value = teamId
 }
 
-async function handleUpdate({ payload }: { payload: CreateTeamPayload; crest: File | null }) {
+async function handleUpdate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
   if (!editingTeam.value) return
   savingEdit.value = true
   try {
     const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
-    teamDetails.value = { ...teamDetails.value, [updated.id]: updated }
-    teams.value = teams.value.map((tm) => (tm.id === updated.id ? updated : tm))
+    if (crest) await teamsApi.uploadCrest(updated.id, crest, auth.accessToken)
+
+    const withCrest = crest ? { ...updated, hasCrest: true } : updated
+    teamDetails.value = { ...teamDetails.value, [withCrest.id]: withCrest }
+    teams.value = teams.value.map((tm) => (tm.id === withCrest.id ? withCrest : tm))
     editingTeamId.value = null
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
@@ -376,32 +377,15 @@ async function confirmLeave() {
     <!-- Create a new team -->
     <TeamWizard v-model="wizardOpen" :loading="creatingTeam" @submit="handleCreate" />
 
-    <!-- Edit a team -->
-    <v-dialog :model-value="!!editingTeam" max-width="560" scrollable @update:model-value="editingTeamId = null">
-      <v-card v-if="editingTeam" class="fp-card fp-modal-card">
-        <div class="fp-wizard-head">
-          <div class="d-flex align-start justify-space-between ga-3">
-            <h2 class="fp-wizard-title">{{ t('profile.team.editTitle') }}</h2>
-            <button
-              type="button"
-              class="fp-wizard-close"
-              :aria-label="t('profile.team.cancel')"
-              @click="editingTeamId = null"
-            >
-              <v-icon :icon="mdiClose" size="16" />
-            </button>
-          </div>
-        </div>
-        <v-card-text class="fp-wizard-body">
-          <TeamForm
-            :initial="editingTeam"
-            :submit-label="t('profile.team.saveChanges')"
-            :loading="savingEdit"
-            @submit="handleUpdate"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <!-- Edit a team: the same wizard as creation, pre-filled from the team
+         being edited (see TeamWizard's `initial` prop). -->
+    <TeamWizard
+      :model-value="!!editingTeam"
+      :initial="editingTeam"
+      :loading="savingEdit"
+      @update:model-value="(open) => { if (!open) editingTeamId = null }"
+      @update="handleUpdate"
+    />
 
     <!-- Confirm leaving a team -->
     <v-dialog :model-value="!!leavingTeam" max-width="400" @update:model-value="leavingTeam = null">

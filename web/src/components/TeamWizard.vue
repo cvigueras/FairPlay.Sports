@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
 import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
+import { teamsApi } from '@/lib/teams'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -14,12 +15,14 @@ import {
   type Division,
   type FootballType,
   type PitchSurface,
+  type Team,
   type TeamMemberRole,
 } from '@/types/team'
 
-const props = withDefaults(defineProps<{ modelValue: boolean; loading?: boolean }>(), {
-  loading: false,
-})
+const props = withDefaults(
+  defineProps<{ modelValue: boolean; loading?: boolean; initial?: Team | null }>(),
+  { loading: false, initial: null },
+)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
@@ -27,9 +30,18 @@ const emit = defineEmits<{
     e: 'submit',
     value: { payload: CreateTeamPayload; role: TeamMemberRole; displayName: string; crest: File | null },
   ): void
+  (e: 'update', value: { payload: CreateTeamPayload; crest: File | null }): void
 }>()
 
 const { t } = useI18n()
+
+/** Editing an existing team reuses this same wizard, pre-filled from
+ *  `initial`, instead of founding a new one - so no member role to pick and
+ *  no crest required (the team may already have one). Set only when the
+ *  dialog opens (not a computed off `props.initial`) so it doesn't flip
+ *  back to "create" mid-way through the closing transition, once the
+ *  parent clears `initial` right after a successful save. */
+const isEdit = ref(false)
 
 const TOTAL_STEPS = 5
 const step = ref(1)
@@ -61,6 +73,7 @@ const errors = reactive<Record<string, string>>({})
 
 function resetForm() {
   step.value = 1
+  isEdit.value = false
   Object.assign(model, {
     name: '',
     role: null,
@@ -86,10 +99,40 @@ function resetForm() {
   for (const key of Object.keys(errors)) delete errors[key]
 }
 
+function applyInitial(team: Team) {
+  step.value = 1
+  isEdit.value = true
+  Object.assign(model, {
+    name: team.name,
+    role: null,
+    coach: team.coach,
+    city: team.city,
+    type: team.type,
+    division: team.division,
+    category: team.category,
+    shortName: team.shortName ?? '',
+    foundedYear: team.foundedYear ?? null,
+    venueName: team.venueName ?? '',
+    venueAddress: team.venueAddress ?? '',
+    venueSurface: team.venueSurface ?? null,
+    venueMapsUrl: team.venueMapsUrl ?? '',
+    colorPrimary: team.colorPrimary || '#16a34a',
+    colorSecondary: team.colorSecondary || '#ffffff',
+    contactEmail: team.contactEmail ?? '',
+    contactPhone: team.contactPhone ?? '',
+    website: team.website ?? '',
+  })
+  crest.value = null
+  crestPreviewUrl.value = team.hasCrest ? teamsApi.crestUrl(team.id) : ''
+  for (const key of Object.keys(errors)) delete errors[key]
+}
+
 watch(
   () => props.modelValue,
   (open) => {
-    if (open) resetForm()
+    if (!open) return
+    if (props.initial) applyInitial(props.initial)
+    else resetForm()
   },
 )
 
@@ -131,10 +174,10 @@ function validate(): boolean {
   for (const key of Object.keys(errors)) delete errors[key]
 
   if (!model.name.trim()) errors.name = required
-  if (!model.role) errors.role = required
+  if (!isEdit.value && !model.role) errors.role = required
   if (!model.coach.trim()) errors.coach = required
   if (!model.city.trim()) errors.city = required
-  if (!crest.value) errors.crest = t('profile.team.crestRequired')
+  if (!isEdit.value && !crest.value) errors.crest = t('profile.team.crestRequired')
 
   if (model.foundedYear != null) {
     const year = model.foundedYear
@@ -191,7 +234,8 @@ function trimmedOrUndefined(value: string): string | undefined {
 }
 
 function submit() {
-  if (!validate() || !model.role) return
+  if (!validate()) return
+  if (!isEdit.value && !model.role) return
   const name = model.name.trim()
   const payload: CreateTeamPayload = {
     name,
@@ -212,7 +256,8 @@ function submit() {
     contactPhone: trimmedOrUndefined(model.contactPhone),
     website: trimmedOrUndefined(model.website),
   }
-  emit('submit', { payload, role: model.role, displayName: name, crest: crest.value })
+  if (isEdit.value) emit('update', { payload, crest: crest.value })
+  else emit('submit', { payload, role: model.role!, displayName: name, crest: crest.value })
 }
 
 function goNext() {
@@ -272,14 +317,14 @@ function goNext() {
 
           <FlatField
             :label="t('profile.team.wizard.nameLabel')"
-            :hint="t('profile.team.wizard.nameHint')"
+            :hint="isEdit ? '' : t('profile.team.wizard.nameHint')"
             :error="errors.name"
             class="mb-4"
           >
             <input v-model="model.name" class="fp-input" :class="{ 'fp-invalid': errors.name }" type="text" />
           </FlatField>
 
-          <FlatField :label="t('profile.team.memberRole')" class="mb-3">
+          <FlatField v-if="!isEdit" :label="t('profile.team.memberRole')" class="mb-3">
             <RolePills v-model="model.role" />
             <span v-if="errors.role" class="fp-error">{{ errors.role }}</span>
           </FlatField>
@@ -446,7 +491,13 @@ function goNext() {
         <button type="button" class="fp-btn fp-btn-solid" :disabled="loading" @click="goNext">
           <v-progress-circular v-if="loading" indeterminate size="16" width="2" color="white" />
           <template v-else>
-            {{ step === TOTAL_STEPS ? t('profile.team.wizard.finish') : t('profile.team.wizard.next') }}
+            {{
+              step === TOTAL_STEPS
+                ? isEdit
+                  ? t('profile.team.saveChanges')
+                  : t('profile.team.wizard.finish')
+                : t('profile.team.wizard.next')
+            }}
             <v-icon :icon="step === TOTAL_STEPS ? mdiCheck : mdiChevronRight" size="16" />
           </template>
         </button>
