@@ -55,11 +55,14 @@ const joinableTeams = computed(() =>
 )
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 
-/** Each membership paired with its resolved `Team`, once fetched. */
+/** Each membership paired with its resolved `Team`, once fetched. Newest
+ *  membership first, so a just-created (and just-joined) team lands at the
+ *  top of the list rather than wherever the backend happens to return it. */
 const myTeamCards = computed(() =>
   myTeams.value
     .map((membership) => ({ membership, team: teamDetails.value[membership.teamId] }))
-    .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team),
+    .filter((card): card is { membership: TeamMembership; team: Team } => !!card.team)
+    .sort((a, b) => new Date(b.membership.createdAt).getTime() - new Date(a.membership.createdAt).getTime()),
 )
 
 async function loadMyTeamDetails() {
