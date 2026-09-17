@@ -197,6 +197,7 @@
       "colorsGroup": "Kit colours",
       "colorPrimary": "1st kit",
       "colorSecondary": "2nd kit",
+      "kitPattern": "Kit pattern",
       "contactGroup": "Contact",
       "contactEmail": "Email",
       "contactPhone": "Phone",
@@ -218,6 +219,14 @@
         "Hybrid": "Hybrid grass",
         "Earth": "Dirt",
         "Indoor": "Indoor court"
+      },
+      "kitPatterns": {
+        "Plain": "Plain",
+        "Stripes": "Stripes",
+        "Hoops": "Hoops",
+        "Halves": "Halves",
+        "Sash": "Sash",
+        "Checkered": "Checkered"
       },
       "enums": {
         "Football11": "11-a-side",

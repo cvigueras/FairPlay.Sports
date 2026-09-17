@@ -108,6 +108,7 @@ public class CreateTeamHandlerTests
             Assert.That(result.Value!.VenueMapsUrl, Is.EqualTo(TeamMother.VenueMapsUrl));
             Assert.That(result.Value!.ColorPrimary, Is.EqualTo(TeamMother.ColorPrimary));
             Assert.That(result.Value!.ColorSecondary, Is.EqualTo(TeamMother.ColorSecondary));
+            Assert.That(result.Value!.KitPattern, Is.EqualTo(TeamMother.KitPattern));
             Assert.That(result.Value!.ContactEmail, Is.EqualTo(TeamMother.ContactEmail));
             Assert.That(result.Value!.ContactPhone, Is.EqualTo(TeamMother.ContactPhone));
             Assert.That(result.Value!.Website, Is.EqualTo(TeamMother.Website));
@@ -116,6 +117,7 @@ public class CreateTeamHandlerTests
         {
             Assert.That(persisted!.HomeVenue!.Surface, Is.EqualTo(TeamMother.VenueSurface));
             Assert.That(persisted!.Colors!.Primary, Is.EqualTo(TeamMother.ColorPrimary));
+            Assert.That(persisted!.Colors!.Pattern, Is.EqualTo(TeamMother.KitPattern));
         });
     }
 }

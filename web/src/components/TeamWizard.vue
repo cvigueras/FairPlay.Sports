@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
 import FlatField from '@/components/FlatField.vue'
+import KitSwatch from '@/components/KitSwatch.vue'
 import RolePills from '@/components/RolePills.vue'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -10,11 +11,13 @@ import {
   AGE_CATEGORIES,
   DIVISIONS,
   FOOTBALL_TYPES,
+  KIT_PATTERNS,
   PITCH_SURFACES,
   type AgeCategory,
   type CreateTeamPayload,
   type Division,
   type FootballType,
+  type KitPattern,
   type PitchSurface,
   type Team,
   type TeamMemberRole,
@@ -64,6 +67,7 @@ const model = reactive({
   venueMapsUrl: '',
   colorPrimary: '#16a34a',
   colorSecondary: '#ffffff',
+  kitPattern: 'Plain' as KitPattern,
   contactEmail: '',
   contactPhone: '',
   website: '',
@@ -92,6 +96,7 @@ function resetForm() {
     venueMapsUrl: '',
     colorPrimary: '#16a34a',
     colorSecondary: '#ffffff',
+    kitPattern: 'Plain',
     contactEmail: '',
     contactPhone: '',
     website: '',
@@ -120,6 +125,7 @@ function applyInitial(team: Team) {
     venueMapsUrl: team.venueMapsUrl ?? '',
     colorPrimary: team.colorPrimary || '#16a34a',
     colorSecondary: team.colorSecondary || '#ffffff',
+    kitPattern: team.kitPattern ?? 'Plain',
     contactEmail: team.contactEmail ?? '',
     contactPhone: team.contactPhone ?? '',
     website: team.website ?? '',
@@ -177,7 +183,7 @@ const STEP_FIELDS: Record<number, string[]> = {
   1: ['name', 'role', 'coach', 'city', 'crest'],
   2: ['foundedYear'],
   3: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl'],
-  4: ['colorPrimary', 'colorSecondary'],
+  4: ['colorPrimary', 'colorSecondary', 'kitPattern'],
   5: ['website'],
 }
 
@@ -264,6 +270,7 @@ function submit() {
     venueMapsUrl: trimmedOrUndefined(model.venueMapsUrl),
     colorPrimary: trimmedOrUndefined(model.colorPrimary),
     colorSecondary: trimmedOrUndefined(model.colorSecondary),
+    kitPattern: model.kitPattern,
     contactEmail: trimmedOrUndefined(model.contactEmail),
     contactPhone: trimmedOrUndefined(model.contactPhone),
     website: trimmedOrUndefined(model.website),
@@ -471,6 +478,22 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <FlatField :label="t('profile.team.kitPattern')" class="mt-3">
+            <div class="fp-kit-patterns">
+              <button
+                v-for="pattern in KIT_PATTERNS"
+                :key="pattern"
+                type="button"
+                class="fp-kit-pattern"
+                :class="{ 'fp-kit-pattern--selected': model.kitPattern === pattern }"
+                @click="model.kitPattern = pattern"
+              >
+                <KitSwatch :pattern="pattern" :primary="model.colorPrimary" :secondary="model.colorSecondary" />
+                <span>{{ t(`profile.team.kitPatterns.${pattern}`) }}</span>
+              </button>
+            </div>
+          </FlatField>
         </template>
 
         <!-- Step 5: Contacto -->
@@ -534,5 +557,43 @@ function goNext() {
   cursor: pointer;
   background: none;
   flex-shrink: 0;
+}
+
+.fp-kit-patterns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fp-kit-pattern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 76px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: rgb(var(--v-theme-surface));
+  cursor: pointer;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+}
+
+.fp-kit-pattern:hover {
+  border-color: #94a3b8;
+}
+
+.fp-kit-pattern--selected {
+  border-color: rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.08);
+  color: rgb(var(--v-theme-primary-darken-1));
+}
+
+.fp-kit-pattern svg {
+  border-radius: 6px;
 }
 </style>

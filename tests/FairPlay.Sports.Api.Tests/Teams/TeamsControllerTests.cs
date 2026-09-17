@@ -186,6 +186,7 @@ public class TeamsControllerTests
                 command.VenueMapsUrl == request.VenueMapsUrl &&
                 command.ColorPrimary == request.ColorPrimary &&
                 command.ColorSecondary == request.ColorSecondary &&
+                command.KitPattern == request.KitPattern &&
                 command.ContactEmail == request.ContactEmail &&
                 command.ContactPhone == request.ContactPhone &&
                 command.Website == request.Website),
@@ -213,7 +214,8 @@ public class TeamsControllerTests
                 command.Coach == request.Coach &&
                 command.VenueSurface == request.VenueSurface &&
                 command.VenueMapsUrl == request.VenueMapsUrl &&
-                command.ColorPrimary == request.ColorPrimary),
+                command.ColorPrimary == request.ColorPrimary &&
+                command.KitPattern == request.KitPattern),
             Arg.Any<CancellationToken>());
     }
 

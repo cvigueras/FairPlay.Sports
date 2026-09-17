@@ -62,6 +62,10 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         {
             colors.Property(c => c.Primary).HasColumnName("ColorPrimary").HasMaxLength(KitColors.MaxColourLength);
             colors.Property(c => c.Secondary).HasColumnName("ColorSecondary").HasMaxLength(KitColors.MaxColourLength);
+            colors.Property(c => c.Pattern)
+                .HasColumnName("KitPattern")
+                .HasMaxLength(20)
+                .HasConversion<string>();
         });
         builder.Navigation(team => team.Colors).IsRequired(false);
 

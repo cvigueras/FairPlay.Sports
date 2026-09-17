@@ -30,6 +30,7 @@ internal static class TeamRequestMother
             TeamMother.VenueMapsUrl,
             TeamMother.ColorPrimary,
             TeamMother.ColorSecondary,
+            TeamMother.KitPattern,
             TeamMother.ContactEmail,
             TeamMother.ContactPhone,
             TeamMother.Website);
@@ -50,6 +51,7 @@ internal static class TeamRequestMother
             TeamMother.VenueMapsUrl,
             TeamMother.ColorPrimary,
             TeamMother.ColorSecondary,
+            TeamMother.KitPattern,
             TeamMother.ContactEmail,
             TeamMother.ContactPhone,
             TeamMother.Website);

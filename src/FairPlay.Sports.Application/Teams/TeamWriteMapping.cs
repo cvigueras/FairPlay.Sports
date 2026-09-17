@@ -41,9 +41,13 @@ internal static class TeamWriteMapping
 
     private static KitColors? BuildColors(ITeamWriteFields fields)
     {
-        if (string.IsNullOrWhiteSpace(fields.ColorPrimary) && string.IsNullOrWhiteSpace(fields.ColorSecondary))
+        if (string.IsNullOrWhiteSpace(fields.ColorPrimary) &&
+            string.IsNullOrWhiteSpace(fields.ColorSecondary) &&
+            fields.KitPattern is null or KitPattern.Default)
+        {
             return null;
+        }
 
-        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!);
+        return new KitColors(fields.ColorPrimary!, fields.ColorSecondary!, fields.KitPattern!.Value);
     }
 }

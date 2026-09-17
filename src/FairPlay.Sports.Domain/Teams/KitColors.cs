@@ -2,8 +2,9 @@ namespace FairPlay.Sports.Domain.Teams;
 
 /// <summary>
 /// A club's kit colours as listed on a federation club sheet: the primary
-/// ("1ª equipación") and secondary ("2ª equipación") shirt colours. Stored as
-/// free text (a colour name or hex) since federations do not standardise them.
+/// ("1ª equipación") and secondary ("2ª equipación") shirt colours, plus the
+/// pattern that lays them out on the shirt. Colours are stored as free text
+/// (a colour name or hex) since federations do not standardise them.
 /// Immutable; equality is by value.
 /// </summary>
 public sealed record KitColors
@@ -12,11 +13,16 @@ public sealed record KitColors
 
     public string Primary { get; }
     public string Secondary { get; }
+    public KitPattern Pattern { get; }
 
-    public KitColors(string primary, string secondary)
+    public KitColors(string primary, string secondary, KitPattern pattern)
     {
         Primary = Require(primary, nameof(primary), "Primary kit colour");
         Secondary = Require(secondary, nameof(secondary), "Secondary kit colour");
+
+        if (!Enum.IsDefined(pattern) || pattern == KitPattern.Default)
+            throw new ArgumentException($"'{pattern}' is not a valid {nameof(KitPattern)}.", nameof(pattern));
+        Pattern = pattern;
     }
 
     private static string Require(string value, string paramName, string label)

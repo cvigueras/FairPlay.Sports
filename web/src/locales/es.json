@@ -197,6 +197,7 @@
       "colorsGroup": "Equipación",
       "colorPrimary": "1ª equipación",
       "colorSecondary": "2ª equipación",
+      "kitPattern": "Diseño de la equipación",
       "contactGroup": "Contacto",
       "contactEmail": "Email",
       "contactPhone": "Teléfono",
@@ -218,6 +219,14 @@
         "Hybrid": "Césped híbrido",
         "Earth": "Tierra",
         "Indoor": "Pista cubierta"
+      },
+      "kitPatterns": {
+        "Plain": "Liso",
+        "Stripes": "Rayas",
+        "Hoops": "Franjas",
+        "Halves": "Mitades",
+        "Sash": "Banda",
+        "Checkered": "Cuadros"
       },
       "enums": {
         "Football11": "Fútbol 11",

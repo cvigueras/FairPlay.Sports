@@ -21,6 +21,7 @@ public sealed record TeamDto(
     string? VenueMapsUrl,
     string? ColorPrimary,
     string? ColorSecondary,
+    KitPattern? KitPattern,
     string? ContactEmail,
     string? ContactPhone,
     string? Website)
@@ -45,6 +46,7 @@ public sealed record TeamDto(
             team.HomeVenue?.MapsUrl,
             team.Colors?.Primary,
             team.Colors?.Secondary,
+            team.Colors?.Pattern,
             team.ContactEmail,
             team.ContactPhone,
             team.Website);

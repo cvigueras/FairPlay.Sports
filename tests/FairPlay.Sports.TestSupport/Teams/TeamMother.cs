@@ -22,6 +22,7 @@ public static class TeamMother
     public const string VenueMapsUrl = "https://maps.google.com/?q=Pabell%C3%B3n+Municipal";
     public const string ColorPrimary = "Blue";
     public const string ColorSecondary = "White";
+    public const KitPattern KitPattern = KitPattern.Stripes;
     public const string ContactEmail = "info@fairplayfc.example";
     public const string ContactPhone = "+34 600 000 000";
     public const string Website = "https://fairplayfc.example";
@@ -31,7 +32,7 @@ public static class TeamMother
 
     public static Venue Venue() => new(VenueName, VenueAddress, VenueSurface, VenueMapsUrl);
 
-    public static KitColors Colors() => new(ColorPrimary, ColorSecondary);
+    public static KitColors Colors() => new(ColorPrimary, ColorSecondary, KitPattern);
 
     public static TeamProfile Profile() =>
         new(ShortName, FoundedYear, Venue(), Colors(), ContactEmail, ContactPhone, Website);
@@ -44,7 +45,7 @@ public static class TeamMother
             Name, Coach, City, DefaultType, DefaultDivision, DefaultCategory,
             ShortName, FoundedYear,
             VenueName, VenueAddress, VenueSurface, VenueMapsUrl,
-            ColorPrimary, ColorSecondary,
+            ColorPrimary, ColorSecondary, KitPattern,
             ContactEmail, ContactPhone, Website);
 
     public static UpdateTeamCommand UpdateCommand(Guid id) =>
@@ -52,7 +53,7 @@ public static class TeamMother
             id, Name, Coach, City, DefaultType, DefaultDivision, DefaultCategory,
             ShortName, FoundedYear,
             VenueName, VenueAddress, VenueSurface, VenueMapsUrl,
-            ColorPrimary, ColorSecondary,
+            ColorPrimary, ColorSecondary, KitPattern,
             ContactEmail, ContactPhone, Website);
 
     public static Team DomainTeam(
@@ -114,6 +115,7 @@ public static class TeamMother
             VenueMapsUrl: null,
             ColorPrimary: null,
             ColorSecondary: null,
+            KitPattern: null,
             ContactEmail: null,
             ContactPhone: null,
             Website: null);

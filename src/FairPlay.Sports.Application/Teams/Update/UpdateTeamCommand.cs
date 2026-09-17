@@ -21,6 +21,7 @@ public sealed record UpdateTeamCommand(
     string? VenueMapsUrl = null,
     string? ColorPrimary = null,
     string? ColorSecondary = null,
+    KitPattern? KitPattern = null,
     string? ContactEmail = null,
     string? ContactPhone = null,
     string? Website = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;
