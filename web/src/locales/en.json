@@ -280,12 +280,11 @@
       "wizard": {
         "stepOf": "Step {step} of {total}",
         "stepDetails": "Team details",
-        "stepClub": "Club sheet",
         "stepVenue": "Home venue",
+        "stepClub": "Club",
         "stepKit": "1st kit",
         "stepKitSecondary": "2nd kit",
         "stepContact": "Contact",
-        "clubSheetHint": "These details are already part of the club's public sheet.",
         "nameLabel": "Team name",
         "nameHint": "It's the same value: the name of the club you're founding, and your name or nickname in it.",
         "crestHint": "PNG, JPG, WEBP or SVG",

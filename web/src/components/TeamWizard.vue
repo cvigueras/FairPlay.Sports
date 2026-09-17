@@ -50,7 +50,7 @@ const auth = useAuthStore()
  *  parent clears `initial` right after a successful save. */
 const isEdit = ref(false)
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 5
 const step = ref(1)
 
 const model = reactive({
@@ -200,7 +200,7 @@ const divisionItems = computed(() => enumItems(DIVISIONS, 'profile.team.enums'))
 const categoryItems = computed(() => enumItems(AGE_CATEGORIES, 'profile.team.enums'))
 const surfaceItems = computed(() => enumItems(PITCH_SURFACES, 'profile.team.surfaces'))
 
-const STEP_TITLE_KEYS = ['stepDetails', 'stepClub', 'stepVenue', 'stepKit', 'stepKitSecondary', 'stepContact']
+const STEP_TITLE_KEYS = ['stepDetails', 'stepVenue', 'stepKit', 'stepKitSecondary', 'stepContact']
 const stepTitle = computed(() => t(`profile.team.wizard.${STEP_TITLE_KEYS[step.value - 1]}`))
 
 function isHttpUrl(value: string): boolean {
@@ -218,11 +218,10 @@ const anyVenueField = computed(
 )
 const STEP_FIELDS: Record<number, string[]> = {
   1: ['name', 'role', 'coach', 'city', 'crest'],
-  2: ['foundedYear'],
-  3: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl'],
-  4: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
-  5: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
-  6: ['website'],
+  2: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl', 'foundedYear'],
+  3: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
+  4: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
+  5: ['website'],
 }
 
 function validate(): boolean {
@@ -440,30 +439,8 @@ function goNext() {
           </v-row>
         </template>
 
-        <!-- Step 2: Ficha del club -->
+        <!-- Step 2: Campo, con la ficha del club debajo -->
         <template v-else-if="step === 2">
-          <p class="fp-section-hint">{{ t('profile.team.wizard.clubSheetHint') }}</p>
-          <v-row dense>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.shortName')">
-                <input v-model="model.shortName" class="fp-input" type="text" maxlength="20" />
-              </FlatField>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.foundedYear')" :error="errors.foundedYear">
-                <input
-                  v-model.number="model.foundedYear"
-                  class="fp-input"
-                  :class="{ 'fp-invalid': errors.foundedYear }"
-                  type="number"
-                />
-              </FlatField>
-            </v-col>
-          </v-row>
-        </template>
-
-        <!-- Step 3: Campo -->
-        <template v-else-if="step === 3">
           <FlatField :label="t('profile.team.venueName')" :error="errors.venueName" class="mb-3">
             <input
               v-model="model.venueName"
@@ -504,10 +481,29 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <h3 class="fp-wizard-title mt-4 mb-3">{{ t('profile.team.wizard.stepClub') }}</h3>
+          <v-row dense>
+            <v-col cols="12" sm="6">
+              <FlatField :label="t('profile.team.shortName')">
+                <input v-model="model.shortName" class="fp-input" type="text" maxlength="20" />
+              </FlatField>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <FlatField :label="t('profile.team.foundedYear')" :error="errors.foundedYear">
+                <input
+                  v-model.number="model.foundedYear"
+                  class="fp-input"
+                  :class="{ 'fp-invalid': errors.foundedYear }"
+                  type="number"
+                />
+              </FlatField>
+            </v-col>
+          </v-row>
         </template>
 
-        <!-- Step 4: 1ª equipación -->
-        <template v-else-if="step === 4">
+        <!-- Step 3: 1ª equipación -->
+        <template v-else-if="step === 3">
           <div class="fp-kit-layout">
             <div class="fp-kit-preview-col">
               <div class="fp-kit-preview-card">
@@ -615,8 +611,8 @@ function goNext() {
           </div>
         </template>
 
-        <!-- Step 5: 2ª equipación -->
-        <template v-else-if="step === 5">
+        <!-- Step 4: 2ª equipación -->
+        <template v-else-if="step === 4">
           <div class="fp-kit-toggle-row">
             <div>
               <div class="fp-kit-toggle-title">{{ t('profile.team.hasSecondKitQuestion') }}</div>
@@ -761,7 +757,7 @@ function goNext() {
           </div>
         </template>
 
-        <!-- Step 6: Contacto -->
+        <!-- Step 5: Contacto -->
         <template v-else>
           <FlatField :label="t('profile.team.contactEmail')" class="mb-3">
             <input v-model="model.contactEmail" class="fp-input" type="email" />

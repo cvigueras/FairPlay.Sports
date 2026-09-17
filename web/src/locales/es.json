@@ -280,12 +280,11 @@
       "wizard": {
         "stepOf": "Paso {step} de {total}",
         "stepDetails": "Datos del equipo",
-        "stepClub": "Ficha del club",
         "stepVenue": "Campo",
+        "stepClub": "Club",
         "stepKit": "1ª equipación",
         "stepKitSecondary": "2ª equipación",
         "stepContact": "Contacto",
-        "clubSheetHint": "Estos datos ya forman parte de la ficha pública del club.",
         "nameLabel": "Nombre de equipo",
         "nameHint": "Es el mismo dato: el nombre del club que fundas y tu nombre o apodo en él.",
         "crestHint": "PNG, JPG, WEBP o SVG",
