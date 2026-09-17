@@ -5,6 +5,7 @@ import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } 
 import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
 import { teamsApi } from '@/lib/teams'
+import { useAuthStore } from '@/stores/auth'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const auth = useAuthStore()
 
 /** Editing an existing team reuses this same wizard, pre-filled from
  *  `initial`, instead of founding a new one - so no member role to pick and
@@ -133,6 +135,16 @@ watch(
     if (!open) return
     if (props.initial) applyInitial(props.initial)
     else resetForm()
+  },
+)
+
+/** Picking "Entrenador" as your own role means you ARE the team's coach, so
+ *  the coach-name field just mirrors your account name and locks - picking
+ *  any other role hands manual control of that field back. */
+watch(
+  () => model.role,
+  (role) => {
+    if (role === 'Coach') model.coach = auth.currentUser?.userName ?? ''
   },
 )
 
@@ -332,7 +344,13 @@ function goNext() {
           <v-row dense>
             <v-col cols="12" sm="6">
               <FlatField :label="t('profile.team.coach')" :error="errors.coach">
-                <input v-model="model.coach" class="fp-input" :class="{ 'fp-invalid': errors.coach }" type="text" />
+                <input
+                  v-model="model.coach"
+                  class="fp-input"
+                  :class="{ 'fp-invalid': errors.coach }"
+                  type="text"
+                  :disabled="model.role === 'Coach'"
+                />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
