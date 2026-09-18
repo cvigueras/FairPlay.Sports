@@ -210,8 +210,8 @@ async function handleSendChallenge(payload: SendChallengePayload) {
              renders (an empty state when there's nothing) so the row never reflows
              to a single column depending on which fields a team happened to fill in. -->
         <div class="team-row-2col mb-5">
-          <v-card border flat rounded="xl" class="pa-6 pa-md-8 team-panel">
-            <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+          <v-card border flat rounded="xl" class="pa-5 pa-md-6 team-panel">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
               <v-icon :icon="mdiEmailOutline" />
               {{ t('profile.team.contactGroup') }}
             </h2>
@@ -251,8 +251,8 @@ async function handleSendChallenge(payload: SendChallengePayload) {
             </div>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-6 pa-md-8 team-panel team-panel--center">
-            <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+          <v-card border flat rounded="xl" class="pa-5 pa-md-6 team-panel team-panel--center">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
               <svg
                 width="24"
                 height="24"
@@ -447,7 +447,7 @@ async function handleSendChallenge(payload: SendChallengePayload) {
 .team-contact-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .team-contact-row {
@@ -507,7 +507,7 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   justify-content: center;
   gap: 0.5rem;
   text-align: center;
-  padding: 1.5rem;
+  padding: 1.1rem;
   border: 1.5px dashed rgba(var(--v-theme-on-surface), 0.16);
   border-radius: 0.875rem;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
@@ -551,8 +551,8 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  padding: 1.25rem 1rem;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
   border: 1px solid;
   border-radius: 1rem;
 }
