@@ -3,7 +3,6 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccountOutline,
-  mdiArrowLeft,
   mdiCalendarOutline,
   mdiEmailOutline,
   mdiGrass,
@@ -144,16 +143,6 @@ async function handleSendChallenge(payload: SendChallengePayload) {
 <template>
   <v-main>
     <v-container class="py-6 py-md-10 team-detail-container">
-      <v-btn
-        :to="{ name: 'teams' }"
-        :prepend-icon="mdiArrowLeft"
-        variant="text"
-        size="small"
-        class="mb-4"
-      >
-        {{ t('nav.teams') }}
-      </v-btn>
-
       <v-progress-circular
         v-if="loading"
         indeterminate
@@ -264,17 +253,21 @@ async function handleSendChallenge(payload: SendChallengePayload) {
 
           <v-card border flat rounded="xl" class="pa-6 pa-md-8 team-panel team-panel--center">
             <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
-              <span class="team-panel-icon">
-                <svg width="16" height="16" viewBox="0 0 100 100" aria-hidden="true">
-                  <path
-                    d="M6,24 C2,28 2,34 5,38 L24,52 L24,86 C24,91 28,95 33,95 L67,95 C72,95 76,91 76,86 L76,52 L95,38 C98,34 98,28 94,24 L75,9 C73,8 70,9 69,11 C65,19 58,23 50,23 C42,23 35,19 31,11 C30,9 27,8 25,9 Z"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="6"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                class="team-kit-group-icon"
+              >
+                <path
+                  d="M6,24 C2,28 2,34 5,38 L24,52 L24,86 C24,91 28,95 33,95 L67,95 C72,95 76,91 76,86 L76,52 L95,38 C98,34 98,28 94,24 L75,9 C73,8 70,9 69,11 C65,19 58,23 50,23 C42,23 35,19 31,11 C30,9 27,8 25,9 Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="6"
+                  stroke-linejoin="round"
+                />
+              </svg>
               {{ t('profile.team.colorsGroup') }}
             </h2>
 
@@ -564,15 +557,7 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   border-radius: 1rem;
 }
 
-.team-panel-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 0.5rem;
-  background: rgba(var(--v-theme-primary), 0.1);
-  color: rgb(var(--v-theme-primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.team-kit-group-icon {
   flex-shrink: 0;
 }
 
