@@ -38,7 +38,15 @@ public sealed record ChallengeDto(
         var homeTeam = challenge.HomeTeamId == challengerTeam.Id ? challengerTeam : challengedTeam;
         var awayTeam = challenge.HomeTeamId == challengerTeam.Id ? challengedTeam : challengerTeam;
 
-        var homeKit = homeTeam.Colors is not null ? ChallengeKitDto.FromDomain(homeTeam.Colors, TeamKitSlot.First) : null;
+        var homeColors = challenge.HomeKitSlot switch
+        {
+            TeamKitSlot.First => homeTeam.Colors,
+            TeamKitSlot.Second => homeTeam.AlternateColors,
+            _ => null,
+        };
+        var homeKit = homeColors is not null
+            ? ChallengeKitDto.FromDomain(homeColors, challenge.HomeKitSlot!.Value)
+            : null;
         var awayColors = challenge.AwayKitSlot switch
         {
             TeamKitSlot.First => awayTeam.Colors,

@@ -11,9 +11,17 @@ public sealed class Challenge
     public DateTime MatchDate { get; }
 
     /// <summary>
-    /// Which of the away team's kits avoids clashing with the home team's, chosen
-    /// automatically. Null when it has none to fall back on - no kit configured at all, or none
-    /// of its kits avoid the clash - a challenge is still allowed to go ahead either way.
+    /// Which of the home team's kits it wears - its first by default, but the challenger may
+    /// pick its second instead when it's the one playing at home (the challenged team's kit is
+    /// never chosen this way). Null only when the home team has no kit configured at all.
+    /// </summary>
+    public TeamKitSlot? HomeKitSlot { get; }
+
+    /// <summary>
+    /// Which of the away team's kits avoids clashing with the home team's (whichever
+    /// <see cref="HomeKitSlot"/> resolved to), chosen automatically - the away team never picks
+    /// this itself. Null when it has none to fall back on - no kit configured at all, or none of
+    /// its kits avoid the clash - a challenge is still allowed to go ahead either way.
     /// </summary>
     public TeamKitSlot? AwayKitSlot { get; }
 
@@ -34,6 +42,7 @@ public sealed class Challenge
         Guid challengedTeamId,
         Guid venueTeamId,
         DateTime matchDate,
+        TeamKitSlot? homeKitSlot,
         TeamKitSlot? awayKitSlot,
         string? message,
         DateTime createdAt)
@@ -43,6 +52,7 @@ public sealed class Challenge
         ChallengedTeamId = challengedTeamId;
         VenueTeamId = venueTeamId;
         MatchDate = matchDate;
+        HomeKitSlot = homeKitSlot;
         AwayKitSlot = awayKitSlot;
         Message = message;
         Status = ChallengeStatus.Pending;
@@ -55,6 +65,7 @@ public sealed class Challenge
         Guid challengedTeamId,
         Guid venueTeamId,
         DateTime matchDate,
+        TeamKitSlot? homeKitSlot,
         TeamKitSlot? awayKitSlot,
         string? message,
         DateTime createdAtUtc)
@@ -77,11 +88,14 @@ public sealed class Challenge
                 "The venue must belong to the challenger or the challenged team.", nameof(venueTeamId));
         }
 
+        if (homeKitSlot is not null && !Enum.IsDefined(homeKitSlot.Value))
+            throw new ArgumentException($"'{homeKitSlot}' is not a valid {nameof(TeamKitSlot)}.", nameof(homeKitSlot));
+
         if (awayKitSlot is not null && !Enum.IsDefined(awayKitSlot.Value))
             throw new ArgumentException($"'{awayKitSlot}' is not a valid {nameof(TeamKitSlot)}.", nameof(awayKitSlot));
 
         return new(
-            id, challengerTeamId, challengedTeamId, venueTeamId, matchDate, awayKitSlot,
+            id, challengerTeamId, challengedTeamId, venueTeamId, matchDate, homeKitSlot, awayKitSlot,
             ValidateMessage(message), createdAtUtc);
     }
 

@@ -12,12 +12,14 @@ public class ChallengeTests
         Guid? challengerTeamId = null,
         Guid? challengedTeamId = null,
         Guid? venueTeamId = null,
+        TeamKitSlot homeKitSlot = TeamKitSlot.First,
         TeamKitSlot awayKitSlot = TeamKitSlot.First,
         string? message = "Hola")
     {
         var challenger = challengerTeamId ?? Guid.NewGuid();
         var challenged = challengedTeamId ?? Guid.NewGuid();
-        return Challenge.Create(Guid.NewGuid(), challenger, challenged, venueTeamId ?? challenger, MatchDate, awayKitSlot, message, Now);
+        return Challenge.Create(
+            Guid.NewGuid(), challenger, challenged, venueTeamId ?? challenger, MatchDate, homeKitSlot, awayKitSlot, message, Now);
     }
 
     [Test]
@@ -73,7 +75,8 @@ public class ChallengeTests
     {
         var challenger = Guid.NewGuid();
         Assert.That(
-            () => Challenge.Create(Guid.Empty, challenger, Guid.NewGuid(), challenger, MatchDate, TeamKitSlot.First, null, Now),
+            () => Challenge.Create(
+                Guid.Empty, challenger, Guid.NewGuid(), challenger, MatchDate, TeamKitSlot.First, TeamKitSlot.First, null, Now),
             Throws.ArgumentException);
     }
 
@@ -101,6 +104,12 @@ public class ChallengeTests
     public void Create_RejectsAVenueThatIsNeitherTeam()
     {
         Assert.That(() => Create(venueTeamId: Guid.NewGuid()), Throws.ArgumentException);
+    }
+
+    [Test]
+    public void Create_RejectsAnUndefinedHomeKitSlot()
+    {
+        Assert.That(() => Create(homeKitSlot: (TeamKitSlot)999), Throws.ArgumentException);
     }
 
     [Test]

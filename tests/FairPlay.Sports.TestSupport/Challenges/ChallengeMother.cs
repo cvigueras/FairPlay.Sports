@@ -45,6 +45,7 @@ public static class ChallengeMother
         Guid? challengedTeamId = null,
         Guid? venueTeamId = null,
         DateTime? matchDate = null,
+        TeamKitSlot homeKitSlot = TeamKitSlot.First,
         TeamKitSlot awayKitSlot = TeamKitSlot.First,
         string? message = Message,
         DateTime? createdAtUtc = null) =>
@@ -54,6 +55,7 @@ public static class ChallengeMother
             challengedTeamId ?? ChallengedTeamId,
             venueTeamId ?? challengerTeamId ?? ChallengerTeamId,
             matchDate ?? MatchDate,
+            homeKitSlot,
             awayKitSlot,
             message,
             createdAtUtc ?? DateTime.UtcNow);

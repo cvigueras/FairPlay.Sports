@@ -235,52 +235,11 @@ public class SendChallengeHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenChallengerIsAway_AndPrefersItsSecondKit_AndHasIt_UsesThePreferenceOverTheAutomaticPick()
+    public async Task Handle_WhenChallengerIsHome_AndPrefersItsSecondKit_AndHasIt_UsesThePreferenceOverTheDefault()
     {
-        // Green (kit1) doesn't clash with the home team's Blue, so the automatic pick would be
-        // First - the explicit preference should still win.
         _challengerTeam = TeamWithProfile(ChallengeMother.ChallengerTeamId, GreenKit, PurpleKit);
         _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
 
-        var result = await _handler.Handle(
-            ChallengeMother.SendCommand(
-                venueTeamId: ChallengeMother.ChallengedTeamId,
-                challengerKitPreference: TeamKitSlot.Second),
-            CancellationToken.None);
-
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.Value!.AwayTeamId, Is.EqualTo(ChallengeMother.ChallengerTeamId));
-            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
-            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(PurpleKit.Primary));
-        });
-    }
-
-    [Test]
-    public async Task Handle_WhenChallengerIsAway_AndPrefersAKitItDoesNotHave_FallsBackToTheAutomaticPick()
-    {
-        // Challenger only has a first kit.
-        var result = await _handler.Handle(
-            ChallengeMother.SendCommand(
-                venueTeamId: ChallengeMother.ChallengedTeamId,
-                challengerKitPreference: TeamKitSlot.Second),
-            CancellationToken.None);
-
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
-            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
-        });
-    }
-
-    [Test]
-    public async Task Handle_WhenChallengerIsHome_ThePreferenceIsIgnored()
-    {
-        // The challenger is home here, so its "preference" - meant for its own kit when it's the
-        // one playing away - doesn't apply to anything; the challenged team's kit is resolved
-        // automatically as usual.
         var result = await _handler.Handle(
             ChallengeMother.SendCommand(
                 venueTeamId: ChallengeMother.ChallengerTeamId,
@@ -290,9 +249,76 @@ public class SendChallengeHandlerTests
         Assert.That(result.IsSuccess, Is.True);
         Assert.Multiple(() =>
         {
-            Assert.That(result.Value!.AwayTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
+            Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengerTeamId));
+            Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(PurpleKit.Primary));
+            // The away side still resolves automatically, now against the chosen home kit.
             Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
             Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenChallengerIsHome_AndPrefersAKitItDoesNotHave_FallsBackToTheDefault()
+    {
+        // Challenger only has a first kit.
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengerTeamId,
+                challengerKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenChallengerIsAway_ThePreferenceIsIgnored()
+    {
+        // The challenger is away here, so its "preference" - meant for its own kit when it's the
+        // one playing at home - doesn't apply to anything; the home team wears its default kit
+        // and the away side resolves automatically as usual.
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengedTeamId,
+                challengerKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
+            Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenTheChosenHomeKitClashesWithAway_AwayFallsBackToItsOwnSecondKit()
+    {
+        // Home's preferred second kit (Blue) clashes with the away team's first kit (also Blue) -
+        // the away side's automatic resolution reacts to whichever kit home actually wears, not
+        // always its first.
+        _challengerTeam = TeamWithProfile(ChallengeMother.ChallengerTeamId, GreenKit, BlueKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengerTeamId,
+                challengerKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(RedKit.Primary));
         });
     }
 

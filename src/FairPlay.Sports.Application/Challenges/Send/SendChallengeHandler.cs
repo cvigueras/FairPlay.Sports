@@ -41,16 +41,24 @@ public sealed class SendChallengeHandler(
         var homeTeam = request.VenueTeamId == challengerTeam.Id ? challengerTeam : challengedTeam;
         var awayTeam = request.VenueTeamId == challengerTeam.Id ? challengedTeam : challengerTeam;
 
+        // The home team wears its first kit by default; the challenger may pick its second
+        // instead, but only when it's the one playing at home (the challenged team's kit is
+        // never chosen this way) and it actually has that kit configured - otherwise the
+        // default applies as usual.
+        var homeKitSlot = homeTeam.Id == challengerTeam.Id &&
+            request.ChallengerKitPreference is not null &&
+            HasKit(homeTeam, request.ChallengerKitPreference.Value)
+                ? request.ChallengerKitPreference.Value
+                : ResolveHomeKitSlot(homeTeam);
+        var homeColors = homeKitSlot == TeamKitSlot.First ? homeTeam.Colors
+            : homeKitSlot == TeamKitSlot.Second ? homeTeam.AlternateColors
+            : null;
+
         // Best-effort: missing kits or an unavoidable colour clash never block sending, they
         // just leave AwayKitSlot unresolved (or picked despite the clash) for the DTO to flag.
-        // The challenger may express which of its own kits to wear, but only when it's the one
-        // playing away (the challenged team's kit is never chosen this way) and it actually has
-        // that kit configured - otherwise the automatic pick is used as usual.
-        var awayKitSlot = awayTeam.Id == challengerTeam.Id &&
-            request.ChallengerKitPreference is not null &&
-            HasKit(awayTeam, request.ChallengerKitPreference.Value)
-                ? request.ChallengerKitPreference.Value
-                : ResolveAwayKitSlot(homeTeam.Colors, awayTeam);
+        // The away team never picks its own kit - it's always resolved automatically against
+        // whichever kit the home team ends up wearing.
+        var awayKitSlot = ResolveAwayKitSlot(homeColors, awayTeam);
 
         var challenge = Challenge.Create(
             Guid.NewGuid(),
@@ -58,6 +66,7 @@ public sealed class SendChallengeHandler(
             request.ChallengedTeamId,
             request.VenueTeamId,
             request.MatchDate,
+            homeKitSlot,
             awayKitSlot,
             request.Message,
             _clock.UtcNow);
@@ -65,6 +74,14 @@ public sealed class SendChallengeHandler(
         await _challenges.AddAsync(challenge, cancellationToken);
 
         return Result<ChallengeDto>.Success(ChallengeDto.FromDomain(challenge, challengerTeam, challengedTeam));
+    }
+
+    /// <summary>The home team's first kit, or its second if that's all it has configured.</summary>
+    private static TeamKitSlot? ResolveHomeKitSlot(Team homeTeam)
+    {
+        if (homeTeam.Colors is not null) return TeamKitSlot.First;
+        if (homeTeam.AlternateColors is not null) return TeamKitSlot.Second;
+        return null;
     }
 
     /// <summary>

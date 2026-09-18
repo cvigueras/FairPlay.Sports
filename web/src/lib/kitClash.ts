@@ -53,36 +53,39 @@ export function kitBySlot(team: Team, slot: TeamKitSlot): ResolvedKit | null {
   return slot === 'First' ? firstKit(team) : secondKit(team)
 }
 
-/** The home team always wears its first kit. Null if it hasn't configured one. */
-export function homeKit(homeTeam: Team): ResolvedKit | null {
-  return firstKit(homeTeam)
+/** The home team's first kit by default, or its second if that's the only one it has. The
+ *  challenger may override this to its second kit when it's the one playing at home - see
+ *  `ChallengeWizard.vue`'s `homeKitPreview` - this is only the unoverridden default. */
+export function resolveHomeKit(homeTeam: Team): ResolvedKit | null {
+  return firstKit(homeTeam) ?? secondKit(homeTeam)
 }
 
 /**
- * The away team's first kit, unless its primary colour matches the home team's - then its
- * second kit if that avoids the clash; otherwise falls back to its first kit anyway (accepting
- * the clash) if it has one, else null (no kit configured at all). A client-side preview of the
- * backend's own resolution (`SendChallengeHandler.ResolveAwayKitSlot`) - the server is the
- * source of truth, this is only so the wizard can show the result before sending. Never returns
- * null just because of a clash - a clash is informational, never blocking.
+ * The away team's first kit, unless its primary colour matches `homeKit`'s - then its second
+ * kit if that avoids the clash; otherwise falls back to its first kit anyway (accepting the
+ * clash) if it has one, else null (no kit configured at all). Takes the home side's *resolved*
+ * kit (not the team) so it reacts correctly to a manually chosen home kit, not just its default.
+ * A client-side preview of the backend's own resolution
+ * (`SendChallengeHandler.ResolveAwayKitSlot`) - the server is the source of truth, this is only
+ * so the wizard can show the result before sending. Never returns null just because of a clash -
+ * a clash is informational, never blocking.
  */
-export function resolveAwayKit(homeTeam: Team, awayTeam: Team): ResolvedKit | null {
-  const home = firstKit(homeTeam)
+export function resolveAwayKit(homeKit: ResolvedKit | null, awayTeam: Team): ResolvedKit | null {
   const first = firstKit(awayTeam)
 
-  if (!home) return first
+  if (!homeKit) return first
 
-  if (first && !sameColor(first.colorPrimary, home.colorPrimary)) return first
+  if (first && !sameColor(first.colorPrimary, homeKit.colorPrimary)) return first
 
   const second = secondKit(awayTeam)
-  if (second && !sameColor(second.colorPrimary, home.colorPrimary)) return second
+  if (second && !sameColor(second.colorPrimary, homeKit.colorPrimary)) return second
 
   return first
 }
 
 export function resolveKits(homeTeam: Team, awayTeam: Team): KitInfo {
-  const home = homeKit(homeTeam)
-  const away = resolveAwayKit(homeTeam, awayTeam)
+  const home = resolveHomeKit(homeTeam)
+  const away = resolveAwayKit(home, awayTeam)
   const clash = !!home && !!away && sameColor(home.colorPrimary, away.colorPrimary)
   return { home, away, clash }
 }
