@@ -247,7 +247,7 @@ async function confirmLeave() {
               <input v-model="joinDisplayName" class="fp-input" type="text" disabled />
             </FlatField>
 
-            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
+            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" required class="mb-4">
               <v-autocomplete
                 v-model="selectedTeamId"
                 v-model:search="teamSearch"
@@ -291,7 +291,7 @@ async function confirmLeave() {
               </p>
             </div>
 
-            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" class="mb-4">
+            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" required class="mb-4">
               <RolePills v-model="joinRole" />
             </FlatField>
 

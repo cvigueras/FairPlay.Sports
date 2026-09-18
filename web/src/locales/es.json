@@ -220,7 +220,7 @@
       "createFailed": "No se ha podido crear el equipo.",
       "memberRole": "Tu rol en el equipo",
       "displayName": "Tu nombre o apodo",
-      "required": "Obligatorio.",
+      "required": "Campo obligatorio.",
       "crestRequired": "La imagen del escudo es obligatoria.",
       "urlInvalid": "Introduce un enlace http(s) completo.",
       "foundedYearRange": "Introduce un año entre 1850 y {max}.",

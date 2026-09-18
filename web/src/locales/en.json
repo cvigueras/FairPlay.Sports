@@ -220,7 +220,7 @@
       "createFailed": "Could not create the team.",
       "memberRole": "Your role on the team",
       "displayName": "Your name or nickname",
-      "required": "Required.",
+      "required": "Required field.",
       "crestRequired": "A crest image is required.",
       "urlInvalid": "Enter a full http(s) link.",
       "foundedYearRange": "Enter a year between 1850 and {max}.",

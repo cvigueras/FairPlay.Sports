@@ -374,7 +374,9 @@ function goNext() {
             <img v-if="crestPreviewUrl" class="fp-crest-thumb" :src="crestPreviewUrl" alt="" />
             <span v-else class="fp-crest-empty"><v-icon :icon="mdiImageOutline" size="24" /></span>
             <span class="fp-crest-copy">
-              <strong>{{ t('profile.team.crest') }}</strong>
+              <strong>
+                {{ t('profile.team.crest') }}<span v-if="!isEdit" class="fp-required-mark">*</span>
+              </strong>
               <span>{{ t('profile.team.wizard.crestHint') }}</span>
             </span>
           </div>
@@ -385,19 +387,20 @@ function goNext() {
             :label="t('profile.team.wizard.nameLabel')"
             :hint="isEdit ? '' : t('profile.team.wizard.nameHint')"
             :error="errors.name"
+            required
             class="mb-4"
           >
             <input v-model="model.name" class="fp-input" :class="{ 'fp-invalid': errors.name }" type="text" />
           </FlatField>
 
-          <FlatField v-if="!isEdit" :label="t('profile.team.memberRole')" class="mb-3">
+          <FlatField v-if="!isEdit" :label="t('profile.team.memberRole')" required class="mb-3">
             <RolePills v-model="model.role" />
             <span v-if="errors.role" class="fp-error">{{ errors.role }}</span>
           </FlatField>
 
           <v-row dense>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.coach')" :error="errors.coach">
+              <FlatField :label="t('profile.team.coach')" :error="errors.coach" required>
                 <input
                   v-model="model.coach"
                   class="fp-input"
@@ -408,7 +411,7 @@ function goNext() {
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.city')" :error="errors.city">
+              <FlatField :label="t('profile.team.city')" :error="errors.city" required>
                 <input v-model="model.city" class="fp-input" :class="{ 'fp-invalid': errors.city }" type="text" />
               </FlatField>
             </v-col>
@@ -520,7 +523,9 @@ function goNext() {
 
             <div class="fp-kit-controls">
               <div>
-                <div class="fp-kit-section-title">{{ t('profile.team.shirtColorsGroup') }}</div>
+                <div class="fp-kit-section-title">
+                  {{ t('profile.team.shirtColorsGroup') }}<span class="fp-required-mark">*</span>
+                </div>
                 <div class="fp-kit-swatch-row">
                   <button
                     type="button"
@@ -583,7 +588,9 @@ function goNext() {
               </div>
 
               <div>
-                <div class="fp-kit-section-title">{{ t('profile.team.shortsColor') }}</div>
+                <div class="fp-kit-section-title">
+                  {{ t('profile.team.shortsColor') }}<span class="fp-required-mark">*</span>
+                </div>
                 <div class="fp-kit-section-hint">{{ t('profile.team.shortsColorHint') }}</div>
                 <div class="fp-kit-swatch-row">
                   <span class="fp-kit-swatch-slot fp-kit-swatch-slot--single">

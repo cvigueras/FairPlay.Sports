@@ -29,11 +29,15 @@
   font-weight: 600;
   color: #475569;
 }
+.fp-required-mark {
+  margin-left: 3px;
+  color: rgb(var(--v-theme-error));
+}
 .fp-field .fp-hint {
   font-size: 12px;
   color: #64748b;
 }
-.fp-field .fp-error {
+.fp-error {
   font-size: 12px;
   color: rgb(var(--v-theme-error));
 }
