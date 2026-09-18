@@ -58,9 +58,9 @@ const model = reactive({
   role: null as TeamMemberRole | null,
   coach: '',
   city: '',
-  type: 'Futsal' as FootballType,
-  division: 'First' as Division,
-  category: 'Alevines' as AgeCategory,
+  type: null as FootballType | null,
+  division: null as Division | null,
+  category: null as AgeCategory | null,
   shortName: '',
   foundedYear: null as number | null,
   venueName: '',
@@ -110,9 +110,9 @@ function resetForm() {
     role: null,
     coach: '',
     city: '',
-    type: 'Futsal',
-    division: 'First',
-    category: 'Alevines',
+    type: null,
+    division: null,
+    category: null,
     shortName: '',
     foundedYear: null,
     venueName: '',
@@ -217,7 +217,7 @@ const anyVenueField = computed(
     !!model.venueName.trim() || !!model.venueAddress.trim() || !!model.venueSurface || !!model.venueMapsUrl.trim(),
 )
 const STEP_FIELDS: Record<number, string[]> = {
-  1: ['name', 'role', 'coach', 'city', 'crest'],
+  1: ['name', 'role', 'coach', 'city', 'crest', 'type', 'division', 'category'],
   2: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl', 'foundedYear'],
   3: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
   4: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
@@ -233,6 +233,9 @@ function validate(): boolean {
   if (!model.coach.trim()) errors.coach = required
   if (!model.city.trim()) errors.city = required
   if (!isEdit.value && !crest.value) errors.crest = t('profile.team.crestRequired')
+  if (!model.type) errors.type = required
+  if (!model.division) errors.division = required
+  if (!model.category) errors.category = required
 
   if (model.foundedYear != null) {
     const year = model.foundedYear
@@ -301,9 +304,9 @@ function submit() {
     name,
     coach: model.coach.trim(),
     city: model.city.trim(),
-    type: model.type,
-    division: model.division,
-    category: model.category,
+    type: model.type!,
+    division: model.division!,
+    category: model.category!,
     shortName: trimmedOrUndefined(model.shortName),
     foundedYear: model.foundedYear ?? undefined,
     venueName: trimmedOrUndefined(model.venueName),
@@ -419,22 +422,25 @@ function goNext() {
 
           <v-row dense class="mt-1">
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.type')">
-                <select v-model="model.type" class="fp-select">
+              <FlatField :label="t('profile.team.type')" :error="errors.type" required>
+                <select v-model="model.type" class="fp-select" :class="{ 'fp-invalid': errors.type }">
+                  <option :value="null">{{ t('profile.team.selectType') }}</option>
                   <option v-for="opt in typeItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.division')">
-                <select v-model="model.division" class="fp-select">
+              <FlatField :label="t('profile.team.division')" :error="errors.division" required>
+                <select v-model="model.division" class="fp-select" :class="{ 'fp-invalid': errors.division }">
+                  <option :value="null">{{ t('profile.team.selectDivision') }}</option>
                   <option v-for="opt in divisionItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
             <v-col cols="12">
-              <FlatField :label="t('profile.team.category')">
-                <select v-model="model.category" class="fp-select">
+              <FlatField :label="t('profile.team.category')" :error="errors.category" required>
+                <select v-model="model.category" class="fp-select" :class="{ 'fp-invalid': errors.category }">
+                  <option :value="null">{{ t('profile.team.selectCategory') }}</option>
                   <option v-for="opt in categoryItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
