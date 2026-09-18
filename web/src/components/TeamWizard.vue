@@ -450,18 +450,18 @@ function goNext() {
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.division')" :error="errors.division" required>
-                <select v-model="model.division" class="fp-select" :class="{ 'fp-invalid': errors.division }">
-                  <option :value="null">{{ t('profile.team.selectDivision') }}</option>
-                  <option v-for="opt in divisionItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
-                </select>
-              </FlatField>
-            </v-col>
-            <v-col cols="12">
               <FlatField :label="t('profile.team.category')" :error="errors.category" required>
                 <select v-model="model.category" class="fp-select" :class="{ 'fp-invalid': errors.category }">
                   <option :value="null">{{ t('profile.team.selectCategory') }}</option>
                   <option v-for="opt in categoryItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
+                </select>
+              </FlatField>
+            </v-col>
+            <v-col cols="12">
+              <FlatField :label="t('profile.team.division')" :error="errors.division" required>
+                <select v-model="model.division" class="fp-select" :class="{ 'fp-invalid': errors.division }">
+                  <option :value="null">{{ t('profile.team.selectDivision') }}</option>
+                  <option v-for="opt in divisionItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
