@@ -17,7 +17,7 @@ export interface KitInfo {
   clash: boolean
 }
 
-function firstKit(team: Team): ResolvedKit | null {
+export function firstKit(team: Team): ResolvedKit | null {
   if (!team.colorPrimary || !team.colorSecondary || !team.shortsColor || !team.kitPattern) return null
   return {
     colorPrimary: team.colorPrimary,
@@ -28,7 +28,7 @@ function firstKit(team: Team): ResolvedKit | null {
   }
 }
 
-function secondKit(team: Team): ResolvedKit | null {
+export function secondKit(team: Team): ResolvedKit | null {
   if (
     !team.alternateColorPrimary ||
     !team.alternateColorSecondary ||
@@ -47,6 +47,11 @@ function secondKit(team: Team): ResolvedKit | null {
 }
 
 const sameColor = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
+
+/** A team's kit in a given slot, or null if it hasn't configured that one. */
+export function kitBySlot(team: Team, slot: TeamKitSlot): ResolvedKit | null {
+  return slot === 'First' ? firstKit(team) : secondKit(team)
+}
 
 /** The home team always wears its first kit. Null if it hasn't configured one. */
 export function homeKit(homeTeam: Team): ResolvedKit | null {

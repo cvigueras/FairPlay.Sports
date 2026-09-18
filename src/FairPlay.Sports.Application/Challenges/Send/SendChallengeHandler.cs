@@ -43,7 +43,14 @@ public sealed class SendChallengeHandler(
 
         // Best-effort: missing kits or an unavoidable colour clash never block sending, they
         // just leave AwayKitSlot unresolved (or picked despite the clash) for the DTO to flag.
-        var awayKitSlot = ResolveAwayKitSlot(homeTeam.Colors, awayTeam);
+        // The challenger may express which of its own kits to wear, but only when it's the one
+        // playing away (the challenged team's kit is never chosen this way) and it actually has
+        // that kit configured - otherwise the automatic pick is used as usual.
+        var awayKitSlot = awayTeam.Id == challengerTeam.Id &&
+            request.ChallengerKitPreference is not null &&
+            HasKit(awayTeam, request.ChallengerKitPreference.Value)
+                ? request.ChallengerKitPreference.Value
+                : ResolveAwayKitSlot(homeTeam.Colors, awayTeam);
 
         var challenge = Challenge.Create(
             Guid.NewGuid(),
@@ -84,4 +91,7 @@ public sealed class SendChallengeHandler(
 
     private static bool ClashesWith(KitColors home, KitColors away) =>
         string.Equals(home.Primary, away.Primary, StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasKit(Team team, TeamKitSlot slot) =>
+        slot == TeamKitSlot.First ? team.Colors is not null : team.AlternateColors is not null;
 }

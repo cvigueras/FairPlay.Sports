@@ -16,12 +16,12 @@ import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { CHALLENGE_ACTOR_ROLES } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
-import { resolveKits } from '@/lib/kitClash'
+import { firstKit, kitBySlot, resolveKits, secondKit } from '@/lib/kitClash'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
-import type { SendChallengePayload } from '@/types/challenge'
+import type { SendChallengePayload, TeamKitSlot } from '@/types/challenge'
 import type { Team } from '@/types/team'
 
 const props = withDefaults(defineProps<{ modelValue: boolean; rivalTeam: Team; loading?: boolean }>(), {
@@ -95,18 +95,48 @@ const kitInfo = computed(() =>
     ? resolveKits(homeTeam.value, awayTeam.value)
     : { home: null, away: null, clash: false },
 )
+
+/** Only the challenger can override its own kit, and only when it's the one playing away - the
+ *  rival's (challenged team's) kit is never editable here. */
+const isChallengerAway = computed(
+  () => !!selectedTeam.value && !!awayTeam.value && selectedTeam.value.id === awayTeam.value.id,
+)
+const canOverrideAwayKit = computed(
+  () => isChallengerAway.value && !!selectedTeam.value && !!firstKit(selectedTeam.value) && !!secondKit(selectedTeam.value),
+)
+/** null = follow the automatic pick; set once the user picks a slot themselves. */
+const manualAwayKitSlot = ref<TeamKitSlot | null>(null)
+
 const homeKitPreview = computed(() => kitInfo.value.home)
-const awayKitPreview = computed(() => kitInfo.value.away)
+const awayKitPreview = computed(() => {
+  if (canOverrideAwayKit.value && manualAwayKitSlot.value && awayTeam.value) {
+    const kit = kitBySlot(awayTeam.value, manualAwayKitSlot.value)
+    if (kit) return kit
+  }
+  return kitInfo.value.away
+})
+/** Whichever slot is currently in effect for the away kit - the override if there is one and it
+ *  applies, otherwise the automatic pick - used to highlight the right toggle button. */
+const effectiveAwaySlot = computed<TeamKitSlot | null>(
+  () => (canOverrideAwayKit.value ? manualAwayKitSlot.value : null) ?? kitInfo.value.away?.slot ?? null,
+)
+
+const kitsClash = computed(() => {
+  const home = homeKitPreview.value
+  const away = awayKitPreview.value
+  return !!home && !!away && home.colorPrimary.toLowerCase() === away.colorPrimary.toLowerCase()
+})
 
 /** i18n key + params for the info banner, or null when both kits are known and don't clash. */
 const kitInfoMessage = computed(() => {
   if (!homeTeam.value || !awayTeam.value) return null
-  const { home, away, clash } = kitInfo.value
+  const home = homeKitPreview.value
+  const away = awayKitPreview.value
 
   if (!home && !away) return { key: 'challenges.wizard.kitInfoNoneAtAll', params: {} }
   if (!home) return { key: 'challenges.wizard.kitInfoNoHome', params: { team: homeTeam.value.name } }
   if (!away) return { key: 'challenges.wizard.kitInfoNoAway', params: { team: awayTeam.value.name } }
-  if (clash) return { key: 'challenges.wizard.kitInfoClash', params: {} }
+  if (kitsClash.value) return { key: 'challenges.wizard.kitInfoClash', params: {} }
   return null
 })
 
@@ -148,6 +178,7 @@ function reset() {
   matchTimeStr.value = ''
   message.value = ''
   dateAttempted.value = false
+  manualAwayKitSlot.value = null
 }
 
 watch(
@@ -158,6 +189,12 @@ watch(
     loadEligibleTeams()
   },
 )
+
+// A manual kit override only makes sense for the current team/venue pairing it was made
+// under - switching either stales it, so drop back to the automatic pick.
+watch([venueChoice, selectedTeamId], () => {
+  manualAwayKitSlot.value = null
+})
 
 function goBack() {
   step.value = Math.max(1, step.value - 1)
@@ -175,6 +212,7 @@ function submit() {
     venueTeamId: homeTeam.value.id,
     matchDate: matchDateTime.value.toISOString(),
     message: message.value.trim() || undefined,
+    challengerKitPreference: isChallengerAway.value ? effectiveAwaySlot.value : undefined,
   })
 }
 
@@ -339,6 +377,24 @@ function goNext() {
                 :size="72"
               />
               <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
+              <div v-if="canOverrideAwayKit" class="cw-kit-slot-toggle">
+                <button
+                  type="button"
+                  class="cw-kit-slot-toggle-btn"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveAwaySlot === 'First' }"
+                  @click="manualAwayKitSlot = 'First'"
+                >
+                  {{ t('challenges.wizard.kitFirstShort') }}
+                </button>
+                <button
+                  type="button"
+                  class="cw-kit-slot-toggle-btn"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveAwaySlot === 'Second' }"
+                  @click="manualAwayKitSlot = 'Second'"
+                >
+                  {{ t('challenges.wizard.kitSecondShort') }}
+                </button>
+              </div>
             </div>
           </div>
           <p class="fp-hint mt-2">{{ t('challenges.wizard.kitAutoHint') }}</p>
@@ -574,6 +630,29 @@ function goNext() {
   height: 72px;
   font-size: 0.8125rem;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.cw-kit-slot-toggle {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.cw-kit-slot-toggle-btn {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(var(--v-theme-on-surface), 0.18);
+  background: none;
+  cursor: pointer;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.cw-kit-slot-toggle-btn--on {
+  border-color: rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary));
 }
 
 .cw-message-input {

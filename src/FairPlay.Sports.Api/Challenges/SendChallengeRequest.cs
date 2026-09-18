@@ -1,3 +1,5 @@
+using FairPlay.Sports.Domain.Challenges;
+
 namespace FairPlay.Sports.Api.Challenges;
 
 public sealed record SendChallengeRequest(
@@ -5,4 +7,5 @@ public sealed record SendChallengeRequest(
     Guid ChallengedTeamId,
     Guid VenueTeamId,
     DateTime MatchDate,
-    string? Message);
+    string? Message,
+    TeamKitSlot? ChallengerKitPreference = null);

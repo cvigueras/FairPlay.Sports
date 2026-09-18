@@ -38,6 +38,8 @@
       "kitHome": "Home",
       "kitAway": "Away",
       "kitNotSet": "No kit set",
+      "kitFirstShort": "1st",
+      "kitSecondShort": "2nd",
       "kitAutoHint": "Chosen automatically so it doesn't clash with the home team's kit.",
       "kitInfoNoneAtAll": "Neither team has a kit configured.",
       "kitInfoNoHome": "{team} (home) has no kit configured.",

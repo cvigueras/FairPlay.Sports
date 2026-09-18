@@ -38,6 +38,8 @@
       "kitHome": "Local",
       "kitAway": "Visitante",
       "kitNotSet": "Sin equipación",
+      "kitFirstShort": "1ª",
+      "kitSecondShort": "2ª",
       "kitAutoHint": "La equipación se calcula automáticamente para que no coincida con la del equipo local.",
       "kitInfoNoneAtAll": "Ninguno de los dos equipos tiene equipación configurada.",
       "kitInfoNoHome": "{team} (local) no tiene equipación configurada.",

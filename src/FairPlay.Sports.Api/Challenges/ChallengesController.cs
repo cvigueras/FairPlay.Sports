@@ -40,7 +40,8 @@ public sealed class ChallengesController(ISender sender) : ControllerBase
             request.VenueTeamId,
             request.MatchDate,
             request.Message,
-            User.GetUserId());
+            User.GetUserId(),
+            request.ChallengerKitPreference);
 
         var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);

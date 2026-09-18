@@ -18,5 +18,8 @@ public sealed class SendChallengeValidator : AbstractValidator<SendChallengeComm
         RuleFor(x => x.VenueTeamId)
             .Must((command, venueTeamId) => venueTeamId == command.ChallengerTeamId || venueTeamId == command.ChallengedTeamId)
             .WithMessage("The venue must belong to the challenger or the challenged team.");
+        RuleFor(x => x.ChallengerKitPreference)
+            .IsInEnum()
+            .When(x => x.ChallengerKitPreference is not null);
     }
 }
