@@ -16,7 +16,66 @@
   },
   "home": {
     "greeting": "Hola, {name}",
-    "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
+    "subtitle": "Este es tu panel de FairPlay Sports.",
+    "browseTeams": "Buscar un equipo para desafiar",
+    "viewMyTeams": "Ver mis equipos",
+    "loadFailed": "No se ha podido cargar tu panel.",
+    "kpi": {
+      "teams": "Equipos asignados",
+      "teamsCaptionEmpty": "Únete a un equipo para empezar",
+      "activeChallenges": "Desafíos activos",
+      "activeChallengesCaption": "{sent} enviados · {received} recibidos",
+      "won": "Partidos ganados",
+      "wonCaption": "{pct}% de victorias · {played} jugados",
+      "wonCaptionEmpty": "Aún sin partidos resueltos",
+      "lost": "Partidos perdidos",
+      "lostCaption": "según tu clasificación actual"
+    },
+    "balance": {
+      "title": "Balance de tus equipos",
+      "won": "Ganados",
+      "lost": "Perdidos",
+      "drawn": "Empatados",
+      "winRate": "victorias",
+      "empty": "Sin partidos resueltos"
+    },
+    "stats": {
+      "teams": "equipos asignados a tu cuenta",
+      "challenges": "desafíos enviados y recibidos en total",
+      "played": "partidos jugados en total"
+    },
+    "myTeams": {
+      "title": "Tus equipos",
+      "viewAll": "Ver todos",
+      "createAnother": "Crear otro equipo",
+      "empty": "Aún no perteneces a ningún equipo."
+    },
+    "nextMatch": {
+      "title": "Próximo partido",
+      "viewDetail": "Ver detalle",
+      "empty": "No tienes ningún partido programado.",
+      "emptyCta": "Buscar equipo"
+    },
+    "standings": {
+      "title": "Clasificación",
+      "viewAll": "Ver clasificación completa",
+      "position": "Pos",
+      "team": "Equipo",
+      "played": "PJ",
+      "points": "Pts",
+      "empty": "Todavía no hay clasificación para tus equipos."
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "empty": "Todavía no hay actividad.",
+      "joinedTeam": "Te uniste a {team} como {role}",
+      "challengeSent": "Enviaste un desafío a {team}",
+      "challengeReceived": "Recibiste un desafío de {team}",
+      "challengeAcceptedByMe": "Aceptaste el desafío de {team}",
+      "challengeRejectedByMe": "Rechazaste el desafío de {team}",
+      "challengeAcceptedByOther": "{team} aceptó tu desafío",
+      "challengeRejectedByOther": "{team} rechazó tu desafío"
+    }
   },
   "challenges": {
     "placeholder": "Aquí tus retos",

@@ -16,7 +16,66 @@
   },
   "home": {
     "greeting": "Hi, {name}",
-    "subtitle": "This is your FairPlay Sports hub. More coming soon."
+    "subtitle": "This is your FairPlay Sports hub.",
+    "browseTeams": "Find a team to challenge",
+    "viewMyTeams": "View my teams",
+    "loadFailed": "Couldn't load your dashboard.",
+    "kpi": {
+      "teams": "Teams assigned",
+      "teamsCaptionEmpty": "Join a team to get started",
+      "activeChallenges": "Active challenges",
+      "activeChallengesCaption": "{sent} sent · {received} received",
+      "won": "Matches won",
+      "wonCaption": "{pct}% win rate · {played} played",
+      "wonCaptionEmpty": "No matches settled yet",
+      "lost": "Matches lost",
+      "lostCaption": "based on your current standings"
+    },
+    "balance": {
+      "title": "Your teams' balance",
+      "won": "Won",
+      "lost": "Lost",
+      "drawn": "Drawn",
+      "winRate": "win rate",
+      "empty": "No matches settled"
+    },
+    "stats": {
+      "teams": "teams assigned to your account",
+      "challenges": "challenges sent and received in total",
+      "played": "matches played in total"
+    },
+    "myTeams": {
+      "title": "Your teams",
+      "viewAll": "View all",
+      "createAnother": "Create another team",
+      "empty": "You don't belong to any team yet."
+    },
+    "nextMatch": {
+      "title": "Next match",
+      "viewDetail": "View detail",
+      "empty": "You have no match scheduled.",
+      "emptyCta": "Find a team"
+    },
+    "standings": {
+      "title": "Standings",
+      "viewAll": "View full standings",
+      "position": "Pos",
+      "team": "Team",
+      "played": "P",
+      "points": "Pts",
+      "empty": "There's no standings for your teams yet."
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity yet.",
+      "joinedTeam": "You joined {team} as {role}",
+      "challengeSent": "You sent a challenge to {team}",
+      "challengeReceived": "You received a challenge from {team}",
+      "challengeAcceptedByMe": "You accepted the challenge from {team}",
+      "challengeRejectedByMe": "You declined the challenge from {team}",
+      "challengeAcceptedByOther": "{team} accepted your challenge",
+      "challengeRejectedByOther": "{team} declined your challenge"
+    }
   },
   "challenges": {
     "placeholder": "Here are your challenges",
