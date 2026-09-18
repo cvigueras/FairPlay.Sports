@@ -157,11 +157,12 @@ function applyInitial(team: Team) {
     venueSurface: team.venueSurface ?? null,
     venueMapsUrl: team.venueMapsUrl ?? '',
     colorPrimary: team.colorPrimary || '#16a34a',
-    colorSecondary: team.colorSecondary || '#ffffff',
+    colorSecondary: team.kitPattern === 'Plain' ? '#ffffff' : team.colorSecondary || '#ffffff',
     shortsColor: team.shortsColor || '#1e293b',
     kitPattern: team.kitPattern ?? 'Plain',
     alternateColorPrimary: team.alternateColorPrimary || '#0f172a',
-    alternateColorSecondary: team.alternateColorSecondary || '#ffffff',
+    alternateColorSecondary:
+      team.alternateKitPattern === 'Plain' ? '#ffffff' : team.alternateColorSecondary || '#ffffff',
     alternateShortsColor: team.alternateShortsColor || '#1e293b',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
@@ -190,6 +191,25 @@ watch(
   () => model.role,
   (role) => {
     if (role === 'Coach') model.coach = auth.currentUser?.userName ?? ''
+  },
+)
+
+/** A plain shirt has no secondary colour to show, so the picker hides it and
+ *  parks it at white - the neutral default the other patterns start from. */
+watch(
+  () => model.kitPattern,
+  (pattern) => {
+    if (pattern !== 'Plain') return
+    model.colorSecondary = '#ffffff'
+    if (kitColorSlot.value === 'secondary') kitColorSlot.value = 'primary'
+  },
+)
+watch(
+  () => model.alternateKitPattern,
+  (pattern) => {
+    if (pattern !== 'Plain') return
+    model.alternateColorSecondary = '#ffffff'
+    if (alternateKitColorSlot.value === 'secondary') alternateKitColorSlot.value = 'primary'
   },
 )
 
@@ -543,6 +563,7 @@ function goNext() {
                     {{ t('profile.team.colorPrimary') }}
                   </button>
                   <button
+                    v-if="model.kitPattern !== 'Plain'"
                     type="button"
                     class="fp-kit-swatch-slot"
                     :class="{ 'fp-kit-swatch-slot--active': kitColorSlot === 'secondary' }"
@@ -561,8 +582,9 @@ function goNext() {
                       class="fp-kit-palette-swatch"
                       :style="{ background: c.value }"
                       :disabled="
+                        model.kitPattern !== 'Plain' &&
                         (kitColorSlot === 'primary' ? model.colorSecondary : model.colorPrimary).toLowerCase() ===
-                        c.value.toLowerCase()
+                          c.value.toLowerCase()
                       "
                       :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
                       :title="t(`profile.team.colorNames.${c.labelKey}`)"
@@ -677,6 +699,7 @@ function goNext() {
                     {{ t('profile.team.colorPrimary') }}
                   </button>
                   <button
+                    v-if="model.alternateKitPattern !== 'Plain'"
                     type="button"
                     class="fp-kit-swatch-slot"
                     :class="{ 'fp-kit-swatch-slot--active': alternateKitColorSlot === 'secondary' }"
@@ -695,6 +718,7 @@ function goNext() {
                       class="fp-kit-palette-swatch"
                       :style="{ background: c.value }"
                       :disabled="
+                        model.alternateKitPattern !== 'Plain' &&
                         (alternateKitColorSlot === 'primary'
                           ? model.alternateColorSecondary
                           : model.alternateColorPrimary
