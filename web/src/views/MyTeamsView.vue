@@ -18,6 +18,7 @@ import RolePills from '@/components/RolePills.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
+import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
@@ -330,7 +331,9 @@ async function confirmLeave() {
               <div class="fp-team-body">
                 <div class="fp-team-row1">
                   <span class="fp-team-name">{{ team.name }}</span>
-                  <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
+                  <span class="fp-role-chip" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
+                    {{ t(`profile.team.memberRoles.${membership.role}`) }}
+                  </span>
                 </div>
                 <div class="fp-chip-row">
                   <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">

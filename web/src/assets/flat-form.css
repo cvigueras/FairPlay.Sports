@@ -237,8 +237,6 @@
 .fp-role-chip {
   padding: 5px 14px;
   border-radius: 999px;
-  background: rgba(var(--v-theme-primary), 0.1);
-  color: rgb(var(--v-theme-primary-darken-1));
   font-size: 13px;
   font-weight: 700;
 }
