@@ -373,7 +373,7 @@ function goNext() {
                 {{ t('challenges.wizard.venueRival', { team: rivalTeam.name }) }}
               </button>
             </div>
-            <span class="fp-hint">
+            <span class="cw-venue-name">
               {{ homeTeam && hasVenue(homeTeam) ? homeTeam.venueName : t('challenges.wizard.venueUndefined') }}
             </span>
           </FlatField>
@@ -454,7 +454,9 @@ function goNext() {
               </div>
             </div>
           </div>
-          <p class="fp-hint mt-4">{{ t('challenges.wizard.kitAutoHint') }}</p>
+          <v-alert type="info" variant="tonal" density="compact" class="cw-alert-sm mt-4 mb-1">
+            {{ t('challenges.wizard.kitAutoHint') }}
+          </v-alert>
           <v-alert
             v-if="kitInfoMessage"
             type="info"
@@ -469,7 +471,7 @@ function goNext() {
             type="error"
             variant="tonal"
             density="compact"
-            class="mt-3"
+            class="cw-alert-sm mt-3"
           >
             {{ t('challenges.wizard.dateRequired') }}
           </v-alert>
@@ -681,6 +683,16 @@ function goNext() {
   border-radius: 999px;
   background: rgba(var(--v-theme-primary), 0.1);
   color: rgb(var(--v-theme-primary));
+}
+
+.cw-alert-sm {
+  font-size: 0.75rem;
+}
+
+.cw-venue-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(var(--v-theme-on-surface), 0.87);
 }
 
 .cw-kit-team-name {
