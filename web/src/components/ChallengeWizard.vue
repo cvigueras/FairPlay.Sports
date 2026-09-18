@@ -393,6 +393,7 @@ function goNext() {
           <div class="cw-kits mt-2">
             <div class="cw-kit-col">
               <span class="cw-kit-tag">{{ t('challenges.wizard.kitHome') }}</span>
+              <span v-if="homeTeam" class="cw-kit-team-name">{{ homeTeam.name }}</span>
               <KitPreview
                 v-if="homeKitPreview"
                 :pattern="homeKitPreview.kitPattern"
@@ -423,6 +424,7 @@ function goNext() {
             </div>
             <div class="cw-kit-col">
               <span class="cw-kit-tag">{{ t('challenges.wizard.kitAway') }}</span>
+              <span v-if="awayTeam" class="cw-kit-team-name">{{ awayTeam.name }}</span>
               <KitPreview
                 v-if="awayKitPreview"
                 :pattern="awayKitPreview.kitPattern"
@@ -452,7 +454,7 @@ function goNext() {
               </div>
             </div>
           </div>
-          <p class="fp-hint mt-2">{{ t('challenges.wizard.kitAutoHint') }}</p>
+          <p class="fp-hint mt-4">{{ t('challenges.wizard.kitAutoHint') }}</p>
           <v-alert
             v-if="kitInfoMessage"
             type="info"
@@ -662,9 +664,12 @@ function goNext() {
 
 .cw-kit-col {
   display: flex;
+  flex: 1 1 0;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  padding: 0 0.75rem;
 }
 
 .cw-kit-tag {
@@ -676,6 +681,16 @@ function goNext() {
   border-radius: 999px;
   background: rgba(var(--v-theme-primary), 0.1);
   color: rgb(var(--v-theme-primary));
+}
+
+.cw-kit-team-name {
+  max-width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cw-kit-empty {
