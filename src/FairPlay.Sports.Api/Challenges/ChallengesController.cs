@@ -35,7 +35,12 @@ public sealed class ChallengesController(ISender sender) : ControllerBase
     public async Task<ActionResult<ChallengeDto>> Send(SendChallengeRequest request, CancellationToken cancellationToken)
     {
         var command = new SendChallengeCommand(
-            request.ChallengerTeamId, request.ChallengedTeamId, request.Message, User.GetUserId());
+            request.ChallengerTeamId,
+            request.ChallengedTeamId,
+            request.VenueTeamId,
+            request.MatchDate,
+            request.Message,
+            User.GetUserId());
 
         var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);

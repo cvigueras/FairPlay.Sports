@@ -52,9 +52,9 @@ public class GetTeamChallengesHandlerTests
         _teams.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(
             [
-                TeamMother.DomainTeam(id: ChallengeMother.ChallengerTeamId),
-                TeamMother.DomainTeam(id: ChallengeMother.ChallengedTeamId),
-                TeamMother.DomainTeam(id: thirdTeamId),
+                TeamMother.DomainTeamWithProfile(id: ChallengeMother.ChallengerTeamId),
+                TeamMother.DomainTeamWithProfile(id: ChallengeMother.ChallengedTeamId),
+                TeamMother.DomainTeamWithProfile(id: thirdTeamId),
             ]);
 
         var result = await _handler.Handle(

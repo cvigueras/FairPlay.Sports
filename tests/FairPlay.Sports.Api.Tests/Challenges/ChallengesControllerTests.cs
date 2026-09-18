@@ -57,7 +57,12 @@ public class ChallengesControllerTests
         var dto = ChallengeMother.Dto();
         _sender.Send(Arg.Any<SendChallengeCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ChallengeDto>.Success(dto));
-        var request = new SendChallengeRequest(ChallengeMother.ChallengerTeamId, ChallengeMother.ChallengedTeamId, ChallengeMother.Message);
+        var request = new SendChallengeRequest(
+            ChallengeMother.ChallengerTeamId,
+            ChallengeMother.ChallengedTeamId,
+            ChallengeMother.ChallengerTeamId,
+            ChallengeMother.MatchDate,
+            ChallengeMother.Message);
 
         var response = await _controller.Send(request, CancellationToken.None);
 
@@ -66,6 +71,8 @@ public class ChallengesControllerTests
             Arg.Is<SendChallengeCommand>(command =>
                 command.ChallengerTeamId == request.ChallengerTeamId &&
                 command.ChallengedTeamId == request.ChallengedTeamId &&
+                command.VenueTeamId == request.VenueTeamId &&
+                command.MatchDate == request.MatchDate &&
                 command.Message == request.Message &&
                 command.ActingUserId == CurrentUserId),
             Arg.Any<CancellationToken>());
@@ -77,8 +84,10 @@ public class ChallengesControllerTests
         _sender.Send(Arg.Any<SendChallengeCommand>(), Arg.Any<CancellationToken>())
             .Returns(Result<ChallengeDto>.Failure(ChallengeMother.NotAllowedToSend));
 
+        var challengerId = Guid.NewGuid();
         var response = await _controller.Send(
-            new SendChallengeRequest(Guid.NewGuid(), Guid.NewGuid(), null), CancellationToken.None);
+            new SendChallengeRequest(challengerId, Guid.NewGuid(), challengerId, ChallengeMother.MatchDate, null),
+            CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<BadRequestObjectResult>());
     }

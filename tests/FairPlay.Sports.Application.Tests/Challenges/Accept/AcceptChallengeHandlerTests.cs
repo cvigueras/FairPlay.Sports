@@ -30,9 +30,9 @@ public class AcceptChallengeHandlerTests
         _challenges.GetByIdForUpdateAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(_challenge);
         _teams = Substitute.For<ITeamRepository>();
         _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>())
-            .Returns(TeamMother.DomainTeam(id: ChallengeMother.ChallengerTeamId));
+            .Returns(TeamMother.DomainTeamWithProfile(id: ChallengeMother.ChallengerTeamId));
         _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>())
-            .Returns(TeamMother.DomainTeam(id: ChallengeMother.ChallengedTeamId));
+            .Returns(TeamMother.DomainTeamWithProfile(id: ChallengeMother.ChallengedTeamId));
         _members = Substitute.For<ITeamMemberRepository>();
         _members.GetByTeamAndUserAsync(
                 ChallengeMother.ChallengedTeamId, ChallengeMother.ActingUserId, Arg.Any<CancellationToken>())

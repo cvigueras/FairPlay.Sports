@@ -19,7 +19,37 @@
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
   },
   "challenges": {
-    "placeholder": "Aquí tus retos"
+    "placeholder": "Aquí tus retos",
+    "wizard": {
+      "stepOf": "Paso {step} de {total}",
+      "stepTeam": "Elige tu equipo",
+      "stepMatch": "Fecha, campo y equipación",
+      "stepSummary": "Resumen del desafío",
+      "teamHint": "Solo se muestran los equipos donde eres delegado, entrenador, presidente o técnico.",
+      "noEligibleTeams": "No perteneces a ningún equipo con permiso para retar (delegado, entrenador, presidente o técnico).",
+      "venueLabel": "Campo",
+      "venueMine": "Mi campo",
+      "venueRival": "Campo de {team}",
+      "venueUndefined": "Sin campo definido",
+      "dateLabel": "Fecha",
+      "timeLabel": "Hora",
+      "dateRequired": "Elige una fecha y hora futuras.",
+      "kitLabel": "Equipación",
+      "kitHome": "Local",
+      "kitAway": "Visitante",
+      "kitAutoHint": "Se calcula automáticamente para que no coincida con la del equipo local.",
+      "noHomeKit": "El equipo local no tiene equipación configurada.",
+      "noValidAwayKit": "{team} no tiene ninguna equipación que no coincida con la del equipo local. No se puede enviar el desafío.",
+      "messageLabel": "Mensaje (opcional)",
+      "messagePlaceholder": "Añade un comentario para el rival...",
+      "summaryVs": "{home} (local) frente a {away} (visitante)",
+      "back": "Atrás",
+      "next": "Continuar",
+      "send": "Enviar desafío",
+      "cancel": "Cancelar",
+      "sentSuccess": "Desafío enviado a {team}.",
+      "sendFailed": "No se ha podido enviar el desafío."
+    }
   },
   "teams": {
     "count": "{n} equipos",

@@ -14,5 +14,9 @@ public sealed class SendChallengeValidator : AbstractValidator<SendChallengeComm
         RuleFor(x => x.ChallengedTeamId)
             .NotEqual(x => x.ChallengerTeamId)
             .WithMessage("A team cannot challenge itself.");
+        RuleFor(x => x.MatchDate).NotEmpty();
+        RuleFor(x => x.VenueTeamId)
+            .Must((command, venueTeamId) => venueTeamId == command.ChallengerTeamId || venueTeamId == command.ChallengedTeamId)
+            .WithMessage("The venue must belong to the challenger or the challenged team.");
     }
 }

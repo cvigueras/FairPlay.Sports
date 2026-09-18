@@ -13,12 +13,19 @@ internal sealed class ChallengeConfiguration : IEntityTypeConfiguration<Challeng
 
         builder.HasKey(challenge => challenge.Id);
         builder.Property(challenge => challenge.Id).ValueGeneratedNever();
+        builder.Property(challenge => challenge.MatchDate).IsRequired();
+        builder.Property(challenge => challenge.AwayKitSlot)
+            .IsRequired()
+            .HasMaxLength(10)
+            .HasConversion<string>();
         builder.Property(challenge => challenge.Message).HasMaxLength(Challenge.MaxMessageLength);
         builder.Property(challenge => challenge.Status)
             .IsRequired()
             .HasMaxLength(20)
             .HasConversion<string>();
         builder.Property(challenge => challenge.CreatedAt).IsRequired();
+        builder.Ignore(challenge => challenge.HomeTeamId);
+        builder.Ignore(challenge => challenge.AwayTeamId);
         builder.HasOne<Team>()
             .WithMany()
             .HasForeignKey(challenge => challenge.ChallengerTeamId)
@@ -27,8 +34,13 @@ internal sealed class ChallengeConfiguration : IEntityTypeConfiguration<Challeng
             .WithMany()
             .HasForeignKey(challenge => challenge.ChallengedTeamId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Team>()
+            .WithMany()
+            .HasForeignKey(challenge => challenge.VenueTeamId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(challenge => challenge.ChallengerTeamId);
         builder.HasIndex(challenge => challenge.ChallengedTeamId);
+        builder.HasIndex(challenge => challenge.VenueTeamId);
     }
 }

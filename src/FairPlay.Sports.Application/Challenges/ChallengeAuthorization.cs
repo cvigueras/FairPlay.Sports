@@ -6,5 +6,5 @@ namespace FairPlay.Sports.Application.Challenges;
 internal static class ChallengeAuthorization
 {
     public static bool CanActForTeam(TeamMemberRole role) =>
-        role is TeamMemberRole.Delegate or TeamMemberRole.Coach or TeamMemberRole.President;
+        role is TeamMemberRole.Delegate or TeamMemberRole.Coach or TeamMemberRole.President or TeamMemberRole.TechnicalStaff;
 }

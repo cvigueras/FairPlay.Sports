@@ -19,7 +19,37 @@
     "subtitle": "This is your FairPlay Sports hub. More coming soon."
   },
   "challenges": {
-    "placeholder": "Here are your challenges"
+    "placeholder": "Here are your challenges",
+    "wizard": {
+      "stepOf": "Step {step} of {total}",
+      "stepTeam": "Choose your team",
+      "stepMatch": "Date, venue and kit",
+      "stepSummary": "Challenge summary",
+      "teamHint": "Only teams where you are a delegate, coach, president or technical staff are shown.",
+      "noEligibleTeams": "You don't belong to any team with permission to send challenges (delegate, coach, president or technical staff).",
+      "venueLabel": "Venue",
+      "venueMine": "My venue",
+      "venueRival": "{team}'s venue",
+      "venueUndefined": "No venue set",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "dateRequired": "Choose a future date and time.",
+      "kitLabel": "Kit",
+      "kitHome": "Home",
+      "kitAway": "Away",
+      "kitAutoHint": "Chosen automatically so it doesn't clash with the home team's kit.",
+      "noHomeKit": "The home team has no kit configured.",
+      "noValidAwayKit": "{team} has no kit that avoids clashing with the home team's. The challenge can't be sent.",
+      "messageLabel": "Message (optional)",
+      "messagePlaceholder": "Add a note for the rival team...",
+      "summaryVs": "{home} (home) vs {away} (away)",
+      "back": "Back",
+      "next": "Continue",
+      "send": "Send challenge",
+      "cancel": "Cancel",
+      "sentSuccess": "Challenge sent to {team}.",
+      "sendFailed": "Could not send the challenge."
+    }
   },
   "teams": {
     "count": "{n} teams",

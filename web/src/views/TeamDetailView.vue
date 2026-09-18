@@ -20,14 +20,17 @@ import {
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
+import { challengesApi } from '@/lib/challenges'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { SURFACE_COLOR } from '@/lib/pitchSurface'
+import type { SendChallengePayload } from '@/types/challenge'
 import type { Team } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
@@ -105,8 +108,24 @@ const hasContact = computed(
   () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
 )
 
+const challengeWizardOpen = ref(false)
+const sendingChallenge = ref(false)
+
 function challengeTeam() {
-  // TODO: wire up the team-vs-team challenge flow.
+  challengeWizardOpen.value = true
+}
+
+async function handleSendChallenge(payload: SendChallengePayload) {
+  sendingChallenge.value = true
+  try {
+    await challengesApi.send(payload, auth.accessToken)
+    challengeWizardOpen.value = false
+    ui.notify(t('challenges.wizard.sentSuccess', { team: team.value?.name }))
+  } catch (err) {
+    ui.notify(err instanceof ApiError ? err.message : t('challenges.wizard.sendFailed'), 'error')
+  } finally {
+    sendingChallenge.value = false
+  }
 }
 </script>
 
@@ -344,6 +363,13 @@ function challengeTeam() {
             <p class="text-body-2 mb-0">{{ t('teams.detail.noVenue') }}</p>
           </div>
         </v-card>
+
+        <ChallengeWizard
+          v-model="challengeWizardOpen"
+          :rival-team="team"
+          :loading="sendingChallenge"
+          @submit="handleSendChallenge"
+        />
       </template>
     </v-container>
   </v-main>

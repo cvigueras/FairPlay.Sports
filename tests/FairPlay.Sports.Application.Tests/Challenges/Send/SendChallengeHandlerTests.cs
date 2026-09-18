@@ -14,22 +14,31 @@ namespace FairPlay.Sports.Application.Tests.Challenges.Send;
 public class SendChallengeHandlerTests
 {
     private static readonly DateTime Now = new(2026, 9, 18, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly KitColors GreenKit = new("Green", "White", "White", KitPattern.Plain);
+    private static readonly KitColors BlueKit = new("Blue", "Yellow", "Blue", KitPattern.Plain);
+    private static readonly KitColors RedKit = new("Red", "Black", "Black", KitPattern.Plain);
 
     private IChallengeRepository _challenges = null!;
     private ITeamRepository _teams = null!;
     private ITeamMemberRepository _members = null!;
     private IClock _clock = null!;
     private SendChallengeHandler _handler = null!;
+    private Team _challengerTeam = null!;
+    private Team _challengedTeam = null!;
+
+    private static Team TeamWithProfile(Guid id, KitColors colors, KitColors? alternateColors = null) =>
+        TeamMother.DomainTeam(id: id, profile: new TeamProfile(Colors: colors, AlternateColors: alternateColors));
 
     [SetUp]
     public void SetUp()
     {
+        _challengerTeam = TeamWithProfile(ChallengeMother.ChallengerTeamId, GreenKit);
+        _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, BlueKit, RedKit);
+
         _challenges = Substitute.For<IChallengeRepository>();
         _teams = Substitute.For<ITeamRepository>();
-        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>())
-            .Returns(TeamMother.DomainTeam(id: ChallengeMother.ChallengerTeamId));
-        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>())
-            .Returns(TeamMother.DomainTeam(id: ChallengeMother.ChallengedTeamId));
+        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
         _members = Substitute.For<ITeamMemberRepository>();
         _members.GetByTeamAndUserAsync(
                 ChallengeMother.ChallengerTeamId, ChallengeMother.ActingUserId, Arg.Any<CancellationToken>())
@@ -90,9 +99,113 @@ public class SendChallengeHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenActingUserIsTechnicalStaff_Succeeds()
+    {
+        _members.GetByTeamAndUserAsync(
+                ChallengeMother.ChallengerTeamId, ChallengeMother.ActingUserId, Arg.Any<CancellationToken>())
+            .Returns(ChallengeMother.Member(ChallengeMother.ChallengerTeamId, ChallengeMother.ActingUserId, TeamMemberRole.TechnicalStaff));
+
+        var result = await _handler.Handle(ChallengeMother.SendCommand(), CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+    }
+
+    [Test]
+    public async Task Handle_WhenMatchDateIsInThePast_ReturnsFailure()
+    {
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(matchDate: Now.AddDays(-1)), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Error, Is.EqualTo(ChallengeMother.MatchDateNotInFuture));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenHomeTeamHasNoKitConfigured_ReturnsFailure()
+    {
+        _challengerTeam = TeamMother.DomainTeam(id: ChallengeMother.ChallengerTeamId);
+        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.That(result.Error, Is.EqualTo(ChallengeMother.HomeTeamHasNoKit));
+    }
+
+    [Test]
+    public async Task Handle_WhenVenueIsChallenger_AndAwayFirstKitDoesNotClash_UsesFirstKit()
+    {
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengerTeamId));
+            Assert.That(result.Value!.AwayTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
+            Assert.That(result.Value!.AwayKit.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+            Assert.That(result.Value!.HomeKit.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenAwayFirstKitClashesWithHome_FallsBackToSecondKit()
+    {
+        // Challenged plays away this time, with a first kit that matches the home (challenger) colour.
+        _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, GreenKit, RedKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
+        _members.GetByTeamAndUserAsync(
+                ChallengeMother.ChallengerTeamId, ChallengeMother.ActingUserId, Arg.Any<CancellationToken>())
+            .Returns(ChallengeMother.Member(ChallengeMother.ChallengerTeamId, ChallengeMother.ActingUserId, TeamMemberRole.Delegate));
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AwayKit.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.AwayKit.ColorPrimary, Is.EqualTo(RedKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenBothAwayKitsClashWithHome_ReturnsFailure()
+    {
+        _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, GreenKit, GreenKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Error, Is.EqualTo(ChallengeMother.NoValidAwayKit));
+        });
+        await _challenges.DidNotReceive().AddAsync(Arg.Any<Challenge>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Handle_WhenAwayHasNoSecondKit_AndFirstClashes_ReturnsFailure()
+    {
+        _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, GreenKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.That(result.Error, Is.EqualTo(ChallengeMother.NoValidAwayKit));
+    }
+
+    [Test]
     public async Task Handle_OnSuccess_AddsTheChallenge_AndReturnsDto()
     {
-        var command = ChallengeMother.SendCommand();
+        var command = ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -102,13 +215,16 @@ public class SendChallengeHandlerTests
             Assert.That(result.Value!.ChallengerTeamId, Is.EqualTo(command.ChallengerTeamId));
             Assert.That(result.Value!.ChallengedTeamId, Is.EqualTo(command.ChallengedTeamId));
             Assert.That(result.Value!.Message, Is.EqualTo(command.Message));
+            Assert.That(result.Value!.MatchDate, Is.EqualTo(command.MatchDate));
             Assert.That(result.Value!.Status, Is.EqualTo(ChallengeStatus.Pending));
             Assert.That(result.Value!.CreatedAt, Is.EqualTo(Now));
         });
         await _challenges.Received(1).AddAsync(
             Arg.Is<Challenge>(challenge =>
                 challenge.ChallengerTeamId == command.ChallengerTeamId &&
-                challenge.ChallengedTeamId == command.ChallengedTeamId),
+                challenge.ChallengedTeamId == command.ChallengedTeamId &&
+                challenge.VenueTeamId == command.VenueTeamId &&
+                challenge.MatchDate == command.MatchDate),
             Arg.Any<CancellationToken>());
     }
 }

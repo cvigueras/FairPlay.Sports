@@ -27,7 +27,7 @@ public sealed class RejectChallengeHandler(
         if (member is null || !ChallengeAuthorization.CanActForTeam(member.Role))
         {
             return Result<ChallengeDto>.Failure(
-                "Only the challenged team's delegate, coach or president can respond to a challenge.");
+                "Only the challenged team's delegate, coach, president or technical staff can respond to a challenge.");
         }
 
         if (challenge.Status != ChallengeStatus.Pending)
