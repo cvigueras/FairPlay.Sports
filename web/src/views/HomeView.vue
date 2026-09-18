@@ -28,9 +28,6 @@ const { t, locale } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 
-const userName = computed(() => auth.currentUser?.userName ?? '')
-const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
-
 const loading = ref(true)
 
 interface TeamCard {
@@ -299,13 +296,6 @@ onMounted(async () => {
       <template v-else>
         <!-- Header -->
         <div class="home-header mb-7">
-          <div class="d-flex align-center ga-4">
-            <div class="home-avatar">{{ userInitial }}</div>
-            <div>
-              <h1 class="text-h5 text-md-h4 font-weight-bold">{{ t('home.greeting', { name: userName }) }}</h1>
-              <p class="text-body-2 text-medium-emphasis mt-1">{{ t('home.subtitle') }}</p>
-            </div>
-          </div>
           <div class="d-flex ga-2 home-header-actions">
             <RouterLink :to="{ name: 'my-teams' }" class="fp-btn fp-btn-outline">
               {{ t('home.viewMyTeams') }}
@@ -513,24 +503,9 @@ onMounted(async () => {
 .home-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 16px;
-}
-
-.home-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  background: rgb(var(--v-theme-primary));
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  flex-shrink: 0;
 }
 
 .home-kpi-grid {

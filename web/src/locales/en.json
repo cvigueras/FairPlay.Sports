@@ -15,8 +15,6 @@
     "challenges": "Challenges"
   },
   "home": {
-    "greeting": "Hi, {name}",
-    "subtitle": "This is your FairPlay Sports hub.",
     "browseTeams": "Find a team to challenge",
     "viewMyTeams": "View my teams",
     "loadFailed": "Couldn't load your dashboard.",
