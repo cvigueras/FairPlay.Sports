@@ -43,7 +43,8 @@
       "notFound": "No se ha encontrado este equipo.",
       "loadFailed": "No se ha podido cargar este equipo.",
       "noVenue": "Este equipo todavía no ha indicado su campo.",
-      "noProfile": "Este equipo todavía no ha añadido más datos de la ficha."
+      "noProfile": "Este equipo todavía no ha añadido más datos de la ficha.",
+      "noContact": "Este equipo todavía no ha añadido datos de contacto."
     }
   },
   "standings": {
