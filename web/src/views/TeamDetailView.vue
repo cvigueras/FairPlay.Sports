@@ -3,7 +3,6 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccountOutline,
-  mdiArrowLeft,
   mdiCalendarOutline,
   mdiEmailOutline,
   mdiGrass,
@@ -20,14 +19,17 @@ import {
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
+import { CHALLENGE_ACTOR_ROLES, challengesApi } from '@/lib/challenges'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { SURFACE_COLOR } from '@/lib/pitchSurface'
+import type { SendChallengePayload } from '@/types/challenge'
 import type { Team } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
@@ -49,6 +51,8 @@ async function load(id: string) {
   try {
     team.value = await teamsApi.byId(id, auth.accessToken)
     ui.breadcrumbLabel = team.value.name
+    // Best-effort: only used to decide whether to show the challenge button.
+    auth.loadMyTeams().catch(() => {})
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       notFound.value = true
@@ -105,24 +109,40 @@ const hasContact = computed(
   () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
 )
 
+/** Never your own team (any role), and only for users who can actually act for
+ *  some team (a pure Player, with no Delegate/Coach/President/TechnicalStaff
+ *  membership anywhere, has no team to send a challenge from). */
+const canChallenge = computed(() => {
+  if (!team.value) return false
+  const teamId = team.value.id
+  if (auth.myTeams.some((membership) => membership.teamId === teamId)) return false
+  return auth.myTeams.some((membership) => CHALLENGE_ACTOR_ROLES.includes(membership.role))
+})
+
+const challengeWizardOpen = ref(false)
+const sendingChallenge = ref(false)
+
 function challengeTeam() {
-  // TODO: wire up the team-vs-team challenge flow.
+  challengeWizardOpen.value = true
+}
+
+async function handleSendChallenge(payload: SendChallengePayload) {
+  sendingChallenge.value = true
+  try {
+    await challengesApi.send(payload, auth.accessToken)
+    challengeWizardOpen.value = false
+    ui.notify(t('challenges.wizard.sentSuccess', { team: team.value?.name }))
+  } catch (err) {
+    ui.notify(err instanceof ApiError ? err.message : t('challenges.wizard.sendFailed'), 'error')
+  } finally {
+    sendingChallenge.value = false
+  }
 }
 </script>
 
 <template>
   <v-main>
     <v-container class="py-6 py-md-10 team-detail-container">
-      <v-btn
-        :to="{ name: 'teams' }"
-        :prepend-icon="mdiArrowLeft"
-        variant="text"
-        size="small"
-        class="mb-4"
-      >
-        {{ t('nav.teams') }}
-      </v-btn>
-
       <v-progress-circular
         v-if="loading"
         indeterminate
@@ -173,8 +193,9 @@ function challengeTeam() {
             </div>
 
             <v-btn
+              v-if="canChallenge"
               color="red"
-              variant="outlined"
+              variant="flat"
               size="large"
               :prepend-icon="mdiSwordCross"
               class="team-hero-challenge"
@@ -185,66 +206,121 @@ function challengeTeam() {
           </div>
         </v-card>
 
-        <!-- Contacto and Equipación: a matched-height row on desktop. -->
-        <div class="team-row-2col mb-5" :class="{ 'team-row-2col--single': !hasContact }">
-          <v-card v-if="hasContact" border flat rounded="xl" class="pa-6 pa-md-8 team-panel">
-            <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+        <!-- Contacto and Equipación: a matched-height row on desktop. Contacto always
+             renders (an empty state when there's nothing) so the row never reflows
+             to a single column depending on which fields a team happened to fill in. -->
+        <div class="team-row-2col mb-5">
+          <v-card border flat rounded="xl" class="pa-5 pa-md-6 team-panel">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
               <v-icon :icon="mdiEmailOutline" />
               {{ t('profile.team.contactGroup') }}
             </h2>
-            <div class="team-sheet-contact team-sheet-contact--stacked">
-              <a v-if="team.contactEmail" :href="`mailto:${team.contactEmail}`" class="team-sheet-contact-item">
-                <v-icon size="18" :icon="mdiEmailOutline" />
-                <span>{{ team.contactEmail }}</span>
+
+            <div v-if="hasContact" class="team-contact-list">
+              <a v-if="team.contactEmail" :href="`mailto:${team.contactEmail}`" class="team-contact-row">
+                <span class="team-contact-icon"><v-icon size="18" :icon="mdiEmailOutline" /></span>
+                <span class="team-contact-text">
+                  <span class="team-contact-label">{{ t('profile.team.contactEmail') }}</span>
+                  <span class="team-contact-value">{{ team.contactEmail }}</span>
+                </span>
               </a>
-              <a v-if="team.contactPhone" :href="`tel:${team.contactPhone}`" class="team-sheet-contact-item">
-                <v-icon size="18" :icon="mdiPhoneOutline" />
-                <span>{{ team.contactPhone }}</span>
+              <a v-if="team.contactPhone" :href="`tel:${team.contactPhone}`" class="team-contact-row">
+                <span class="team-contact-icon"><v-icon size="18" :icon="mdiPhoneOutline" /></span>
+                <span class="team-contact-text">
+                  <span class="team-contact-label">{{ t('profile.team.contactPhone') }}</span>
+                  <span class="team-contact-value">{{ team.contactPhone }}</span>
+                </span>
               </a>
               <a
                 v-if="team.website"
                 :href="team.website"
                 target="_blank"
                 rel="noopener"
-                class="team-sheet-contact-item"
+                class="team-contact-row"
               >
-                <v-icon size="18" :icon="mdiWeb" />
-                <span>{{ team.website }}</span>
+                <span class="team-contact-icon"><v-icon size="18" :icon="mdiWeb" /></span>
+                <span class="team-contact-text">
+                  <span class="team-contact-label">{{ t('profile.team.website') }}</span>
+                  <span class="team-contact-value">{{ team.website }}</span>
+                </span>
               </a>
+            </div>
+            <div v-else class="team-empty-state">
+              <v-icon size="28" :icon="mdiEmailOutline" />
+              <p class="text-body-2 mb-0">{{ t('teams.detail.noContact') }}</p>
             </div>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-6 pa-md-8 team-panel team-panel--center">
-            <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
-              <v-icon :icon="mdiPaletteOutline" />
+          <v-card border flat rounded="xl" class="pa-5 pa-md-6 team-panel team-panel--center">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center ga-2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                class="team-kit-group-icon"
+              >
+                <path
+                  d="M6,24 C2,28 2,34 5,38 L24,52 L24,86 C24,91 28,95 33,95 L67,95 C72,95 76,91 76,86 L76,52 L95,38 C98,34 98,28 94,24 L75,9 C73,8 70,9 69,11 C65,19 58,23 50,23 C42,23 35,19 31,11 C30,9 27,8 25,9 Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="6"
+                  stroke-linejoin="round"
+                />
+              </svg>
               {{ t('profile.team.colorsGroup') }}
             </h2>
 
             <div v-if="hasKit" class="team-sheet-kit">
-              <div v-if="firstKit" class="team-sheet-kit-item">
+              <div
+                v-if="firstKit"
+                class="team-kit-stage"
+                :style="{
+                  background: `color-mix(in srgb, ${firstKit.primary} 7%, white)`,
+                  borderColor: `color-mix(in srgb, ${firstKit.primary} 22%, white)`,
+                }"
+              >
+                <span class="team-kit-tag">{{ t('profile.team.wizard.stepKit') }}</span>
                 <KitPreview
                   :pattern="firstKit.pattern"
                   :primary="firstKit.primary"
                   :secondary="firstKit.secondary"
                   :shorts="firstKit.shorts"
-                  :size="96"
+                  :size="120"
                 />
-                <span class="team-sheet-kit-label">{{ t('profile.team.wizard.stepKit') }}</span>
+                <div class="team-kit-legend">
+                  <span class="team-kit-swatch" :style="{ background: firstKit.primary }" />
+                  <span class="team-kit-swatch" :style="{ background: firstKit.secondary }" />
+                  <span class="team-kit-swatch" :style="{ background: firstKit.shorts }" />
+                </div>
               </div>
-              <div v-if="secondKit" class="team-sheet-kit-item">
+              <div
+                v-if="secondKit"
+                class="team-kit-stage"
+                :style="{
+                  background: `color-mix(in srgb, ${secondKit.primary} 7%, white)`,
+                  borderColor: `color-mix(in srgb, ${secondKit.primary} 22%, white)`,
+                }"
+              >
+                <span class="team-kit-tag">{{ t('profile.team.wizard.stepKitSecondary') }}</span>
                 <KitPreview
                   :pattern="secondKit.pattern"
                   :primary="secondKit.primary"
                   :secondary="secondKit.secondary"
                   :shorts="secondKit.shorts"
-                  :size="96"
+                  :size="120"
                 />
-                <span class="team-sheet-kit-label">{{ t('profile.team.wizard.stepKitSecondary') }}</span>
+                <div class="team-kit-legend">
+                  <span class="team-kit-swatch" :style="{ background: secondKit.primary }" />
+                  <span class="team-kit-swatch" :style="{ background: secondKit.secondary }" />
+                  <span class="team-kit-swatch" :style="{ background: secondKit.shorts }" />
+                </div>
               </div>
             </div>
-            <p v-else class="text-body-2 text-medium-emphasis">
-              {{ t('teams.detail.noProfile') }}
-            </p>
+            <div v-else class="team-empty-state">
+              <v-icon size="28" :icon="mdiPaletteOutline" />
+              <p class="text-body-2 mb-0">{{ t('teams.detail.noProfile') }}</p>
+            </div>
           </v-card>
         </div>
 
@@ -288,10 +364,19 @@ function challengeTeam() {
               {{ t(`profile.team.surfaces.${team.venueSurface}`) }}
             </v-chip>
           </div>
-          <p v-else class="text-body-2 text-medium-emphasis">
-            {{ t('teams.detail.noVenue') }}
-          </p>
+          <div v-else class="team-empty-state">
+            <v-icon size="28" :icon="mdiSoccerField" />
+            <p class="text-body-2 mb-0">{{ t('teams.detail.noVenue') }}</p>
+          </div>
         </v-card>
+
+        <ChallengeWizard
+          v-if="canChallenge"
+          v-model="challengeWizardOpen"
+          :rival-team="team"
+          :loading="sendingChallenge"
+          @submit="handleSendChallenge"
+        />
       </template>
     </v-container>
   </v-main>
@@ -359,32 +444,73 @@ function challengeTeam() {
   }
 }
 
-.team-sheet-contact {
+.team-contact-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-}
-
-.team-sheet-contact--stacked {
   flex-direction: column;
-  flex-wrap: nowrap;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
-.team-sheet-contact-item {
+.team-contact-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.85rem;
   color: inherit;
   text-decoration: none;
 }
 
-.team-sheet-contact-item .v-icon {
+.team-contact-icon {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.75rem;
+  background: rgba(var(--v-theme-primary), 0.08);
+  color: rgb(var(--v-theme-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.team-contact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.team-contact-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 
-.team-sheet-contact-item:hover {
+.team-contact-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-contact-row:hover .team-contact-value {
   text-decoration: underline;
+}
+
+/* A shared fallback for a panel with nothing to show (contact, kit, venue) -
+   the panel keeps its place in the layout instead of collapsing or disappearing. */
+.team-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.1rem;
+  border: 1.5px dashed rgba(var(--v-theme-on-surface), 0.16);
+  border-radius: 0.875rem;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 
 /* Contacto and Equipación: a matched-height row on desktop, stacked on phones. */
@@ -393,10 +519,6 @@ function challengeTeam() {
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
   align-items: stretch;
-}
-
-.team-row-2col--single {
-  grid-template-columns: 1fr;
 }
 
 @media (max-width: 899px) {
@@ -419,23 +541,47 @@ function challengeTeam() {
 .team-sheet-kit {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: 2rem;
+  align-items: stretch;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.team-sheet-kit-item {
+.team-kit-stage {
+  flex: 1 1 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid;
+  border-radius: 1rem;
 }
 
-.team-sheet-kit-label {
-  display: block;
-  font-size: 1rem;
-  font-weight: 600;
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+.team-kit-group-icon {
+  flex-shrink: 0;
+}
+
+.team-kit-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.team-kit-legend {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.team-kit-swatch {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.15);
 }
 
 .team-sheet-head {

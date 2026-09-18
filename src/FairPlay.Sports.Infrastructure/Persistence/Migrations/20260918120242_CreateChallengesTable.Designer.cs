@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FairPlay.Sports.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FairPlaySportsDbContext))]
-    partial class FairPlaySportsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918120242_CreateChallengesTable")]
+    partial class CreateChallengesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,10 +67,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AwayKitSlot")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
                     b.Property<Guid>("ChallengedTeamId")
                         .HasColumnType("uuid");
 
@@ -75,13 +74,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("HomeKitSlot")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<DateTime>("MatchDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Message")
@@ -96,16 +88,11 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("VenueTeamId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ChallengedTeamId");
 
                     b.HasIndex("ChallengerTeamId");
-
-                    b.HasIndex("VenueTeamId");
 
                     b.ToTable("Challenges", (string)null);
                 });
@@ -339,12 +326,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.HasOne("FairPlay.Sports.Domain.Teams.Team", null)
                         .WithMany()
                         .HasForeignKey("ChallengerTeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FairPlay.Sports.Domain.Teams.Team", null)
-                        .WithMany()
-                        .HasForeignKey("VenueTeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

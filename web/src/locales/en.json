@@ -19,7 +19,45 @@
     "subtitle": "This is your FairPlay Sports hub. More coming soon."
   },
   "challenges": {
-    "placeholder": "Here are your challenges"
+    "placeholder": "Here are your challenges",
+    "wizard": {
+      "stepOf": "Step {step} of {total}",
+      "stepTeam": "Choose your team",
+      "stepMatch": "Date, venue and kit",
+      "stepSummary": "Challenge summary",
+      "teamHint": "Only teams where you are a delegate, coach, president or technical staff are shown.",
+      "noEligibleTeams": "You don't belong to any team with permission to send challenges (delegate, coach, president or technical staff).",
+      "venueLabel": "Venue",
+      "venueMine": "My venue",
+      "venueRival": "{team}'s venue",
+      "venueUndefined": "No venue set",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "dateRequired": "Choose a future date and time.",
+      "kitLabel": "Kit",
+      "kitHome": "Home",
+      "kitAway": "Away",
+      "kitNotSet": "No kit set",
+      "kitFirstShort": "1st",
+      "kitSecondShort": "2nd",
+      "kitAutoHint": "If you don't pick a kit, it's calculated automatically to avoid a clash with the other team's.",
+      "kitInfoNoneAtAll": "Neither team has a kit configured.",
+      "kitInfoNoHome": "{team} (home) has no kit configured.",
+      "kitInfoNoAway": "{team} (away) has no kit configured.",
+      "kitInfoClash": "Both teams have the same kit assigned; there may be a colour clash on the pitch.",
+      "messageLabel": "Message (optional)",
+      "messagePlaceholder": "Add a note for the rival team...",
+      "summaryVs": "{home} (home) vs {away} (away)",
+      "summaryDay": "Day:",
+      "summaryTime": "Time:",
+      "summaryVenue": "Venue:",
+      "back": "Back",
+      "next": "Continue",
+      "send": "Send challenge",
+      "cancel": "Cancel",
+      "sentSuccess": "Challenge sent to {team}.",
+      "sendFailed": "Could not send the challenge."
+    }
   },
   "teams": {
     "count": "{n} teams",
@@ -43,7 +81,8 @@
       "notFound": "This team could not be found.",
       "loadFailed": "Could not load this team.",
       "noVenue": "This team hasn't set up its home ground yet.",
-      "noProfile": "This team hasn't added any club details yet."
+      "noProfile": "This team hasn't added any club details yet.",
+      "noContact": "This team hasn't added any contact details yet."
     }
   },
   "standings": {

@@ -33,6 +33,12 @@ internal sealed class EfTeamMemberRepository : ITeamMemberRepository
         _context.TeamMembers
             .FirstOrDefaultAsync(member => member.TeamId == teamId && member.UserId == userId, cancellationToken);
 
+    public Task<TeamMember?> GetByTeamAndUserAsync(
+        Guid teamId, Guid userId, CancellationToken cancellationToken = default) =>
+        _context.TeamMembers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(member => member.TeamId == teamId && member.UserId == userId, cancellationToken);
+
     public Task<bool> ExistsForUserAndTeamAsync(
         Guid teamId, Guid userId, CancellationToken cancellationToken = default) =>
         _context.TeamMembers.AnyAsync(member => member.TeamId == teamId && member.UserId == userId, cancellationToken);

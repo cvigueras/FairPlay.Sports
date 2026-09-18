@@ -19,7 +19,45 @@
     "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
   },
   "challenges": {
-    "placeholder": "Aquí tus retos"
+    "placeholder": "Aquí tus retos",
+    "wizard": {
+      "stepOf": "Paso {step} de {total}",
+      "stepTeam": "Elige tu equipo",
+      "stepMatch": "Fecha, campo y equipación",
+      "stepSummary": "Resumen del desafío",
+      "teamHint": "Solo se muestran los equipos donde eres delegado, entrenador, presidente o técnico.",
+      "noEligibleTeams": "No perteneces a ningún equipo con permiso para retar (delegado, entrenador, presidente o técnico).",
+      "venueLabel": "Campo",
+      "venueMine": "Mi campo",
+      "venueRival": "Campo de {team}",
+      "venueUndefined": "Sin campo definido",
+      "dateLabel": "Fecha",
+      "timeLabel": "Hora",
+      "dateRequired": "Elige una fecha y hora futuras.",
+      "kitLabel": "Equipación",
+      "kitHome": "Local",
+      "kitAway": "Visitante",
+      "kitNotSet": "Sin equipación",
+      "kitFirstShort": "1ª",
+      "kitSecondShort": "2ª",
+      "kitAutoHint": "Si no eliges una equipación, se calcula automáticamente para que no choque con la del otro equipo.",
+      "kitInfoNoneAtAll": "Ninguno de los dos equipos tiene equipación configurada.",
+      "kitInfoNoHome": "{team} (local) no tiene equipación configurada.",
+      "kitInfoNoAway": "{team} (visitante) no tiene equipación configurada.",
+      "kitInfoClash": "Ambos equipos tienen la misma equipación; puede haber confusión de colores en el partido.",
+      "messageLabel": "Mensaje (opcional)",
+      "messagePlaceholder": "Añade un comentario para el rival...",
+      "summaryVs": "{home} (local) frente a {away} (visitante)",
+      "summaryDay": "Día:",
+      "summaryTime": "Hora:",
+      "summaryVenue": "Campo:",
+      "back": "Atrás",
+      "next": "Continuar",
+      "send": "Enviar desafío",
+      "cancel": "Cancelar",
+      "sentSuccess": "Desafío enviado a {team}.",
+      "sendFailed": "No se ha podido enviar el desafío."
+    }
   },
   "teams": {
     "count": "{n} equipos",
@@ -43,7 +81,8 @@
       "notFound": "No se ha encontrado este equipo.",
       "loadFailed": "No se ha podido cargar este equipo.",
       "noVenue": "Este equipo todavía no ha indicado su campo.",
-      "noProfile": "Este equipo todavía no ha añadido más datos de la ficha."
+      "noProfile": "Este equipo todavía no ha añadido más datos de la ficha.",
+      "noContact": "Este equipo todavía no ha añadido datos de contacto."
     }
   },
   "standings": {
