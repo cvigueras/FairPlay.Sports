@@ -40,7 +40,7 @@
       "kitNotSet": "Sin equipación",
       "kitFirstShort": "1ª",
       "kitSecondShort": "2ª",
-      "kitAutoHint": "La equipación se calcula automáticamente para que no coincida con la del equipo local.",
+      "kitAutoHint": "La equipación del rival se calcula automáticamente para que no coincida con la tuya.",
       "kitInfoNoneAtAll": "Ninguno de los dos equipos tiene equipación configurada.",
       "kitInfoNoHome": "{team} (local) no tiene equipación configurada.",
       "kitInfoNoAway": "{team} (visitante) no tiene equipación configurada.",

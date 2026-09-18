@@ -277,11 +277,11 @@ public class SendChallengeHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenChallengerIsAway_ThePreferenceIsIgnored()
+    public async Task Handle_WhenChallengerIsAway_AndPrefersItsSecondKit_AndHasIt_UsesThePreferenceOverTheDefault()
     {
-        // The challenger is away here, so its "preference" - meant for its own kit when it's the
-        // one playing at home - doesn't apply to anything; the home team wears its default kit
-        // and the away side resolves automatically as usual.
+        _challengerTeam = TeamWithProfile(ChallengeMother.ChallengerTeamId, GreenKit, PurpleKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
+
         var result = await _handler.Handle(
             ChallengeMother.SendCommand(
                 venueTeamId: ChallengeMother.ChallengedTeamId,
@@ -292,9 +292,35 @@ public class SendChallengeHandlerTests
         Assert.Multiple(() =>
         {
             Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(PurpleKit.Primary));
+            // The home side still resolves automatically, now against the chosen away kit.
             Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.First));
-            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
-            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenTheChosenAwayKitClashesWithHome_HomeFallsBackToItsOwnSecondKit()
+    {
+        // Away's preferred second kit (Blue) clashes with the home team's first kit (also Blue) -
+        // the home side's automatic resolution reacts to whichever kit away actually wears, not
+        // always its first.
+        _challengerTeam = TeamWithProfile(ChallengeMother.ChallengerTeamId, GreenKit, BlueKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengedTeamId,
+                challengerKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+            Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(RedKit.Primary));
         });
     }
 

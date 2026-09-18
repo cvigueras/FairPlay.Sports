@@ -38,27 +38,28 @@ public sealed class SendChallengeHandler(
         if (request.MatchDate <= _clock.UtcNow)
             return Result<ChallengeDto>.Failure("The match date must be in the future.");
 
-        var homeTeam = request.VenueTeamId == challengerTeam.Id ? challengerTeam : challengedTeam;
-        var awayTeam = request.VenueTeamId == challengerTeam.Id ? challengedTeam : challengerTeam;
+        var challengerIsHome = request.VenueTeamId == challengerTeam.Id;
 
-        // The home team wears its first kit by default; the challenger may pick its second
-        // instead, but only when it's the one playing at home (the challenged team's kit is
-        // never chosen this way) and it actually has that kit configured - otherwise the
-        // default applies as usual.
-        var homeKitSlot = homeTeam.Id == challengerTeam.Id &&
-            request.ChallengerKitPreference is not null &&
-            HasKit(homeTeam, request.ChallengerKitPreference.Value)
+        // The challenger wears its first kit by default; it may pick its second instead,
+        // whether it's playing at home or away, as long as it actually has that kit
+        // configured - otherwise the default applies as usual. The challenged team never
+        // picks; its kit is always resolved automatically to avoid clashing with whatever
+        // the challenger ends up wearing.
+        var challengerKitSlot = request.ChallengerKitPreference is not null &&
+            HasKit(challengerTeam, request.ChallengerKitPreference.Value)
                 ? request.ChallengerKitPreference.Value
-                : ResolveHomeKitSlot(homeTeam);
-        var homeColors = homeKitSlot == TeamKitSlot.First ? homeTeam.Colors
-            : homeKitSlot == TeamKitSlot.Second ? homeTeam.AlternateColors
+                : ResolveDefaultKitSlot(challengerTeam);
+        var challengerColors = challengerKitSlot == TeamKitSlot.First ? challengerTeam.Colors
+            : challengerKitSlot == TeamKitSlot.Second ? challengerTeam.AlternateColors
             : null;
 
         // Best-effort: missing kits or an unavoidable colour clash never block sending, they
-        // just leave AwayKitSlot unresolved (or picked despite the clash) for the DTO to flag.
-        // The away team never picks its own kit - it's always resolved automatically against
-        // whichever kit the home team ends up wearing.
-        var awayKitSlot = ResolveAwayKitSlot(homeColors, awayTeam);
+        // just leave the challenged team's slot unresolved (or picked despite the clash) for
+        // the DTO to flag.
+        var challengedKitSlot = ResolveOpponentKitSlot(challengerColors, challengedTeam);
+
+        var homeKitSlot = challengerIsHome ? challengerKitSlot : challengedKitSlot;
+        var awayKitSlot = challengerIsHome ? challengedKitSlot : challengerKitSlot;
 
         var challenge = Challenge.Create(
             Guid.NewGuid(),
@@ -76,38 +77,38 @@ public sealed class SendChallengeHandler(
         return Result<ChallengeDto>.Success(ChallengeDto.FromDomain(challenge, challengerTeam, challengedTeam));
     }
 
-    /// <summary>The home team's first kit, or its second if that's all it has configured.</summary>
-    private static TeamKitSlot? ResolveHomeKitSlot(Team homeTeam)
+    /// <summary>A team's first kit, or its second if that's all it has configured.</summary>
+    private static TeamKitSlot? ResolveDefaultKitSlot(Team team)
     {
-        if (homeTeam.Colors is not null) return TeamKitSlot.First;
-        if (homeTeam.AlternateColors is not null) return TeamKitSlot.Second;
+        if (team.Colors is not null) return TeamKitSlot.First;
+        if (team.AlternateColors is not null) return TeamKitSlot.Second;
         return null;
     }
 
     /// <summary>
-    /// The away team's first kit unless its primary colour matches the home team's; then its
+    /// The opponent's first kit unless its primary colour matches the challenger's; then its
     /// second kit if that avoids the clash; otherwise falls back to its first kit (accepting the
     /// clash) if it has one, else null (no kit configured at all).
     /// </summary>
-    private static TeamKitSlot? ResolveAwayKitSlot(KitColors? homeColors, Team awayTeam)
+    private static TeamKitSlot? ResolveOpponentKitSlot(KitColors? challengerColors, Team opponent)
     {
-        var first = awayTeam.Colors;
-        var second = awayTeam.AlternateColors;
+        var first = opponent.Colors;
+        var second = opponent.AlternateColors;
 
-        if (homeColors is null)
+        if (challengerColors is null)
             return first is not null ? TeamKitSlot.First : null;
 
-        if (first is not null && !ClashesWith(homeColors, first))
+        if (first is not null && !ClashesWith(challengerColors, first))
             return TeamKitSlot.First;
 
-        if (second is not null && !ClashesWith(homeColors, second))
+        if (second is not null && !ClashesWith(challengerColors, second))
             return TeamKitSlot.Second;
 
         return first is not null ? TeamKitSlot.First : null;
     }
 
-    private static bool ClashesWith(KitColors home, KitColors away) =>
-        string.Equals(home.Primary, away.Primary, StringComparison.OrdinalIgnoreCase);
+    private static bool ClashesWith(KitColors a, KitColors b) =>
+        string.Equals(a.Primary, b.Primary, StringComparison.OrdinalIgnoreCase);
 
     private static bool HasKit(Team team, TeamKitSlot slot) =>
         slot == TeamKitSlot.First ? team.Colors is not null : team.AlternateColors is not null;

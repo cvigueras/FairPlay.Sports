@@ -16,7 +16,7 @@ import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { CHALLENGE_ACTOR_ROLES } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
-import { firstKit, kitBySlot, resolveAwayKit, resolveHomeKit, secondKit } from '@/lib/kitClash'
+import { firstKit, kitBySlot, resolveDefaultKit, resolveOpponentKit, secondKit } from '@/lib/kitClash'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -89,37 +89,42 @@ function hasVenue(team: Team): boolean {
   return !!(team.venueName || team.venueAddress || team.venueSurface)
 }
 
-/** Only the challenger can override its own kit, and only when it's the one playing at home -
- *  the rival's (challenged team's) kit is never editable here. */
+/** Only the challenger can override its own kit, whether it's playing at home or away - the
+ *  rival's (challenged team's) kit is never editable here. */
 const isChallengerHome = computed(
   () => !!selectedTeam.value && !!homeTeam.value && selectedTeam.value.id === homeTeam.value.id,
 )
-const canOverrideHomeKit = computed(
-  () => isChallengerHome.value && !!selectedTeam.value && !!firstKit(selectedTeam.value) && !!secondKit(selectedTeam.value),
+const canOverrideChallengerKit = computed(
+  () => !!selectedTeam.value && !!firstKit(selectedTeam.value) && !!secondKit(selectedTeam.value),
 )
 /** null = follow the default (first kit, or second if that's all it has); set once the user
  *  picks a slot themselves. */
-const manualHomeKitSlot = ref<TeamKitSlot | null>(null)
+const manualChallengerKitSlot = ref<TeamKitSlot | null>(null)
 
-const homeKitPreview = computed(() => {
-  if (canOverrideHomeKit.value && manualHomeKitSlot.value && homeTeam.value) {
-    const kit = kitBySlot(homeTeam.value, manualHomeKitSlot.value)
+const challengerKitPreview = computed(() => {
+  if (canOverrideChallengerKit.value && manualChallengerKitSlot.value && selectedTeam.value) {
+    const kit = kitBySlot(selectedTeam.value, manualChallengerKitSlot.value)
     if (kit) return kit
   }
-  return homeTeam.value ? resolveHomeKit(homeTeam.value) : null
+  return selectedTeam.value ? resolveDefaultKit(selectedTeam.value) : null
 })
-/** Whichever slot is currently in effect for the home kit - the override if there is one and it
- *  applies, otherwise the default - used to highlight the right toggle button. */
-const effectiveHomeSlot = computed<TeamKitSlot | null>(
+/** Whichever slot is currently in effect for the challenger's kit - the override if there is one,
+ *  otherwise the default - used to highlight the right toggle button and to send the preference. */
+const effectiveChallengerSlot = computed<TeamKitSlot | null>(
   () =>
-    (canOverrideHomeKit.value ? manualHomeKitSlot.value : null) ??
-    (homeTeam.value ? resolveHomeKit(homeTeam.value)?.slot : null) ??
+    (canOverrideChallengerKit.value ? manualChallengerKitSlot.value : null) ??
+    (selectedTeam.value ? resolveDefaultKit(selectedTeam.value)?.slot : null) ??
     null,
 )
 
-// The away side never picks its own kit - it always resolves automatically against whichever
-// kit the home team ends up wearing (its default, or the challenger's override).
-const awayKitPreview = computed(() => (awayTeam.value ? resolveAwayKit(homeKitPreview.value, awayTeam.value) : null))
+// The rival never picks its own kit - it's always resolved automatically against whichever kit
+// the challenger ends up wearing (its default, or its own override).
+const rivalKitPreview = computed(() =>
+  selectedTeam.value ? resolveOpponentKit(challengerKitPreview.value, props.rivalTeam) : null,
+)
+
+const homeKitPreview = computed(() => (isChallengerHome.value ? challengerKitPreview.value : rivalKitPreview.value))
+const awayKitPreview = computed(() => (isChallengerHome.value ? rivalKitPreview.value : challengerKitPreview.value))
 
 const kitsClash = computed(() => {
   const home = homeKitPreview.value
@@ -178,7 +183,7 @@ function reset() {
   matchTimeStr.value = ''
   message.value = ''
   dateAttempted.value = false
-  manualHomeKitSlot.value = null
+  manualChallengerKitSlot.value = null
 }
 
 watch(
@@ -193,7 +198,7 @@ watch(
 // A manual kit override only makes sense for the current team/venue pairing it was made
 // under - switching either stales it, so drop back to the default.
 watch([venueChoice, selectedTeamId], () => {
-  manualHomeKitSlot.value = null
+  manualChallengerKitSlot.value = null
 })
 
 function goBack() {
@@ -212,7 +217,7 @@ function submit() {
     venueTeamId: homeTeam.value.id,
     matchDate: matchDateTime.value.toISOString(),
     message: message.value.trim() || undefined,
-    challengerKitPreference: isChallengerHome.value ? effectiveHomeSlot.value : undefined,
+    challengerKitPreference: effectiveChallengerSlot.value ?? undefined,
   })
 }
 
@@ -365,20 +370,20 @@ function goNext() {
                 :size="72"
               />
               <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
-              <div v-if="canOverrideHomeKit" class="cw-kit-slot-toggle">
+              <div v-if="canOverrideChallengerKit && isChallengerHome" class="cw-kit-slot-toggle">
                 <button
                   type="button"
                   class="cw-kit-slot-toggle-btn"
-                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveHomeSlot === 'First' }"
-                  @click="manualHomeKitSlot = 'First'"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveChallengerSlot === 'First' }"
+                  @click="manualChallengerKitSlot = 'First'"
                 >
                   {{ t('challenges.wizard.kitFirstShort') }}
                 </button>
                 <button
                   type="button"
                   class="cw-kit-slot-toggle-btn"
-                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveHomeSlot === 'Second' }"
-                  @click="manualHomeKitSlot = 'Second'"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveChallengerSlot === 'Second' }"
+                  @click="manualChallengerKitSlot = 'Second'"
                 >
                   {{ t('challenges.wizard.kitSecondShort') }}
                 </button>
@@ -395,6 +400,24 @@ function goNext() {
                 :size="72"
               />
               <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
+              <div v-if="canOverrideChallengerKit && !isChallengerHome" class="cw-kit-slot-toggle">
+                <button
+                  type="button"
+                  class="cw-kit-slot-toggle-btn"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveChallengerSlot === 'First' }"
+                  @click="manualChallengerKitSlot = 'First'"
+                >
+                  {{ t('challenges.wizard.kitFirstShort') }}
+                </button>
+                <button
+                  type="button"
+                  class="cw-kit-slot-toggle-btn"
+                  :class="{ 'cw-kit-slot-toggle-btn--on': effectiveChallengerSlot === 'Second' }"
+                  @click="manualChallengerKitSlot = 'Second'"
+                >
+                  {{ t('challenges.wizard.kitSecondShort') }}
+                </button>
+              </div>
             </div>
           </div>
           <p class="fp-hint mt-2">{{ t('challenges.wizard.kitAutoHint') }}</p>

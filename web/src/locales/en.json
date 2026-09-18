@@ -40,7 +40,7 @@
       "kitNotSet": "No kit set",
       "kitFirstShort": "1st",
       "kitSecondShort": "2nd",
-      "kitAutoHint": "Chosen automatically so it doesn't clash with the home team's kit.",
+      "kitAutoHint": "The rival's kit is calculated automatically so it doesn't clash with yours.",
       "kitInfoNoneAtAll": "Neither team has a kit configured.",
       "kitInfoNoHome": "{team} (home) has no kit configured.",
       "kitInfoNoAway": "{team} (away) has no kit configured.",
