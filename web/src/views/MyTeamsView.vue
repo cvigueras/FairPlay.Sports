@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccountOutline,
@@ -33,15 +33,12 @@ const myTeams = computed(() => auth.myTeams)
 
 /* ---- My teams ----------------------------------------------------------
    A user can belong to several teams. `myTeams` (the memberships) comes from
-   the auth store; the actual Team records are fetched by id here (fetched
-   individually rather than found in `teams` below, which is capped at the
-   backend's max page size). */
+   the auth store; the actual Team records are fetched by id here. */
 
-const teams = ref<Team[]>([])
-const loadingTeams = ref(false)
 const teamDetails = ref<Record<string, Team>>({})
 const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
+const selectedTeam = ref<Team | null>(null)
 const joinRole = ref<TeamMemberRole | null>(null)
 /** Fixed to the account's username - joining a team always uses it, not a
  *  per-team nickname (that's what the create wizard's own name field is for). */
@@ -49,10 +46,42 @@ const joinDisplayName = ref(auth.currentUser?.userName ?? '')
 const savingTeam = ref(false)
 const joinErrors = reactive<Record<string, string>>({})
 
-const joinableTeams = computed(() =>
-  teams.value.filter((team) => !myTeams.value.some((membership) => membership.teamId === team.id)),
-)
-const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
+/* ---- Join an existing team ----------------------------------------------
+   The roster easily runs past any list-everything page size, so the picker
+   searches the backend by name as the user types instead of holding one
+   flat list of every team - it never has to fully overlap with `myTeams`. */
+
+const TEAM_SEARCH_DEBOUNCE_MS = 300
+const teamSearch = ref('')
+const joinableTeams = ref<Team[]>([])
+const searchingTeams = ref(false)
+
+async function searchJoinableTeams() {
+  searchingTeams.value = true
+  try {
+    const page = await teamsApi.page(
+      { name: teamSearch.value.trim() || undefined, pageSize: 20, sort: 'name' },
+      auth.accessToken,
+    )
+    joinableTeams.value = page.items.filter(
+      (team) => !myTeams.value.some((membership) => membership.teamId === team.id),
+    )
+  } catch (error) {
+    ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
+  } finally {
+    searchingTeams.value = false
+  }
+}
+
+let teamSearchTimer: ReturnType<typeof setTimeout> | undefined
+watch(teamSearch, () => {
+  clearTimeout(teamSearchTimer)
+  teamSearchTimer = setTimeout(searchJoinableTeams, TEAM_SEARCH_DEBOUNCE_MS)
+})
+
+watch(selectedTeamId, (id) => {
+  selectedTeam.value = id ? (joinableTeams.value.find((team) => team.id === id) ?? selectedTeam.value) : null
+})
 
 /** Each membership paired with its resolved `Team`, once fetched. Newest
  *  membership first, so a just-created (and just-joined) team lands at the
@@ -79,17 +108,13 @@ async function loadMyTeamDetails() {
 }
 
 onMounted(async () => {
-  loadingTeams.value = true
   try {
-    const [list] = await Promise.all([teamsApi.list(auth.accessToken), auth.loadMyTeams()])
-    teams.value = list
+    await auth.loadMyTeams()
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.loadFailed'), 'error')
-  } finally {
-    loadingTeams.value = false
   }
 
-  await loadMyTeamDetails()
+  await Promise.all([searchJoinableTeams(), loadMyTeamDetails()])
 })
 
 function validateJoin(): boolean {
@@ -107,10 +132,12 @@ async function saveTeam() {
   savingTeam.value = true
   try {
     await auth.joinTeam(selectedTeamId.value, joinRole.value, joinDisplayName.value.trim())
-    await loadMyTeamDetails()
+    await Promise.all([loadMyTeamDetails(), searchJoinableTeams()])
     ui.notify(t('profile.team.saved'), 'success')
     selectedTeamId.value = null
+    selectedTeam.value = null
     joinRole.value = null
+    teamSearch.value = ''
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.saveFailed'), 'error')
   } finally {
@@ -140,7 +167,6 @@ async function handleCreate({
     if (crest) await teamsApi.uploadCrest(created.id, crest, auth.accessToken)
 
     const withCrest = { ...created, hasCrest: !!crest }
-    teams.value = [...teams.value, withCrest].sort((a, b) => a.name.localeCompare(b.name))
     await auth.joinTeam(created.id, role, displayName)
     teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
     wizardOpen.value = false
@@ -172,7 +198,6 @@ async function handleUpdate({ payload, crest }: { payload: CreateTeamPayload; cr
 
     const withCrest = crest ? { ...updated, hasCrest: true } : updated
     teamDetails.value = { ...teamDetails.value, [withCrest.id]: withCrest }
-    teams.value = teams.value.map((tm) => (tm.id === withCrest.id ? withCrest : tm))
     editingTeamId.value = null
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
@@ -224,7 +249,10 @@ async function confirmLeave() {
             <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
               <v-autocomplete
                 v-model="selectedTeamId"
+                v-model:search="teamSearch"
                 :items="joinableTeams"
+                :loading="searchingTeams"
+                no-filter
                 item-title="name"
                 item-value="id"
                 :placeholder="t('profile.team.selectPlaceholder')"
