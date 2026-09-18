@@ -8,4 +8,5 @@ public sealed record SendChallengeRequest(
     Guid VenueTeamId,
     DateTime MatchDate,
     string? Message,
-    TeamKitSlot? ChallengerKitPreference = null);
+    TeamKitSlot? ChallengerKitPreference = null,
+    TeamKitSlot? ChallengedKitPreference = null);

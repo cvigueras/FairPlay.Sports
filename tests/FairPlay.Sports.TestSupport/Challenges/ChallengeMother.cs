@@ -23,7 +23,8 @@ public static class ChallengeMother
         DateTime? matchDate = null,
         string? message = Message,
         Guid? actingUserId = null,
-        TeamKitSlot? challengerKitPreference = null) =>
+        TeamKitSlot? challengerKitPreference = null,
+        TeamKitSlot? challengedKitPreference = null) =>
         new(
             challengerTeamId ?? ChallengerTeamId,
             challengedTeamId ?? ChallengedTeamId,
@@ -31,7 +32,8 @@ public static class ChallengeMother
             matchDate ?? MatchDate,
             message,
             actingUserId ?? ActingUserId,
-            challengerKitPreference);
+            challengerKitPreference,
+            challengedKitPreference);
 
     public static AcceptChallengeCommand AcceptCommand(Guid? id = null, Guid? actingUserId = null) =>
         new(id ?? Guid.NewGuid(), actingUserId ?? ActingUserId);

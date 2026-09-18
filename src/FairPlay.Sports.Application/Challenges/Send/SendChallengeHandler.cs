@@ -53,10 +53,15 @@ public sealed class SendChallengeHandler(
             : challengerKitSlot == TeamKitSlot.Second ? challengerTeam.AlternateColors
             : null;
 
-        // Best-effort: missing kits or an unavoidable colour clash never block sending, they
-        // just leave the challenged team's slot unresolved (or picked despite the clash) for
-        // the DTO to flag.
-        var challengedKitSlot = ResolveOpponentKitSlot(challengerColors, challengedTeam);
+        // The challenger may also pick the challenged team's kit, as long as it actually has
+        // that kit configured. Otherwise it falls back to the automatic pick, which avoids
+        // clashing with whatever the challenger ends up wearing - missing kits or an
+        // unavoidable clash never block sending, they just leave the slot unresolved (or
+        // picked despite the clash) for the DTO to flag.
+        var challengedKitSlot = request.ChallengedKitPreference is not null &&
+            HasKit(challengedTeam, request.ChallengedKitPreference.Value)
+                ? request.ChallengedKitPreference.Value
+                : ResolveOpponentKitSlot(challengerColors, challengedTeam);
 
         var homeKitSlot = challengerIsHome ? challengerKitSlot : challengedKitSlot;
         var awayKitSlot = challengerIsHome ? challengedKitSlot : challengerKitSlot;

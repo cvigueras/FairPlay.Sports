@@ -21,5 +21,8 @@ public sealed class SendChallengeValidator : AbstractValidator<SendChallengeComm
         RuleFor(x => x.ChallengerKitPreference)
             .IsInEnum()
             .When(x => x.ChallengerKitPreference is not null);
+        RuleFor(x => x.ChallengedKitPreference)
+            .IsInEnum()
+            .When(x => x.ChallengedKitPreference is not null);
     }
 }

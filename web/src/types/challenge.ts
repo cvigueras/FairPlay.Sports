@@ -44,9 +44,14 @@ export interface SendChallengePayload {
   matchDate: string
   message?: string | null
   /**
-   * Which of the challenger's own kits to wear, when the challenger is the away team (the
-   * challenged team's kit can never be chosen this way). The backend still validates it and
-   * falls back to its own automatic pick if it's missing or doesn't apply.
+   * Which of the challenger's own kits to wear. The backend still validates it and falls back
+   * to its own automatic pick if it's missing or the team hasn't configured that kit.
    */
   challengerKitPreference?: TeamKitSlot | null
+  /**
+   * Which of the challenged team's kits it should wear, chosen by the challenger. The backend
+   * still validates it and falls back to its own automatic, clash-avoiding pick if it's missing
+   * or the team hasn't configured that kit.
+   */
+  challengedKitPreference?: TeamKitSlot | null
 }

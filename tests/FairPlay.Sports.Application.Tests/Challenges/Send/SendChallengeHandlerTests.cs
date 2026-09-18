@@ -349,6 +349,62 @@ public class SendChallengeHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenChallengerPicksTheChallengedTeamsKit_AndItIsAway_UsesThePreferenceOverTheDefault()
+    {
+        // No clash forces this pick - the challenger just prefers it, and it's honoured anyway.
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengerTeamId,
+                challengedKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(RedKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenChallengerPicksTheChallengedTeamsKit_AndItIsHome_UsesThePreferenceOverTheDefault()
+    {
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengedTeamId,
+                challengedKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
+            Assert.That(result.Value!.HomeKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(RedKit.Primary));
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenChallengerPicksAKitTheChallengedTeamDoesNotHave_FallsBackToTheDefault()
+    {
+        _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, BlueKit);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(
+                venueTeamId: ChallengeMother.ChallengerTeamId,
+                challengedKitPreference: TeamKitSlot.Second),
+            CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+        });
+    }
+
+    [Test]
     public async Task Handle_OnSuccess_AddsTheChallenge_AndReturnsDto()
     {
         var command = ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId);

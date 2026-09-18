@@ -6,6 +6,7 @@ using FairPlay.Sports.Application.Challenges.GetTeamChallenges;
 using FairPlay.Sports.Application.Challenges.Reject;
 using FairPlay.Sports.Application.Challenges.Send;
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Domain.Challenges;
 using FairPlay.Sports.TestSupport.Challenges;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -62,7 +63,9 @@ public class ChallengesControllerTests
             ChallengeMother.ChallengedTeamId,
             ChallengeMother.ChallengerTeamId,
             ChallengeMother.MatchDate,
-            ChallengeMother.Message);
+            ChallengeMother.Message,
+            TeamKitSlot.Second,
+            TeamKitSlot.First);
 
         var response = await _controller.Send(request, CancellationToken.None);
 
@@ -74,7 +77,9 @@ public class ChallengesControllerTests
                 command.VenueTeamId == request.VenueTeamId &&
                 command.MatchDate == request.MatchDate &&
                 command.Message == request.Message &&
-                command.ActingUserId == CurrentUserId),
+                command.ActingUserId == CurrentUserId &&
+                command.ChallengerKitPreference == request.ChallengerKitPreference &&
+                command.ChallengedKitPreference == request.ChallengedKitPreference),
             Arg.Any<CancellationToken>());
     }
 
