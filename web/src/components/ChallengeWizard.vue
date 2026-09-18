@@ -425,8 +425,8 @@ function goNext() {
           <FlatField :label="t('challenges.wizard.messageLabel')" class="mt-4">
             <textarea
               v-model="message"
-              class="fp-input"
-              rows="3"
+              class="fp-input cw-message-input"
+              rows="6"
               maxlength="500"
               :placeholder="t('challenges.wizard.messagePlaceholder')"
             />
@@ -574,6 +574,14 @@ function goNext() {
   height: 72px;
   font-size: 0.8125rem;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.cw-message-input {
+  height: auto;
+  min-height: 9.5rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  resize: vertical;
 }
 
 .cw-summary-row {
