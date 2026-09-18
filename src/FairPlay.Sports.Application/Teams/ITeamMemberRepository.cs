@@ -12,6 +12,10 @@ public interface ITeamMemberRepository
     Task<TeamMember?> GetByTeamAndUserForUpdateAsync(
         Guid teamId, Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Untracked lookup for use cases (e.g. Challenges) that only need to read the role.</summary>
+    Task<TeamMember?> GetByTeamAndUserAsync(
+        Guid teamId, Guid userId, CancellationToken cancellationToken = default);
+
     Task<bool> ExistsForUserAndTeamAsync(Guid teamId, Guid userId, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsForUserAsync(Guid userId, CancellationToken cancellationToken = default);

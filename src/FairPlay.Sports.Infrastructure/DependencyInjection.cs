@@ -1,9 +1,11 @@
 using FairPlay.Sports.Application.Auth;
+using FairPlay.Sports.Application.Challenges;
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.Application.Standings;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Users;
 using FairPlay.Sports.Infrastructure.Auth;
+using FairPlay.Sports.Infrastructure.Challenges;
 using FairPlay.Sports.Infrastructure.Persistence;
 using FairPlay.Sports.Infrastructure.Security;
 using FairPlay.Sports.Infrastructure.Standings;
@@ -34,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamRepository, EfTeamRepository>();
         services.AddScoped<ITeamMemberRepository, EfTeamMemberRepository>();
         services.AddScoped<IStandingRepository, EfStandingRepository>();
+        services.AddScoped<IChallengeRepository, EfChallengeRepository>();
         services.AddScoped<IRefreshTokenRepository, EfRefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
