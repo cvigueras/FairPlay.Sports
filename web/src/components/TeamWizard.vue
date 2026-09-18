@@ -213,6 +213,16 @@ watch(
   },
 )
 
+/** Aficionados doesn't compete in divisions, so its selector hides - drop
+ *  whatever was picked before so it doesn't linger if the category changes
+ *  again. */
+watch(
+  () => model.category,
+  (category) => {
+    if (category === 'Aficionados') model.division = null
+  },
+)
+
 const enumItems = <T extends string>(values: readonly T[], prefix: string) =>
   values.map((value) => ({ value, title: t(`${prefix}.${value}`) }))
 const typeItems = computed(() => enumItems(FOOTBALL_TYPES, 'profile.team.enums'))
@@ -254,8 +264,8 @@ function validate(): boolean {
   if (!model.city.trim()) errors.city = required
   if (!isEdit.value && !crest.value) errors.crest = t('profile.team.crestRequired')
   if (!model.type) errors.type = required
-  if (!model.division) errors.division = required
   if (!model.category) errors.category = required
+  if (model.category !== 'Aficionados' && !model.division) errors.division = required
 
   if (model.foundedYear != null) {
     const year = model.foundedYear
@@ -325,7 +335,7 @@ function submit() {
     coach: model.coach.trim(),
     city: model.city.trim(),
     type: model.type!,
-    division: model.division!,
+    division: model.category === 'Aficionados' ? null : model.division,
     category: model.category!,
     shortName: trimmedOrUndefined(model.shortName),
     foundedYear: model.foundedYear ?? undefined,
@@ -457,7 +467,7 @@ function goNext() {
                 </select>
               </FlatField>
             </v-col>
-            <v-col cols="12">
+            <v-col v-if="model.category !== 'Aficionados'" cols="12">
               <FlatField :label="t('profile.team.division')" :error="errors.division" required>
                 <select v-model="model.division" class="fp-select" :class="{ 'fp-invalid': errors.division }">
                   <option :value="null">{{ t('profile.team.selectDivision') }}</option>

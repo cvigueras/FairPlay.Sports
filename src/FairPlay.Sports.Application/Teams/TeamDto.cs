@@ -8,7 +8,7 @@ public sealed record TeamDto(
     string Coach,
     string City,
     FootballType Type,
-    Division Division,
+    Division? Division,
     AgeCategory Category,
     bool HasCrest,
     DateTime CreatedAt,

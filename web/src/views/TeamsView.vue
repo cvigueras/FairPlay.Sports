@@ -522,6 +522,7 @@ function toggleTeamRow(id: string) {
                   </td>
                   <td class="teams-col-stat">
                     <v-chip
+                      v-if="team.division"
                       size="small"
                       variant="tonal"
                       :color="DIVISION_COLOR[team.division]"
@@ -529,6 +530,7 @@ function toggleTeamRow(id: string) {
                     >
                       {{ t(`profile.team.enums.${team.division}`) }}
                     </v-chip>
+                    <span v-else class="text-body-2 text-medium-emphasis">—</span>
                   </td>
                   <td class="teams-col-city">
                     <span class="team-row-city text-body-2 text-medium-emphasis">
@@ -587,9 +589,16 @@ function toggleTeamRow(id: string) {
                     </div>
                     <div class="teams-mobile-detail-cell">
                       <span class="teams-mobile-detail-label">{{ t('teams.fields.division') }}</span>
-                      <v-chip size="small" variant="tonal" :color="DIVISION_COLOR[team.division]" :prepend-icon="mdiTrophyOutline">
+                      <v-chip
+                        v-if="team.division"
+                        size="small"
+                        variant="tonal"
+                        :color="DIVISION_COLOR[team.division]"
+                        :prepend-icon="mdiTrophyOutline"
+                      >
                         {{ t(`profile.team.enums.${team.division}`) }}
                       </v-chip>
+                      <span v-else class="text-body-2 text-medium-emphasis">—</span>
                     </div>
                   </div>
                   <div class="teams-mobile-detail-cell">

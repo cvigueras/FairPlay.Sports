@@ -81,6 +81,24 @@ public class CreateTeamHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenCategoryIsAficionados_PersistsTeamWithNoDivision()
+    {
+        _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division?>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
+        var command = TeamMother.Command() with { Division = null, Category = AgeCategory.Aficionados };
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.Division, Is.Null);
+            Assert.That(result.Value!.Category, Is.EqualTo(AgeCategory.Aficionados));
+        });
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Team>(team => team.Classification.Division == null), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
     public async Task Handle_ChecksNameUniquenessBeforePersisting()
     {
         _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);

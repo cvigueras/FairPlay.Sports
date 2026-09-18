@@ -269,7 +269,7 @@ async function confirmLeave() {
                   <v-list-item v-bind="itemProps" :title="item.name">
                     <template #subtitle>
                       {{ t(`profile.team.enums.${item.type}`) }} ·
-                      {{ t(`profile.team.enums.${item.division}`) }} ·
+                      <template v-if="item.division">{{ t(`profile.team.enums.${item.division}`) }} · </template>
                       {{ t(`profile.team.enums.${item.category}`) }}
                     </template>
                   </v-list-item>
@@ -339,7 +339,7 @@ async function confirmLeave() {
                   <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
                     {{ t(`profile.team.enums.${team.type}`) }}
                   </span>
-                  <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                  <span v-if="team.division" class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
                     {{ t(`profile.team.enums.${team.division}`) }}
                   </span>
                   <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">

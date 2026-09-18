@@ -27,7 +27,6 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
                 .HasConversion<string>();
             classification.Property(c => c.Division)
                 .HasColumnName("Division")
-                .IsRequired()
                 .HasMaxLength(30)
                 .HasConversion<string>();
             classification.Property(c => c.Category)

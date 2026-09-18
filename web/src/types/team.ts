@@ -73,7 +73,8 @@ export interface Team extends TeamProfileFields {
   coach: string
   city: string
   type: FootballType
-  division: Division
+  /** Null for Aficionados, the only category that doesn't compete in divisions. */
+  division: Division | null
   category: AgeCategory
   hasCrest: boolean
   createdAt: string
@@ -85,7 +86,7 @@ interface TeamCorePayload {
   coach: string
   city: string
   type: FootballType
-  division: Division
+  division: Division | null
   category: AgeCategory
 }
 

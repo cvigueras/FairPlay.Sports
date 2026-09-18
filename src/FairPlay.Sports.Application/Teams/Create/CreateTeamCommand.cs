@@ -9,7 +9,7 @@ public sealed record CreateTeamCommand(
     string Coach,
     string City,
     FootballType Type,
-    Division Division,
+    Division? Division,
     AgeCategory Category,
     string? ShortName = null,
     int? FoundedYear = null,
