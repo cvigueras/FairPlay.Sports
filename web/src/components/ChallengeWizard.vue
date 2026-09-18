@@ -8,7 +8,7 @@ import {
   mdiChevronRight,
   mdiClockOutline,
   mdiClose,
-  mdiMapMarkerOutline,
+  mdiSoccerField,
 } from '@mdi/js'
 import FlatField from '@/components/FlatField.vue'
 import KitPreview from '@/components/KitPreview.vue'
@@ -16,7 +16,7 @@ import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { CHALLENGE_ACTOR_ROLES } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
-import { homeKit, resolveAwayKit, type ResolvedKit } from '@/lib/kitClash'
+import { resolveKits } from '@/lib/kitClash'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
@@ -33,7 +33,7 @@ const emit = defineEmits<{
   (e: 'submit', value: SendChallengePayload): void
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 
@@ -89,11 +89,26 @@ function hasVenue(team: Team): boolean {
   return !!(team.venueName || team.venueAddress || team.venueSurface)
 }
 
-const homeKitPreview = computed<ResolvedKit | null>(() => (homeTeam.value ? homeKit(homeTeam.value) : null))
-const awayKitPreview = computed<ResolvedKit | null>(() =>
-  homeTeam.value && awayTeam.value ? resolveAwayKit(homeTeam.value, awayTeam.value) : null,
+/** Never blocks sending - purely informational when a kit is missing or both teams clash. */
+const kitInfo = computed(() =>
+  homeTeam.value && awayTeam.value
+    ? resolveKits(homeTeam.value, awayTeam.value)
+    : { home: null, away: null, clash: false },
 )
-const kitBlocked = computed(() => !!homeTeam.value && (!homeKitPreview.value || !awayKitPreview.value))
+const homeKitPreview = computed(() => kitInfo.value.home)
+const awayKitPreview = computed(() => kitInfo.value.away)
+
+/** i18n key + params for the info banner, or null when both kits are known and don't clash. */
+const kitInfoMessage = computed(() => {
+  if (!homeTeam.value || !awayTeam.value) return null
+  const { home, away, clash } = kitInfo.value
+
+  if (!home && !away) return { key: 'challenges.wizard.kitInfoNoneAtAll', params: {} }
+  if (!home) return { key: 'challenges.wizard.kitInfoNoHome', params: { team: homeTeam.value.name } }
+  if (!away) return { key: 'challenges.wizard.kitInfoNoAway', params: { team: awayTeam.value.name } }
+  if (clash) return { key: 'challenges.wizard.kitInfoClash', params: {} }
+  return null
+})
 
 const matchDateTime = computed<Date | null>(() => {
   if (!matchDateStr.value || !matchTimeStr.value) return null
@@ -101,6 +116,18 @@ const matchDateTime = computed<Date | null>(() => {
   return Number.isNaN(date.getTime()) ? null : date
 })
 const isDateValid = computed(() => !!matchDateTime.value && matchDateTime.value.getTime() > Date.now())
+
+/** Long form for the summary step, e.g. "jueves, 15 de octubre de 2026". */
+const formattedMatchDate = computed(() =>
+  matchDateTime.value?.toLocaleDateString(locale.value, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }),
+)
+/** Only shows the date error after a failed attempt to continue, not while still typing. */
+const dateAttempted = ref(false)
 
 /* ---- Step 3: optional message ------------------------------------------- */
 
@@ -110,7 +137,6 @@ const message = ref('')
 
 function stepIsValid(n: number): boolean {
   if (n === 1) return !!selectedTeamId.value
-  if (n === 2) return isDateValid.value && !kitBlocked.value
   return true
 }
 
@@ -121,6 +147,7 @@ function reset() {
   matchDateStr.value = ''
   matchTimeStr.value = ''
   message.value = ''
+  dateAttempted.value = false
 }
 
 watch(
@@ -153,6 +180,12 @@ function submit() {
 
 function goNext() {
   if (!stepIsValid(step.value)) return
+
+  if (step.value === 2 && !isDateValid.value) {
+    dateAttempted.value = true
+    return
+  }
+
   if (step.value >= TOTAL_STEPS) {
     submit()
     return
@@ -197,9 +230,9 @@ function goNext() {
 
           <v-progress-circular v-if="loadingTeams" indeterminate color="primary" class="d-block mx-auto my-8" />
 
-          <p v-else-if="eligibleTeams.length === 0" class="fp-error">
+          <v-alert v-else-if="eligibleTeams.length === 0" type="error" variant="tonal" density="compact">
             {{ t('challenges.wizard.noEligibleTeams') }}
-          </p>
+          </v-alert>
 
           <div v-else class="cw-team-list">
             <button
@@ -282,10 +315,6 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
-          <span v-if="(matchDateStr || matchTimeStr) && !isDateValid" class="fp-error d-block mb-4">
-            {{ t('challenges.wizard.dateRequired') }}
-          </span>
-
           <div class="cw-kits mt-2">
             <div class="cw-kit-col">
               <span class="cw-kit-tag">{{ t('challenges.wizard.kitHome') }}</span>
@@ -297,7 +326,7 @@ function goNext() {
                 :shorts="homeKitPreview.shortsColor"
                 :size="72"
               />
-              <span v-else class="fp-error">{{ t('challenges.wizard.noHomeKit') }}</span>
+              <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
             </div>
             <div class="cw-kit-col">
               <span class="cw-kit-tag">{{ t('challenges.wizard.kitAway') }}</span>
@@ -309,12 +338,28 @@ function goNext() {
                 :shorts="awayKitPreview.shortsColor"
                 :size="72"
               />
-              <span v-else-if="homeKitPreview && awayTeam" class="fp-error">
-                {{ t('challenges.wizard.noValidAwayKit', { team: awayTeam.name }) }}
-              </span>
+              <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
             </div>
           </div>
           <p class="fp-hint mt-2">{{ t('challenges.wizard.kitAutoHint') }}</p>
+          <v-alert
+            v-if="kitInfoMessage"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mt-3"
+          >
+            {{ t(kitInfoMessage.key, kitInfoMessage.params) }}
+          </v-alert>
+          <v-alert
+            v-if="dateAttempted && !isDateValid"
+            type="error"
+            variant="tonal"
+            density="compact"
+            class="mt-3"
+          >
+            {{ t('challenges.wizard.dateRequired') }}
+          </v-alert>
         </template>
 
         <!-- Step 3: summary -->
@@ -335,15 +380,21 @@ function goNext() {
 
           <div class="cw-summary-row">
             <v-icon :icon="mdiCalendarOutline" size="18" />
-            <span>{{ matchDateTime?.toLocaleDateString() }}</span>
+            <span><strong>{{ t('challenges.wizard.summaryDay') }}</strong> {{ formattedMatchDate }}</span>
           </div>
           <div class="cw-summary-row">
             <v-icon :icon="mdiClockOutline" size="18" />
-            <span>{{ matchDateTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+            <span>
+              <strong>{{ t('challenges.wizard.summaryTime') }}</strong>
+              {{ matchDateTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+            </span>
           </div>
           <div class="cw-summary-row">
-            <v-icon :icon="mdiMapMarkerOutline" size="18" />
-            <span>{{ homeTeam && hasVenue(homeTeam) ? homeTeam.venueName : t('challenges.wizard.venueUndefined') }}</span>
+            <v-icon :icon="mdiSoccerField" size="18" />
+            <span>
+              <strong>{{ t('challenges.wizard.summaryVenue') }}</strong>
+              {{ homeTeam && hasVenue(homeTeam) ? homeTeam.venueName : t('challenges.wizard.venueUndefined') }}
+            </span>
           </div>
 
           <div class="cw-kits mt-4">
@@ -356,6 +407,7 @@ function goNext() {
                 :shorts="homeKitPreview.shortsColor"
                 :size="72"
               />
+              <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
             </div>
             <div class="cw-kit-col">
               <KitPreview
@@ -366,6 +418,7 @@ function goNext() {
                 :shorts="awayKitPreview.shortsColor"
                 :size="72"
               />
+              <span v-else class="cw-kit-empty">{{ t('challenges.wizard.kitNotSet') }}</span>
             </div>
           </div>
 
@@ -514,11 +567,20 @@ function goNext() {
   color: rgb(var(--v-theme-primary));
 }
 
+.cw-kit-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  font-size: 0.8125rem;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
 .cw-summary-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
   margin-bottom: 0.5rem;
 }
 </style>

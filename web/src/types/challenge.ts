@@ -27,8 +27,10 @@ export interface Challenge {
   venueAddress?: string | null
   venueSurface?: PitchSurface | null
   venueMapsUrl?: string | null
-  homeKit: ChallengeKit
-  awayKit: ChallengeKit
+  homeKit?: ChallengeKit | null
+  awayKit?: ChallengeKit | null
+  /** Both kits are known and share a primary colour - informational only, never blocking. */
+  kitsClash: boolean
   message?: string | null
   status: ChallengeStatus
   createdAt: string

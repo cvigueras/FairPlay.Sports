@@ -9,7 +9,14 @@ public sealed class Challenge
     public Guid ChallengedTeamId { get; }
     public Guid VenueTeamId { get; }
     public DateTime MatchDate { get; }
-    public TeamKitSlot AwayKitSlot { get; }
+
+    /// <summary>
+    /// Which of the away team's kits avoids clashing with the home team's, chosen
+    /// automatically. Null when it has none to fall back on - no kit configured at all, or none
+    /// of its kits avoid the clash - a challenge is still allowed to go ahead either way.
+    /// </summary>
+    public TeamKitSlot? AwayKitSlot { get; }
+
     public string? Message { get; }
     public ChallengeStatus Status { get; private set; }
     public DateTime CreatedAt { get; }
@@ -27,7 +34,7 @@ public sealed class Challenge
         Guid challengedTeamId,
         Guid venueTeamId,
         DateTime matchDate,
-        TeamKitSlot awayKitSlot,
+        TeamKitSlot? awayKitSlot,
         string? message,
         DateTime createdAt)
     {
@@ -48,7 +55,7 @@ public sealed class Challenge
         Guid challengedTeamId,
         Guid venueTeamId,
         DateTime matchDate,
-        TeamKitSlot awayKitSlot,
+        TeamKitSlot? awayKitSlot,
         string? message,
         DateTime createdAtUtc)
     {
@@ -70,7 +77,7 @@ public sealed class Challenge
                 "The venue must belong to the challenger or the challenged team.", nameof(venueTeamId));
         }
 
-        if (!Enum.IsDefined(awayKitSlot))
+        if (awayKitSlot is not null && !Enum.IsDefined(awayKitSlot.Value))
             throw new ArgumentException($"'{awayKitSlot}' is not a valid {nameof(TeamKitSlot)}.", nameof(awayKitSlot));
 
         return new(

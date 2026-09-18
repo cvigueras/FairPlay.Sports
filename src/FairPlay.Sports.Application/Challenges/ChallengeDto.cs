@@ -18,18 +18,36 @@ public sealed record ChallengeDto(
     string? VenueAddress,
     PitchSurface? VenueSurface,
     string? VenueMapsUrl,
-    ChallengeKitDto HomeKit,
-    ChallengeKitDto AwayKit,
+    ChallengeKitDto? HomeKit,
+    ChallengeKitDto? AwayKit,
     string? Message,
     ChallengeStatus Status,
     DateTime CreatedAt,
     DateTime? RespondedAt)
 {
+    /// <summary>
+    /// Both kits are known and their primary colour matches - shown as an informational note,
+    /// never something that blocks sending or responding to the challenge.
+    /// </summary>
+    public bool KitsClash =>
+        HomeKit is not null && AwayKit is not null &&
+        string.Equals(HomeKit.ColorPrimary, AwayKit.ColorPrimary, StringComparison.OrdinalIgnoreCase);
+
     public static ChallengeDto FromDomain(Challenge challenge, Team challengerTeam, Team challengedTeam)
     {
         var homeTeam = challenge.HomeTeamId == challengerTeam.Id ? challengerTeam : challengedTeam;
         var awayTeam = challenge.HomeTeamId == challengerTeam.Id ? challengedTeam : challengerTeam;
-        var awayColors = challenge.AwayKitSlot == TeamKitSlot.First ? awayTeam.Colors! : awayTeam.AlternateColors!;
+
+        var homeKit = homeTeam.Colors is not null ? ChallengeKitDto.FromDomain(homeTeam.Colors, TeamKitSlot.First) : null;
+        var awayColors = challenge.AwayKitSlot switch
+        {
+            TeamKitSlot.First => awayTeam.Colors,
+            TeamKitSlot.Second => awayTeam.AlternateColors,
+            _ => null,
+        };
+        var awayKit = awayColors is not null
+            ? ChallengeKitDto.FromDomain(awayColors, challenge.AwayKitSlot!.Value)
+            : null;
 
         return new(
             challenge.Id,
@@ -46,8 +64,8 @@ public sealed record ChallengeDto(
             homeTeam.HomeVenue?.Address,
             homeTeam.HomeVenue?.Surface,
             homeTeam.HomeVenue?.MapsUrl,
-            ChallengeKitDto.FromDomain(homeTeam.Colors!, TeamKitSlot.First),
-            ChallengeKitDto.FromDomain(awayColors, challenge.AwayKitSlot),
+            homeKit,
+            awayKit,
             challenge.Message,
             challenge.Status,
             challenge.CreatedAt,

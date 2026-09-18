@@ -124,7 +124,7 @@ public class SendChallengeHandlerTests
     }
 
     [Test]
-    public async Task Handle_WhenHomeTeamHasNoKitConfigured_ReturnsFailure()
+    public async Task Handle_WhenHomeTeamHasNoKitConfigured_Succeeds_WithNoHomeKit_AndAwayUsesItsOwnFirstKit()
     {
         _challengerTeam = TeamMother.DomainTeam(id: ChallengeMother.ChallengerTeamId);
         _teams.GetByIdAsync(ChallengeMother.ChallengerTeamId, Arg.Any<CancellationToken>()).Returns(_challengerTeam);
@@ -132,7 +132,31 @@ public class SendChallengeHandlerTests
         var result = await _handler.Handle(
             ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
 
-        Assert.That(result.Error, Is.EqualTo(ChallengeMother.HomeTeamHasNoKit));
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeKit, Is.Null);
+            Assert.That(result.Value!.AwayKit?.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+            Assert.That(result.Value!.KitsClash, Is.False);
+        });
+    }
+
+    [Test]
+    public async Task Handle_WhenAwayTeamHasNoKitAtAll_Succeeds_WithNoAwayKit()
+    {
+        _challengedTeam = TeamMother.DomainTeam(id: ChallengeMother.ChallengedTeamId);
+        _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
+
+        var result = await _handler.Handle(
+            ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.HomeKit?.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+            Assert.That(result.Value!.AwayKit, Is.Null);
+            Assert.That(result.Value!.KitsClash, Is.False);
+        });
     }
 
     [Test]
@@ -146,9 +170,9 @@ public class SendChallengeHandlerTests
         {
             Assert.That(result.Value!.HomeTeamId, Is.EqualTo(ChallengeMother.ChallengerTeamId));
             Assert.That(result.Value!.AwayTeamId, Is.EqualTo(ChallengeMother.ChallengedTeamId));
-            Assert.That(result.Value!.AwayKit.Slot, Is.EqualTo(TeamKitSlot.First));
-            Assert.That(result.Value!.AwayKit.ColorPrimary, Is.EqualTo(BlueKit.Primary));
-            Assert.That(result.Value!.HomeKit.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(BlueKit.Primary));
+            Assert.That(result.Value!.HomeKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
         });
     }
 
@@ -168,13 +192,13 @@ public class SendChallengeHandlerTests
         Assert.That(result.IsSuccess, Is.True);
         Assert.Multiple(() =>
         {
-            Assert.That(result.Value!.AwayKit.Slot, Is.EqualTo(TeamKitSlot.Second));
-            Assert.That(result.Value!.AwayKit.ColorPrimary, Is.EqualTo(RedKit.Primary));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.Second));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(RedKit.Primary));
         });
     }
 
     [Test]
-    public async Task Handle_WhenBothAwayKitsClashWithHome_ReturnsFailure()
+    public async Task Handle_WhenBothAwayKitsClashWithHome_Succeeds_UsingFirstKitAnyway_AndFlagsTheClash()
     {
         _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, GreenKit, GreenKit);
         _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
@@ -182,16 +206,18 @@ public class SendChallengeHandlerTests
         var result = await _handler.Handle(
             ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
 
+        Assert.That(result.IsSuccess, Is.True);
         Assert.Multiple(() =>
         {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.Error, Is.EqualTo(ChallengeMother.NoValidAwayKit));
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.AwayKit!.ColorPrimary, Is.EqualTo(GreenKit.Primary));
+            Assert.That(result.Value!.KitsClash, Is.True);
         });
-        await _challenges.DidNotReceive().AddAsync(Arg.Any<Challenge>(), Arg.Any<CancellationToken>());
+        await _challenges.Received(1).AddAsync(Arg.Any<Challenge>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
-    public async Task Handle_WhenAwayHasNoSecondKit_AndFirstClashes_ReturnsFailure()
+    public async Task Handle_WhenAwayHasNoSecondKit_AndFirstClashes_Succeeds_AndFlagsTheClash()
     {
         _challengedTeam = TeamWithProfile(ChallengeMother.ChallengedTeamId, GreenKit);
         _teams.GetByIdAsync(ChallengeMother.ChallengedTeamId, Arg.Any<CancellationToken>()).Returns(_challengedTeam);
@@ -199,7 +225,12 @@ public class SendChallengeHandlerTests
         var result = await _handler.Handle(
             ChallengeMother.SendCommand(venueTeamId: ChallengeMother.ChallengerTeamId), CancellationToken.None);
 
-        Assert.That(result.Error, Is.EqualTo(ChallengeMother.NoValidAwayKit));
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AwayKit!.Slot, Is.EqualTo(TeamKitSlot.First));
+            Assert.That(result.Value!.KitsClash, Is.True);
+        });
     }
 
     [Test]

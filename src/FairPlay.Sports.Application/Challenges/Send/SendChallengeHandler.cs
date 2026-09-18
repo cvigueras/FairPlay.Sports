@@ -41,15 +41,9 @@ public sealed class SendChallengeHandler(
         var homeTeam = request.VenueTeamId == challengerTeam.Id ? challengerTeam : challengedTeam;
         var awayTeam = request.VenueTeamId == challengerTeam.Id ? challengedTeam : challengerTeam;
 
-        if (homeTeam.Colors is null)
-            return Result<ChallengeDto>.Failure("The home team has no kit configured.");
-
+        // Best-effort: missing kits or an unavoidable colour clash never block sending, they
+        // just leave AwayKitSlot unresolved (or picked despite the clash) for the DTO to flag.
         var awayKitSlot = ResolveAwayKitSlot(homeTeam.Colors, awayTeam);
-        if (awayKitSlot is null)
-        {
-            return Result<ChallengeDto>.Failure(
-                "The away team has no kit that avoids clashing with the home team's kit.");
-        }
 
         var challenge = Challenge.Create(
             Guid.NewGuid(),
@@ -57,7 +51,7 @@ public sealed class SendChallengeHandler(
             request.ChallengedTeamId,
             request.VenueTeamId,
             request.MatchDate,
-            awayKitSlot.Value,
+            awayKitSlot,
             request.Message,
             _clock.UtcNow);
 
@@ -68,17 +62,24 @@ public sealed class SendChallengeHandler(
 
     /// <summary>
     /// The away team's first kit unless its primary colour matches the home team's; then its
-    /// second kit if that avoids the clash; null if neither does (or there is no second kit).
+    /// second kit if that avoids the clash; otherwise falls back to its first kit (accepting the
+    /// clash) if it has one, else null (no kit configured at all).
     /// </summary>
-    private static TeamKitSlot? ResolveAwayKitSlot(KitColors homeColors, Team awayTeam)
+    private static TeamKitSlot? ResolveAwayKitSlot(KitColors? homeColors, Team awayTeam)
     {
-        if (awayTeam.Colors is not null && !ClashesWith(homeColors, awayTeam.Colors))
+        var first = awayTeam.Colors;
+        var second = awayTeam.AlternateColors;
+
+        if (homeColors is null)
+            return first is not null ? TeamKitSlot.First : null;
+
+        if (first is not null && !ClashesWith(homeColors, first))
             return TeamKitSlot.First;
 
-        if (awayTeam.AlternateColors is not null && !ClashesWith(homeColors, awayTeam.AlternateColors))
+        if (second is not null && !ClashesWith(homeColors, second))
             return TeamKitSlot.Second;
 
-        return null;
+        return first is not null ? TeamKitSlot.First : null;
     }
 
     private static bool ClashesWith(KitColors home, KitColors away) =>

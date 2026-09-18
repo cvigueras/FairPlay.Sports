@@ -97,8 +97,4 @@ public static class ChallengeMother
     public static string AlreadyResponded => "This challenge has already been responded to.";
 
     public static string MatchDateNotInFuture => "The match date must be in the future.";
-
-    public static string HomeTeamHasNoKit => "The home team has no kit configured.";
-
-    public static string NoValidAwayKit => "The away team has no kit that avoids clashing with the home team's kit.";
 }

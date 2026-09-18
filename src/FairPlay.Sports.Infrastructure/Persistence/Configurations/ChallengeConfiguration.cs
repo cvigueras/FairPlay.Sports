@@ -15,7 +15,6 @@ internal sealed class ChallengeConfiguration : IEntityTypeConfiguration<Challeng
         builder.Property(challenge => challenge.Id).ValueGeneratedNever();
         builder.Property(challenge => challenge.MatchDate).IsRequired();
         builder.Property(challenge => challenge.AwayKitSlot)
-            .IsRequired()
             .HasMaxLength(10)
             .HasConversion<string>();
         builder.Property(challenge => challenge.Message).HasMaxLength(Challenge.MaxMessageLength);
