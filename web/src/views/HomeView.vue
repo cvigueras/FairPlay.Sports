@@ -468,7 +468,7 @@ onMounted(async () => {
           <v-card border flat rounded="xl" class="pa-5 home-next-match">
             <div class="home-next-match-header">
               <h2>{{ t('home.nextMatch.title') }}</h2>
-              <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#16a34a')">
+              <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#4F46E5')">
                 {{ upcomingMatches.length }}
               </span>
             </div>
@@ -529,7 +529,7 @@ onMounted(async () => {
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
             <div class="home-teams-header">
               <h2>{{ t('home.myTeams.title') }}</h2>
-              <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#16a34a')">
+              <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#4F46E5')">
                 {{ teamCards.length }}
               </span>
             </div>
@@ -963,17 +963,17 @@ onMounted(async () => {
   height: 32px;
   padding: 0 16px;
   border-radius: 10px;
-  border: 1px dashed #16a34a;
-  color: #16a34a;
+  border: 1px dashed #4F46E5;
+  color: #4F46E5;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .home-next-match-cta:hover {
-  background: rgba(22, 163, 74, 0.08);
-  border-color: #15803d;
-  color: #15803d;
+  background: rgba(79, 70, 229, 0.08);
+  border-color: #4338CA;
+  color: #4338CA;
 }
 
 .home-next-match {
@@ -1030,11 +1030,11 @@ onMounted(async () => {
 }
 
 .home-next-match-row--next {
-  background: rgba(22, 163, 74, 0.08);
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .home-next-match-row--next:hover {
-  background: rgba(22, 163, 74, 0.1);
+  background: rgba(79, 70, 229, 0.1);
 }
 
 .home-next-match-date {
@@ -1050,7 +1050,7 @@ onMounted(async () => {
 }
 
 .home-next-match-date--next {
-  background: rgba(22, 163, 74, 0.14);
+  background: rgba(79, 70, 229, 0.14);
 }
 
 .home-next-match-month {

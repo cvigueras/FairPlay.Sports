@@ -327,7 +327,7 @@ onMounted(async () => {
               <div class="challenges-info-grid">
                 <div class="challenges-info-card">
                   <div class="challenges-info-icon">
-                    <v-icon :icon="mdiCalendarOutline" size="17" color="#16a34a" />
+                    <v-icon :icon="mdiCalendarOutline" size="17" color="#4F46E5" />
                   </div>
                   <div>
                     <div class="challenges-info-label">{{ t('challenges.list.dateTime') }}</div>
@@ -340,7 +340,7 @@ onMounted(async () => {
                 </div>
                 <div class="challenges-info-card">
                   <div class="challenges-info-icon">
-                    <v-icon :icon="mdiMapMarkerOutline" size="17" color="#16a34a" />
+                    <v-icon :icon="mdiMapMarkerOutline" size="17" color="#4F46E5" />
                   </div>
                   <div class="min-width-0">
                     <div class="challenges-info-label">{{ t('challenges.list.venue') }}</div>
@@ -531,8 +531,8 @@ onMounted(async () => {
 
 .challenges-tab--active,
 .challenges-tab--active:hover {
-  background: rgba(22, 163, 74, 0.14);
-  color: #16a34a;
+  background: rgba(79, 70, 229, 0.14);
+  color: #4F46E5;
 }
 
 .challenges-team-filter {
@@ -590,7 +590,7 @@ onMounted(async () => {
 
 .challenges-row--selected,
 .challenges-row--selected:hover {
-  background: rgba(22, 163, 74, 0.08);
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .challenges-row-top {
@@ -782,7 +782,7 @@ onMounted(async () => {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(22, 163, 74, 0.14);
+  background: rgba(79, 70, 229, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -822,15 +822,15 @@ onMounted(async () => {
   margin-top: 8px;
   padding: 7px 14px;
   border-radius: 9px;
-  background: rgba(22, 163, 74, 0.14);
-  color: #16a34a;
+  background: rgba(79, 70, 229, 0.14);
+  color: #4F46E5;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .challenges-route-btn:hover {
-  background: rgba(22, 163, 74, 0.22);
+  background: rgba(79, 70, 229, 0.22);
 }
 
 .challenges-section-title {

@@ -367,7 +367,7 @@ async function handleLogout(): Promise<void> {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #16a34a;
+  background: #4F46E5;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -404,7 +404,7 @@ async function handleLogout(): Promise<void> {
   height: 64px;
   margin: 0 auto 0.75rem;
   border-radius: 50%;
-  background: #16a34a;
+  background: #4F46E5;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -438,14 +438,14 @@ async function handleLogout(): Promise<void> {
   margin-top: 0.9rem;
   padding-top: 0.9rem;
   border-top: 1px solid #f1f5f9;
-  color: #16a34a;
+  color: #4F46E5;
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
 }
 
 .user-panel__link:hover {
-  color: #15803d;
+  color: #4338CA;
   text-decoration: underline;
 }
 
@@ -470,7 +470,7 @@ async function handleLogout(): Promise<void> {
 .lang-pill__code {
   padding: 5px 10px;
   border-radius: 999px;
-  background: #16a34a;
+  background: #4F46E5;
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -514,13 +514,13 @@ async function handleLogout(): Promise<void> {
 }
 
 .nav-list :deep(.v-list-item--active) {
-  background: rgba(22, 163, 74, 0.1);
+  background: rgba(79, 70, 229, 0.1);
 }
 
 .nav-list :deep(.v-list-item--active),
 .nav-list :deep(.v-list-item--active .v-icon),
 .nav-list :deep(.v-list-item--active .v-list-item-title) {
-  color: #15803d;
+  color: #4338CA;
   font-weight: 700;
 }
 
@@ -532,7 +532,7 @@ async function handleLogout(): Promise<void> {
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #16a34a;
+  background: #4F46E5;
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
