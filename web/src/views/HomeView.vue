@@ -504,7 +504,10 @@ onMounted(async () => {
                   v-for="(card, index) in rankedTeamCards"
                   :key="card.team.id"
                   class="home-standings-row"
-                  :class="{ 'home-standings-row--highlight': index === 0 }"
+                  :class="{
+                    'home-standings-row--highlight': index === 0,
+                    'home-standings-row--unplayed': card.standing.played === 0,
+                  }"
                 >
                   <span class="home-standings-pos">{{ card.standing.position }}.º</span>
                   <span class="home-standings-team">{{ card.team.name }}</span>
@@ -939,6 +942,14 @@ onMounted(async () => {
 
 .home-standings-row--highlight {
   background: rgba(var(--v-theme-primary), 0.07);
+}
+
+.home-standings-row--unplayed {
+  background: #f8fafc;
+}
+
+.home-standings-row--unplayed .home-standings-team {
+  color: #64748b;
 }
 
 .home-standings-pos {
