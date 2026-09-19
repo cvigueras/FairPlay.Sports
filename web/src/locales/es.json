@@ -43,18 +43,19 @@
     },
     "myTeams": {
       "title": "Tus equipos",
-      "viewAll": "Ver todos mis equipos",
       "createAnother": "Crear otro equipo",
+      "cta": "Buscar un equipo",
       "empty": "Aún no perteneces a ningún equipo."
     },
     "nextMatch": {
-      "title": "Próximo partido",
+      "title": "Próximos partidos",
       "viewDetail": "Ver detalle",
+      "next": "Próximo",
+      "more": "+{count} más",
       "empty": "No tienes ningún partido programado."
     },
     "standings": {
-      "title": "Clasificación",
-      "viewAll": "Ver clasificación completa",
+      "title": "Tu clasificación",
       "position": "Pos",
       "team": "Equipo",
       "played": "PJ",

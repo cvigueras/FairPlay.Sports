@@ -43,18 +43,19 @@
     },
     "myTeams": {
       "title": "Your teams",
-      "viewAll": "View all my teams",
       "createAnother": "Create another team",
+      "cta": "Browse teams",
       "empty": "You don't belong to any team yet."
     },
     "nextMatch": {
-      "title": "Next match",
+      "title": "Upcoming matches",
       "viewDetail": "View detail",
+      "next": "Next",
+      "more": "+{count} more",
       "empty": "You have no match scheduled."
     },
     "standings": {
       "title": "Standings",
-      "viewAll": "View full standings",
       "position": "Pos",
       "team": "Team",
       "played": "P",
