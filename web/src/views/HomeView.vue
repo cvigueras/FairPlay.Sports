@@ -88,6 +88,45 @@ watch(
   },
 )
 
+/* ---- Row B: match the "activity" + "teams" panels' height to the hero row above ---- */
+
+const ROW_B_EXTRA_HEIGHT = 56
+
+const heroRowEl = ref<HTMLElement | null>(null)
+const heroRowHeight = ref<number | null>(null)
+const desktopRowMql = window.matchMedia('(min-width: 900px)')
+
+const rowBCardStyle = computed(() =>
+  heroRowHeight.value ? { height: `${heroRowHeight.value + ROW_B_EXTRA_HEIGHT}px` } : undefined,
+)
+
+function recomputeHeroRowHeight() {
+  heroRowHeight.value = desktopRowMql.matches ? (heroRowEl.value?.clientHeight ?? null) : null
+}
+
+let heroRowResizeObserver: ResizeObserver | undefined
+
+onBeforeUnmount(() => {
+  heroRowResizeObserver?.disconnect()
+  desktopRowMql.removeEventListener('change', recomputeHeroRowHeight)
+})
+
+desktopRowMql.addEventListener('change', recomputeHeroRowHeight)
+
+watch(
+  () => heroRowEl.value,
+  async (el) => {
+    if (!el) return
+    if (!heroRowResizeObserver) {
+      heroRowResizeObserver = new ResizeObserver(() => recomputeHeroRowHeight())
+    }
+    heroRowResizeObserver.disconnect()
+    heroRowResizeObserver.observe(el)
+    await nextTick()
+    recomputeHeroRowHeight()
+  },
+)
+
 /* ---- KPI row -------------------------------------------------------------- */
 
 /** The distinct roles the user holds across their teams, e.g. "Presidente, Entrenador". */
@@ -347,7 +386,7 @@ onMounted(async () => {
         </div>
 
         <!-- Hero: balance + next match -->
-        <div class="home-hero-row mb-6">
+        <div ref="heroRowEl" class="home-hero-row mb-6">
           <v-card rounded="xl" class="home-hero pa-6 pa-md-8">
             <div class="home-hero-inner">
             <div class="home-donut-wrap">
@@ -443,24 +482,26 @@ onMounted(async () => {
 
         <!-- Row B: activity + teams -->
         <div class="home-row-b mb-6">
-          <v-card border flat rounded="xl" class="pa-5">
+          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
 
-            <template v-if="activityEntries.length > 0">
-              <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
-                <div class="home-activity-icon" :style="tonalStyle(entry.color)">
-                  <v-icon :icon="entry.icon" size="15" :color="entry.color" />
+            <div class="home-activity-scroll">
+              <template v-if="activityEntries.length > 0">
+                <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
+                  <div class="home-activity-icon" :style="tonalStyle(entry.color)">
+                    <v-icon :icon="entry.icon" size="15" :color="entry.color" />
+                  </div>
+                  <div>
+                    <div class="home-activity-text">{{ entry.text }}</div>
+                    <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
+                  </div>
                 </div>
-                <div>
-                  <div class="home-activity-text">{{ entry.text }}</div>
-                  <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
-                </div>
-              </div>
-            </template>
-            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
+              </template>
+              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
+            </div>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-5">
+          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <div class="d-flex align-center justify-space-between mb-3">
               <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
               <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
@@ -892,6 +933,18 @@ onMounted(async () => {
   font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
+}
+
+.home-row-b-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.home-activity-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .home-activity-row {
