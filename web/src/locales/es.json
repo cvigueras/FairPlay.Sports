@@ -260,11 +260,13 @@
       "uploadFailed": "No se ha podido subir la foto."
     },
     "account": {
+      "title": "Información de la cuenta",
       "userName": "Nombre de usuario",
-      "email": "Email",
-      "save": "Guardar cambios",
-      "saved": "Tus datos se han actualizado.",
-      "saveFailed": "No se han podido guardar los cambios."
+      "email": "Email"
+    },
+    "status": {
+      "active": "Cuenta activa",
+      "inactive": "Cuenta inactiva"
     },
     "security": {
       "title": "Seguridad",
