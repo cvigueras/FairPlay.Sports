@@ -193,9 +193,9 @@ async function handleRegisterSubmit() {
         </div>
 
         <div class="login-hero__pitch">
-          <span v-if="!mobile || mode === 'login'" class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
-          <h1 class="login-hero__title">{{ t('login.heroTitle') }}</h1>
-          <p class="login-hero__description">{{ t('login.heroDescription') }}</p>
+          <span class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
+          <h1 v-if="!mobile || mode === 'login'" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
+          <p v-if="!mobile || mode === 'login'" class="login-hero__description">{{ t('login.heroDescription') }}</p>
         </div>
 
         <ul class="login-hero__features">
@@ -523,17 +523,18 @@ async function handleRegisterSubmit() {
 }
 
 /* Mobile: no separate panel at all - the photo fills the whole screen and
-   both the hero's own content (brand, pitch) and the panel's (heading,
-   form, footer) stack directly on top of it via CSS Grid, sharing the same
-   cell instead of sitting in two flex rows one above the other. The hero's
-   content anchors to the top, the panel's to the bottom (where the photo's
-   own gradient is darkest), so a tall register form growing upward from
-   the bottom doesn't collide with the pitch text anchored at the top only
-   because the eyebrow badge (see the template) still drops for register to
-   keep that content short. .login-shell is pinned to the viewport height
-   (not min-height) so the page itself never scrolls; .login-panel keeps
-   overflow-y: auto as a fallback in case a very short viewport still can't
-   fit register's four fields between the top content and the bottom edge. */
+   both the hero's own content (brand, pitch, features) and the panel's
+   (form, footer) stack directly on top of it via CSS Grid, sharing the
+   same cell instead of sitting in two flex rows one above the other. The
+   hero's content anchors to the top, the panel's to the bottom (where the
+   photo's own gradient is darkest). Login shows the full pitch (eyebrow,
+   headline, description) above the feature list; register drops the
+   headline and description (see the v-if next to each in the template)
+   and keeps just the eyebrow above the features, since its four-field form
+   needs more of the screen than login's two. .login-shell is pinned to
+   the viewport height (not min-height) so the page itself never scrolls;
+   .login-panel keeps overflow-y: auto as a fallback in case a short
+   viewport still can't fit everything. */
 @media (max-width: 899px) {
   .login-shell {
     display: grid;
@@ -558,9 +559,36 @@ async function handleRegisterSubmit() {
     font-size: 1.375rem;
   }
 
-  .login-hero__description,
+  .login-hero__description {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
   .login-hero__features {
-    display: none;
+    gap: 12px;
+  }
+
+  .login-hero__features li {
+    gap: 10px;
+  }
+
+  .login-hero__feature-icon {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .login-hero__feature-icon :deep(.v-icon) {
+    font-size: 16px;
+  }
+
+  .login-hero__feature-text {
+    font-size: 0.75rem;
+  }
+
+  .login-hero__feature-text strong {
+    font-size: 0.8125rem;
   }
 
   .login-panel {
