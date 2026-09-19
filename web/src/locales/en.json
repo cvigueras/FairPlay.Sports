@@ -72,6 +72,10 @@
       "challengeRejectedByMe": "You declined the challenge from {team}",
       "challengeAcceptedByOther": "{team} accepted your challenge",
       "challengeRejectedByOther": "{team} declined your challenge"
+    },
+    "panel": {
+      "expand": "Show panel",
+      "collapse": "Hide panel"
     }
   },
   "challenges": {
