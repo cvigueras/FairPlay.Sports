@@ -487,10 +487,7 @@ onMounted(async () => {
         <!-- Row B: standings + teams -->
         <div class="home-row-b">
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="home-panel-title">{{ t('home.standings.title') }}</h2>
-              <RouterLink :to="{ name: 'standings' }" class="home-link">{{ t('home.standings.viewAll') }}</RouterLink>
-            </div>
+            <h2 class="home-panel-title mb-3">{{ t('home.standings.title') }}</h2>
 
             <div class="home-activity-scroll">
               <template v-if="rankedTeamCards.length > 0">
@@ -520,10 +517,7 @@ onMounted(async () => {
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="home-panel-title">{{ t('home.myTeams.title') }}</h2>
-              <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
-            </div>
+            <h2 class="home-panel-title mb-3">{{ t('home.myTeams.title') }}</h2>
 
             <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
               <RouterLink
@@ -801,31 +795,11 @@ onMounted(async () => {
   align-items: stretch;
 }
 
-.home-link {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.home-view-all-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: rgba(var(--v-theme-primary), 0.1);
-  color: rgb(var(--v-theme-primary-darken-1));
-  font-size: 12.5px;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.home-view-all-btn:hover {
-  background: rgba(var(--v-theme-primary), 0.18);
-}
-
 .home-team-carousel {
   display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-items: center;
   gap: 12px;
   flex-wrap: nowrap;
   overflow: hidden;

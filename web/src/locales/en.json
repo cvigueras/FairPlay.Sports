@@ -43,7 +43,6 @@
     },
     "myTeams": {
       "title": "Your teams",
-      "viewAll": "View all my teams",
       "createAnother": "Create another team",
       "empty": "You don't belong to any team yet."
     },
@@ -54,7 +53,6 @@
     },
     "standings": {
       "title": "Standings",
-      "viewAll": "View full standings",
       "position": "Pos",
       "team": "Team",
       "played": "P",
