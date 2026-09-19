@@ -802,7 +802,7 @@ function toggleTeamRow(id: string) {
 }
 
 .app-pagination :deep(.v-pagination__item--is-active .v-btn) {
-  background: #16a34a !important;
+  background: #4F46E5 !important;
   color: #ffffff !important;
 }
 
@@ -886,7 +886,7 @@ function toggleTeamRow(id: string) {
 }
 
 .teams-table thead th.teams-col-sortable--active {
-  color: #15803d;
+  color: #4338CA;
 }
 
 .teams-th-inner {

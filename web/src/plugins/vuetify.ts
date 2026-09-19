@@ -10,7 +10,7 @@ type VueI18nAdapterParams = Parameters<typeof createVueI18nAdapter>[0]
 /**
  * FairPlay Sports Vuetify setup. Component registration is handled by
  * `vite-plugin-vuetify` (autoImport) in `vite.config.ts`; here we only define
- * the brand theme (green primary over a slate surface), the tree-shakeable
+ * the brand theme (indigo primary over a slate surface), the tree-shakeable
  * mdi-svg icon set, the vue-i18n locale adapter (so Vuetify's own component
  * strings follow the app language), and a few component defaults so forms and
  * buttons stay consistent across views.
@@ -18,8 +18,8 @@ type VueI18nAdapterParams = Parameters<typeof createVueI18nAdapter>[0]
 const fairplay = {
   dark: false,
   colors: {
-    primary: '#16a34a',
-    'primary-darken-1': '#15803d',
+    primary: '#4F46E5',
+    'primary-darken-1': '#4338CA',
     secondary: '#334155',
     error: '#dc2626',
     success: '#15803d',
@@ -30,12 +30,12 @@ const fairplay = {
 
 // Used only by the auth screens: the login/register card is a translucent
 // "glass" panel over the stadium photo, so its contents need a dark palette
-// (light text, brighter green) to stay legible.
+// (light text, same indigo) to stay legible.
 const fairplayDark = {
   dark: true,
   colors: {
-    primary: '#34d399',
-    'primary-darken-1': '#10b981',
+    primary: '#818CF8',
+    'primary-darken-1': '#6366F1',
     secondary: '#94a3b8',
     error: '#fb7185',
     success: '#4ade80',

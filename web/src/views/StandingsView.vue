@@ -536,7 +536,7 @@ function medalClass(position: number): string {
 }
 
 .standings-col-stat--active {
-  color: #15803d;
+  color: #4338CA;
 }
 
 .standings-table tbody tr:not(:last-child) td {
@@ -628,7 +628,7 @@ function medalClass(position: number): string {
 }
 
 .standings-club-link:hover {
-  color: #16a34a;
+  color: #4F46E5;
   text-decoration: underline;
 }
 
@@ -819,7 +819,7 @@ function medalClass(position: number): string {
 }
 
 .app-pagination :deep(.v-pagination__item--is-active .v-btn) {
-  background: #16a34a !important;
+  background: #4F46E5 !important;
   color: #ffffff !important;
 }
 

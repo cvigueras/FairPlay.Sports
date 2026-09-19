@@ -20,6 +20,7 @@ import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { challengesApi } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
 import { ApiError } from '@/lib/http'
+import { relativeTime } from '@/lib/relativeTime'
 import { standingsApi } from '@/lib/standings'
 import { teamsApi } from '@/lib/teams'
 import { tonalStyle } from '@/lib/tonalColor'
@@ -274,16 +275,6 @@ interface ActivityEntry {
   at: Date
 }
 
-function relativeTime(date: Date): string {
-  const diffMs = date.getTime() - Date.now()
-  const diffHours = Math.round(diffMs / 3_600_000)
-  const diffDays = Math.round(diffMs / 86_400_000)
-  const rtf = new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' })
-  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, 'hour')
-  if (Math.abs(diffDays) < 30) return rtf.format(diffDays, 'day')
-  return rtf.format(Math.round(diffDays / 30), 'month')
-}
-
 const activityEntries = computed<ActivityEntry[]>(() => {
   const entries: ActivityEntry[] = []
 
@@ -477,7 +468,7 @@ onMounted(async () => {
           <v-card border flat rounded="xl" class="pa-5 home-next-match">
             <div class="home-next-match-header">
               <h2>{{ t('home.nextMatch.title') }}</h2>
-              <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#16a34a')">
+              <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#4F46E5')">
                 {{ upcomingMatches.length }}
               </span>
             </div>
@@ -538,7 +529,7 @@ onMounted(async () => {
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
             <div class="home-teams-header">
               <h2>{{ t('home.myTeams.title') }}</h2>
-              <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#16a34a')">
+              <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#4F46E5')">
                 {{ teamCards.length }}
               </span>
             </div>
@@ -623,7 +614,7 @@ onMounted(async () => {
                   </div>
                   <div>
                     <div class="home-activity-text">{{ entry.text }}</div>
-                    <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
+                    <div class="home-activity-time">{{ relativeTime(entry.at, locale) }}</div>
                   </div>
                 </div>
               </template>
@@ -972,17 +963,17 @@ onMounted(async () => {
   height: 32px;
   padding: 0 16px;
   border-radius: 10px;
-  border: 1px dashed #16a34a;
-  color: #16a34a;
+  border: 1px dashed #4F46E5;
+  color: #4F46E5;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .home-next-match-cta:hover {
-  background: rgba(22, 163, 74, 0.08);
-  border-color: #15803d;
-  color: #15803d;
+  background: rgba(79, 70, 229, 0.08);
+  border-color: #4338CA;
+  color: #4338CA;
 }
 
 .home-next-match {
@@ -1039,11 +1030,11 @@ onMounted(async () => {
 }
 
 .home-next-match-row--next {
-  background: rgba(22, 163, 74, 0.08);
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .home-next-match-row--next:hover {
-  background: rgba(22, 163, 74, 0.1);
+  background: rgba(79, 70, 229, 0.1);
 }
 
 .home-next-match-date {
@@ -1059,7 +1050,7 @@ onMounted(async () => {
 }
 
 .home-next-match-date--next {
-  background: rgba(22, 163, 74, 0.14);
+  background: rgba(79, 70, 229, 0.14);
 }
 
 .home-next-match-month {

@@ -75,7 +75,38 @@
     }
   },
   "challenges": {
-    "placeholder": "Here are your challenges",
+    "list": {
+      "title": "Challenges",
+      "countSummary": "{count} challenges · {pending} pending",
+      "tabAll": "All",
+      "tabSent": "Sent",
+      "tabReceived": "Received",
+      "filterTeam": "Filter by team",
+      "empty": "You don't have any challenges yet.",
+      "emptyFiltered": "No challenges in this tab.",
+      "loadFailed": "We couldn't load your challenges.",
+      "directionSent": "Sent",
+      "directionReceived": "Received",
+      "home": "Home",
+      "away": "Away",
+      "dateTime": "Date and time",
+      "venue": "Venue",
+      "viewRoute": "Get directions",
+      "kits": "Kits",
+      "message": "Message",
+      "sentRelative": "Sent {time}",
+      "respondedRelative": "Responded {time}",
+      "accept": "Accept challenge",
+      "reject": "Reject",
+      "acceptSuccess": "You accepted {team}'s challenge.",
+      "rejectSuccess": "You rejected {team}'s challenge.",
+      "actionFailed": "We couldn't complete that action."
+    },
+    "status": {
+      "Pending": "Pending",
+      "Accepted": "Accepted",
+      "Rejected": "Rejected"
+    },
     "wizard": {
       "stepOf": "Step {step} of {total}",
       "stepTeam": "Choose your team",
