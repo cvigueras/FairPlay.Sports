@@ -90,7 +90,7 @@
       "away": "Away",
       "dateTime": "Date and time",
       "venue": "Venue",
-      "viewMap": "View on map →",
+      "viewRoute": "Get directions",
       "kits": "Kits",
       "message": "Message",
       "sentRelative": "Sent {time}",

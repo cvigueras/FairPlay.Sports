@@ -6,6 +6,7 @@ import {
   mdiArrowDown,
   mdiArrowUp,
   mdiCalendarOutline,
+  mdiDirections,
   mdiMapMarkerOutline,
   mdiSwordCross,
 } from '@mdi/js'
@@ -59,6 +60,16 @@ interface ChallengeItem {
   matchDate: Date
   createdAt: Date
   respondedAt: Date | null
+  routeUrl: string | null
+}
+
+/** The venue's own maps link when the team set one, else a Google Maps directions
+ *  search built from its name/address - either way, a real route the browser can open. */
+function buildRouteUrl(c: Challenge): string | null {
+  if (c.venueMapsUrl) return c.venueMapsUrl
+  if (!c.venueAddress) return null
+  const destination = c.venueName ? `${c.venueName}, ${c.venueAddress}` : c.venueAddress
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
 }
 
 const items = computed<ChallengeItem[]>(() =>
@@ -81,6 +92,7 @@ const items = computed<ChallengeItem[]>(() =>
       matchDate: new Date(c.matchDate),
       createdAt: new Date(c.createdAt),
       respondedAt: c.respondedAt ? new Date(c.respondedAt) : null,
+      routeUrl: buildRouteUrl(c),
     }
   }),
 )
@@ -266,8 +278,9 @@ onMounted(async () => {
                         <template v-if="selected.challenge.venueAddress">{{ selected.challenge.venueAddress }} · </template>
                         <template v-if="selected.challenge.venueSurface">{{ t(`profile.team.surfaces.${selected.challenge.venueSurface}`) }}</template>
                       </div>
-                      <a v-if="selected.challenge.venueMapsUrl" :href="selected.challenge.venueMapsUrl" target="_blank" rel="noopener" class="challenges-map-link">
-                        {{ t('challenges.list.viewMap') }}
+                      <a v-if="selected.routeUrl" :href="selected.routeUrl" target="_blank" rel="noopener" class="challenges-route-btn">
+                        <v-icon :icon="mdiDirections" size="15" />
+                        {{ t('challenges.list.viewRoute') }}
                       </a>
                     </template>
                     <div v-else class="challenges-info-value challenges-info-value--muted">{{ t('challenges.wizard.venueUndefined') }}</div>
@@ -692,13 +705,22 @@ onMounted(async () => {
   margin-top: 1px;
 }
 
-.challenges-map-link {
-  display: inline-block;
-  margin-top: 4px;
-  font-size: 11.5px;
+.challenges-route-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  background: rgba(22, 163, 74, 0.14);
   color: #16a34a;
+  font-size: 12px;
   font-weight: 700;
   text-decoration: none;
+}
+
+.challenges-route-btn:hover {
+  background: rgba(22, 163, 74, 0.22);
 }
 
 .challenges-section-title {

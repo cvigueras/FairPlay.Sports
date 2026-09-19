@@ -90,7 +90,7 @@
       "away": "Visitante",
       "dateTime": "Fecha y hora",
       "venue": "Campo",
-      "viewMap": "Ver en el mapa →",
+      "viewRoute": "Ver ruta al campo",
       "kits": "Equipaciones",
       "message": "Mensaje",
       "sentRelative": "Enviado {time}",
