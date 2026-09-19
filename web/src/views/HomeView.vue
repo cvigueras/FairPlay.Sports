@@ -346,9 +346,10 @@ onMounted(async () => {
           </v-card>
         </div>
 
-        <!-- Hero: balance -->
-        <v-card rounded="xl" class="home-hero mb-6 pa-6 pa-md-8">
-          <div class="home-hero-inner">
+        <!-- Hero: balance + next match -->
+        <div class="home-hero-row mb-6">
+          <v-card rounded="xl" class="home-hero pa-6 pa-md-8">
+            <div class="home-hero-inner">
             <div class="home-donut-wrap">
               <div class="home-donut" :style="balanceDonutStyle" />
               <div class="home-donut-hole">
@@ -411,35 +412,6 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-        </v-card>
-
-        <!-- Row B: teams + next match -->
-        <div class="home-row-b mb-6">
-          <v-card border flat rounded="xl" class="pa-5">
-            <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
-              <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
-            </div>
-
-            <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
-              <RouterLink
-                v-for="{ membership, team } in visibleTeamCards"
-                :key="membership.id"
-                :to="{ name: 'team-detail', params: { id: team.id } }"
-                class="home-team-tile"
-              >
-                <TeamCrest :team="team" :size="36" />
-                <span class="home-team-tile-name">{{ team.name }}</span>
-                <span class="home-team-tile-role" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
-                  {{ t(`profile.team.memberRoles.${membership.role}`) }}
-                </span>
-              </RouterLink>
-              <RouterLink v-if="showAddTeamTile" :to="{ name: 'my-teams' }" class="home-team-tile home-team-tile--add">
-                <v-icon :icon="mdiPlusCircleOutline" size="20" />
-                {{ t('home.myTeams.createAnother') }}
-              </RouterLink>
-            </div>
-            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</p>
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 d-flex ga-4 align-center home-next-match">
@@ -466,6 +438,36 @@ onMounted(async () => {
               <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
               <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
             </div>
+          </v-card>
+        </div>
+
+        <!-- Row B: teams -->
+        <div class="home-row-b mb-6">
+          <v-card border flat rounded="xl" class="pa-5">
+            <div class="d-flex align-center justify-space-between mb-3">
+              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
+              <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
+            </div>
+
+            <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
+              <RouterLink
+                v-for="{ membership, team } in visibleTeamCards"
+                :key="membership.id"
+                :to="{ name: 'team-detail', params: { id: team.id } }"
+                class="home-team-tile"
+              >
+                <TeamCrest :team="team" :size="36" />
+                <span class="home-team-tile-name">{{ team.name }}</span>
+                <span class="home-team-tile-role" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
+                  {{ t(`profile.team.memberRoles.${membership.role}`) }}
+                </span>
+              </RouterLink>
+              <RouterLink v-if="showAddTeamTile" :to="{ name: 'my-teams' }" class="home-team-tile home-team-tile--add">
+                <v-icon :icon="mdiPlusCircleOutline" size="20" />
+                {{ t('home.myTeams.createAnother') }}
+              </RouterLink>
+            </div>
+            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</p>
           </v-card>
         </div>
 
@@ -697,11 +699,17 @@ onMounted(async () => {
   color: #94a3b8;
 }
 
-.home-row-b {
+.home-hero-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.7fr 1fr;
   gap: 16px;
   align-items: stretch;
+}
+
+.home-row-b {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 .home-row-c {
@@ -923,7 +931,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 899px) {
-  .home-row-b,
+  .home-hero-row,
   .home-row-c {
     grid-template-columns: 1fr;
   }
