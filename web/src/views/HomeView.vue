@@ -488,7 +488,7 @@ onMounted(async () => {
         <div class="home-row-b">
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-2 font-weight-bold">{{ t('home.standings.title') }}</h2>
+              <h2 class="home-panel-title">{{ t('home.standings.title') }}</h2>
               <RouterLink :to="{ name: 'standings' }" class="home-link">{{ t('home.standings.viewAll') }}</RouterLink>
             </div>
 
@@ -505,7 +505,7 @@ onMounted(async () => {
                   :key="card.team.id"
                   class="home-standings-row"
                   :class="{
-                    'home-standings-row--highlight': index === 0,
+                    'home-standings-row--alt': index % 2 === 1,
                     'home-standings-row--unplayed': card.standing.played === 0,
                   }"
                 >
@@ -521,7 +521,7 @@ onMounted(async () => {
 
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-2 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
+              <h2 class="home-panel-title">{{ t('home.myTeams.title') }}</h2>
               <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
             </div>
 
@@ -550,7 +550,7 @@ onMounted(async () => {
 
         <aside class="home-side-col">
           <v-card border flat rounded="xl" class="pa-5 home-activity-panel">
-            <h2 class="text-subtitle-2 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
+            <h2 class="home-panel-title mb-3">{{ t('home.activity.title') }}</h2>
 
             <div class="home-activity-scroll">
               <template v-if="activityEntries.length > 0">
@@ -604,7 +604,7 @@ onMounted(async () => {
   flex-direction: column;
   height: 560px;
   min-height: 0;
-  padding-top: 12px !important;
+  padding-top: 10px !important;
   background: #f8fafc !important;
 }
 
@@ -612,6 +612,14 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+}
+
+.home-panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  padding-bottom: 10px;
 }
 
 .home-kpi-label {
@@ -940,12 +948,8 @@ onMounted(async () => {
   padding-bottom: 8px;
 }
 
-.home-standings-row--highlight {
-  background: rgba(var(--v-theme-primary), 0.07);
-}
-
-.home-standings-row--unplayed {
-  background: #f8fafc;
+.home-standings-row--alt {
+  background: #f5f9ff;
 }
 
 .home-standings-row--unplayed .home-standings-team {
@@ -955,10 +959,6 @@ onMounted(async () => {
 .home-standings-pos {
   font-weight: 700;
   color: #64748b;
-}
-
-.home-standings-row--highlight .home-standings-pos {
-  color: rgb(var(--v-theme-primary));
 }
 
 .home-standings-team {
@@ -982,7 +982,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-top: 12px !important;
+  padding-top: 10px !important;
 }
 
 .home-activity-scroll {
