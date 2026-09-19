@@ -131,7 +131,7 @@
       "kitInfoNoneAtAll": "Ninguno de los dos equipos tiene equipación configurada.",
       "kitInfoNoHome": "{team} (local) no tiene equipación configurada.",
       "kitInfoNoAway": "{team} (visitante) no tiene equipación configurada.",
-      "kitInfoClash": "Ambos equipos tienen la misma equipación; puede haber confusión de colores en el partido.",
+      "kitInfoClash": "Ambos equipos tienen la misma equipación o muy similar; puede haber confusión de colores en el partido.",
       "messageLabel": "Mensaje (opcional)",
       "messagePlaceholder": "Añade un comentario para el rival...",
       "summaryVs": "{home} (local) frente a {away} (visitante)",

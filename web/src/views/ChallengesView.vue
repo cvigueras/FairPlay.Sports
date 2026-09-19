@@ -332,7 +332,7 @@ onMounted(async () => {
                   <div>
                     <div class="challenges-info-label">{{ t('challenges.list.dateTime') }}</div>
                     <div class="challenges-info-value">
-                      {{ selected.matchDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                      {{ selected.matchDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
                       ·
                       {{ selected.matchDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}
                     </div>
