@@ -44,7 +44,7 @@
     },
     "myTeams": {
       "title": "Tus equipos",
-      "viewAll": "Ver todos",
+      "viewAll": "Ver todos mis equipos",
       "createAnother": "Crear otro equipo",
       "empty": "Aún no perteneces a ningún equipo."
     },

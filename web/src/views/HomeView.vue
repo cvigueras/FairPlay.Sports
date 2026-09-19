@@ -430,7 +430,7 @@ onMounted(async () => {
           <v-card border flat rounded="xl" class="pa-5">
             <div class="d-flex align-center justify-space-between mb-3">
               <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
-              <RouterLink :to="{ name: 'my-teams' }" class="home-link">{{ t('home.myTeams.viewAll') }}</RouterLink>
+              <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
             </div>
 
             <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
@@ -733,6 +733,24 @@ onMounted(async () => {
 .home-link {
   font-size: 13px;
   font-weight: 600;
+}
+
+.home-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary-darken-1));
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-view-all-btn:hover {
+  background: rgba(var(--v-theme-primary), 0.18);
 }
 
 .home-team-carousel {

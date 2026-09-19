@@ -44,7 +44,7 @@
     },
     "myTeams": {
       "title": "Your teams",
-      "viewAll": "View all",
+      "viewAll": "View all my teams",
       "createAnother": "Create another team",
       "empty": "You don't belong to any team yet."
     },
