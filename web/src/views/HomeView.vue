@@ -19,7 +19,6 @@ import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { challengesApi } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
 import { ApiError } from '@/lib/http'
-import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { standingsApi } from '@/lib/standings'
 import { teamsApi } from '@/lib/teams'
 import { tonalStyle } from '@/lib/tonalColor'
@@ -550,9 +549,6 @@ onMounted(async () => {
                       </span>
                     </div>
                   </div>
-                  <span class="home-teams-role" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
-                    {{ t(`profile.team.memberRoles.${membership.role}`) }}
-                  </span>
                 </RouterLink>
               </div>
               <RouterLink :to="{ name: 'my-teams' }" class="home-teams-add">
@@ -896,14 +892,6 @@ onMounted(async () => {
   font-size: 9.5px;
   font-weight: 700;
   white-space: nowrap;
-}
-
-.home-teams-role {
-  flex-shrink: 0;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 700;
 }
 
 .home-teams-add {
