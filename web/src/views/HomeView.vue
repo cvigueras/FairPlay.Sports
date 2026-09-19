@@ -98,8 +98,12 @@ const heroRowEl = ref<HTMLElement | null>(null)
 const heroRowHeight = ref<number | null>(null)
 const desktopRowMql = window.matchMedia('(min-width: 900px)')
 
+const ROW_B_HEIGHT_SCALE = 0.85
+
 const rowBCardStyle = computed(() =>
-  heroRowHeight.value ? { height: `${heroRowHeight.value + ROW_B_EXTRA_HEIGHT}px` } : undefined,
+  heroRowHeight.value
+    ? { height: `${(heroRowHeight.value + ROW_B_EXTRA_HEIGHT) * ROW_B_HEIGHT_SCALE}px` }
+    : undefined,
 )
 
 function recomputeHeroRowHeight() {
@@ -828,7 +832,7 @@ onMounted(async () => {
 
 .home-row-b {
   display: grid;
-  grid-template-columns: 1fr 1.7fr;
+  grid-template-columns: 1.2fr 1.5fr;
   gap: 16px;
   align-items: stretch;
 }
