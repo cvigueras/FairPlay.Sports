@@ -10,12 +10,14 @@ import {
   mdiCheckCircleOutline,
   mdiCloseCircleOutline,
   mdiMapMarkerOutline,
-  mdiPlusCircleOutline,
+  mdiPlusOutline,
   mdiShieldOutline,
   mdiSwordCross,
 } from '@mdi/js'
 import TeamCrest from '@/components/TeamCrest.vue'
+import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { challengesApi } from '@/lib/challenges'
+import { DIVISION_COLOR } from '@/lib/division'
 import { ApiError } from '@/lib/http'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { standingsApi } from '@/lib/standings'
@@ -51,44 +53,6 @@ const teamStandings = ref<Record<string, TeamStandingSummary>>({})
 const challenges = ref<Challenge[]>([])
 
 const myTeamIds = computed(() => new Set(teamCards.value.map((card) => card.team.id)))
-
-/* ---- "Tus equipos" row: show only as many tiles as fit, no horizontal scroll ---- */
-
-const TEAM_TILE_WIDTH = 148
-const TEAM_TILE_GAP = 12
-
-const teamCarouselEl = ref<HTMLElement | null>(null)
-const visibleTeamSlotCount = ref(0)
-
-const visibleTeamCards = computed(() => teamCards.value.slice(0, Math.min(visibleTeamSlotCount.value, teamCards.value.length)))
-const showAddTeamTile = computed(() => visibleTeamSlotCount.value > teamCards.value.length)
-
-function recomputeVisibleTeamSlots() {
-  const width = teamCarouselEl.value?.clientWidth ?? 0
-  const maxItems = Math.floor((width + TEAM_TILE_GAP) / (TEAM_TILE_WIDTH + TEAM_TILE_GAP))
-  const combinedCount = teamCards.value.length + 1
-  visibleTeamSlotCount.value = Math.max(0, Math.min(maxItems, combinedCount))
-}
-
-let teamCarouselResizeObserver: ResizeObserver | undefined
-
-onBeforeUnmount(() => {
-  teamCarouselResizeObserver?.disconnect()
-})
-
-watch(
-  () => [teamCarouselEl.value, teamCards.value.length] as const,
-  async ([el]) => {
-    if (!el) return
-    if (!teamCarouselResizeObserver) {
-      teamCarouselResizeObserver = new ResizeObserver(() => recomputeVisibleTeamSlots())
-    }
-    teamCarouselResizeObserver.disconnect()
-    teamCarouselResizeObserver.observe(el as HTMLElement)
-    await nextTick()
-    recomputeVisibleTeamSlots()
-  },
-)
 
 /* ---- Row B: match the "standings" + "teams" panels' height to the hero row above ---- */
 
@@ -517,7 +481,7 @@ onMounted(async () => {
               </RouterLink>
             </template>
             <div v-else class="home-empty-block">
-              <div class="home-next-match-empty-icon">
+              <div class="home-empty-icon">
                 <v-icon :icon="mdiCalendarBlankOutline" size="18" color="#94a3b8" />
               </div>
               <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
@@ -558,28 +522,51 @@ onMounted(async () => {
             </div>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <h2 class="home-panel-title mb-3">{{ t('home.myTeams.title') }}</h2>
+          <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
+            <div class="home-teams-header">
+              <h2>{{ t('home.myTeams.title') }}</h2>
+              <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#16a34a')">
+                {{ teamCards.length }}
+              </span>
+            </div>
 
-            <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
-              <RouterLink
-                v-for="{ membership, team } in visibleTeamCards"
-                :key="membership.id"
-                :to="{ name: 'team-detail', params: { id: team.id } }"
-                class="home-team-tile"
-              >
-                <TeamCrest :team="team" :size="36" />
-                <span class="home-team-tile-name">{{ team.name }}</span>
-                <span class="home-team-tile-role" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
-                  {{ t(`profile.team.memberRoles.${membership.role}`) }}
-                </span>
-              </RouterLink>
-              <RouterLink v-if="showAddTeamTile" :to="{ name: 'my-teams' }" class="home-team-tile home-team-tile--add">
-                <v-icon :icon="mdiPlusCircleOutline" size="20" />
+            <template v-if="teamCards.length > 0">
+              <div class="home-teams-list home-activity-scroll">
+                <RouterLink
+                  v-for="{ membership, team } in teamCards"
+                  :key="membership.id"
+                  :to="{ name: 'team-detail', params: { id: team.id } }"
+                  class="home-teams-row"
+                >
+                  <TeamCrest :team="team" :size="34" />
+                  <div class="min-width-0">
+                    <div class="home-teams-row-name">{{ team.name }}</div>
+                    <div class="home-teams-row-tags">
+                      <span class="home-teams-tag" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                        {{ t(`profile.team.enums.${team.category}`) }}
+                      </span>
+                      <span v-if="team.division" class="home-teams-tag" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                        {{ t(`profile.team.enums.${team.division}`) }}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="home-teams-role" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
+                    {{ t(`profile.team.memberRoles.${membership.role}`) }}
+                  </span>
+                </RouterLink>
+              </div>
+              <RouterLink :to="{ name: 'my-teams' }" class="home-teams-add">
+                <v-icon :icon="mdiPlusOutline" size="14" />
                 {{ t('home.myTeams.createAnother') }}
               </RouterLink>
+            </template>
+            <div v-else class="home-empty-block">
+              <div class="home-empty-icon">
+                <v-icon :icon="mdiShieldOutline" size="18" color="#94a3b8" />
+              </div>
+              <span class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</span>
+              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.myTeams.cta') }}</RouterLink>
             </div>
-            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</p>
           </v-card>
         </div>
         </div>
@@ -837,57 +824,107 @@ onMounted(async () => {
   align-items: stretch;
 }
 
-.home-team-carousel {
+.home-teams-header {
   display: flex;
-  flex: 1 1 auto;
-  justify-content: center;
   align-items: center;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-
-.home-team-tile {
-  width: 148px;
+  justify-content: space-between;
+  margin-bottom: 6px;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  color: inherit;
-  text-decoration: none;
 }
 
-.home-team-tile:hover {
-  border-color: rgb(var(--v-theme-primary));
-}
-
-.home-team-tile-name {
-  font-size: 13px;
+.home-teams-header h2 {
+  margin: 0;
+  font-size: 15px;
   font-weight: 700;
   color: #0f172a;
 }
 
-.home-team-tile-role {
-  padding: 2px 8px;
+.home-teams-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.home-teams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-teams-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-teams-row:hover {
+  background: #f8fafc;
+}
+
+.home-teams-row-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-teams-row-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  overflow: hidden;
+}
+
+.home-teams-tag {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.home-teams-role {
+  flex-shrink: 0;
+  padding: 3px 10px;
   border-radius: 999px;
   font-size: 10.5px;
   font-weight: 700;
 }
 
-.home-team-tile--add {
+.home-teams-add {
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: row;
   gap: 6px;
-  border-style: dashed;
-  color: #94a3b8;
-  font-size: 12.5px;
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 12px;
   font-weight: 600;
-  text-align: center;
+  text-decoration: none;
+}
+
+.home-teams-add:hover {
+  border-color: #94a3b8;
+  color: #475569;
 }
 
 .home-next-match {
@@ -1053,7 +1090,8 @@ onMounted(async () => {
   gap: 6px;
 }
 
-.home-next-match .home-empty-block {
+.home-next-match .home-empty-block,
+.home-teams-panel .home-empty-block {
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
@@ -1062,7 +1100,7 @@ onMounted(async () => {
   padding-top: 8px;
 }
 
-.home-next-match-empty-icon {
+.home-empty-icon {
   width: 42px;
   height: 42px;
   border-radius: 999px;

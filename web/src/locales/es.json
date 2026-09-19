@@ -44,6 +44,7 @@
     "myTeams": {
       "title": "Tus equipos",
       "createAnother": "Crear otro equipo",
+      "cta": "Buscar un equipo",
       "empty": "Aún no perteneces a ningún equipo."
     },
     "nextMatch": {

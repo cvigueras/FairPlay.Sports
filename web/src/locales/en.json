@@ -44,6 +44,7 @@
     "myTeams": {
       "title": "Your teams",
       "createAnother": "Create another team",
+      "cta": "Browse teams",
       "empty": "You don't belong to any team yet."
     },
     "nextMatch": {
