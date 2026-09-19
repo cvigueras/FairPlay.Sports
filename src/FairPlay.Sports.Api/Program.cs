@@ -5,6 +5,7 @@ using FairPlay.Sports.Application;
 using FairPlay.Sports.Infrastructure;
 using FairPlay.Sports.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 
 const string FrontendCorsPolicy = "FrontendCorsPolicy";
@@ -77,6 +78,18 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = "swagger";
     });
 }
+
+// Render (and similar PaaS) terminate TLS at their edge proxy and forward plain HTTP to the
+// container; without this, the app sees every request as HTTP and UseHttpsRedirection below
+// loops it back to https forever. KnownNetworks/KnownProxies are cleared because the proxy's
+// IP isn't a known/local one, which is expected for this deployment target.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UseHttpsRedirection();
 
