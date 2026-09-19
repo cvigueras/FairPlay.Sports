@@ -194,11 +194,11 @@ async function handleRegisterSubmit() {
 
         <div class="login-hero__pitch">
           <span class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
-          <h1 v-if="!mobile || mode === 'login'" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
-          <p v-if="!mobile || mode === 'login'" class="login-hero__description">{{ t('login.heroDescription') }}</p>
+          <h1 v-if="!mobile" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
+          <p v-if="!mobile" class="login-hero__description">{{ t('login.heroDescription') }}</p>
         </div>
 
-        <ul class="login-hero__features">
+        <ul v-if="!mobile || mode === 'login'" class="login-hero__features">
           <li v-for="feature in heroFeatures" :key="feature.titleKey">
             <span class="login-hero__feature-icon">
               <v-icon :icon="feature.icon" size="22" color="#4ade80" />
@@ -527,14 +527,14 @@ async function handleRegisterSubmit() {
    (form, footer) stack directly on top of it via CSS Grid, sharing the
    same cell instead of sitting in two flex rows one above the other. The
    hero's content anchors to the top, the panel's to the bottom (where the
-   photo's own gradient is darkest). Login shows the full pitch (eyebrow,
-   headline, description) above the feature list; register drops the
-   headline and description (see the v-if next to each in the template)
-   and keeps just the eyebrow above the features, since its four-field form
-   needs more of the screen than login's two. .login-shell is pinned to
-   the viewport height (not min-height) so the page itself never scrolls;
-   .login-panel keeps overflow-y: auto as a fallback in case a short
-   viewport still can't fit everything. */
+   photo's own gradient is darkest). The headline and description are
+   desktop-only depth (see the v-if next to each in the template); the
+   feature list on top of that only shows for login - register keeps just
+   the eyebrow, since its four-field form needs more of the screen than
+   login's two. .login-shell is pinned to the viewport height (not
+   min-height) so the page itself never scrolls; .login-panel keeps
+   overflow-y: auto as a fallback in case a short viewport still can't fit
+   everything. */
 @media (max-width: 899px) {
   .login-shell {
     display: grid;
@@ -553,15 +553,6 @@ async function handleRegisterSubmit() {
 
   .login-hero__pitch {
     gap: 18px;
-  }
-
-  .login-hero__title {
-    font-size: 1.375rem;
-  }
-
-  .login-hero__description {
-    font-size: 0.8125rem;
-    line-height: 1.45;
   }
 
   .login-hero__features {
