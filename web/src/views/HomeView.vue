@@ -489,38 +489,8 @@ onMounted(async () => {
           </v-card>
         </div>
 
-        <!-- Row B: standings + teams -->
+        <!-- Row B: teams + standings -->
         <div class="home-row-b">
-          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <h2 class="home-panel-title mb-3">{{ t('home.standings.title') }}</h2>
-
-            <div class="home-activity-scroll">
-              <template v-if="rankedTeamCards.length > 0">
-                <div class="home-standings-row home-standings-head">
-                  <span>{{ t('home.standings.position') }}</span>
-                  <span>{{ t('home.standings.team') }}</span>
-                  <span class="text-right">{{ t('home.standings.played') }}</span>
-                  <span class="text-right">{{ t('home.standings.points') }}</span>
-                </div>
-                <div
-                  v-for="(card, index) in rankedTeamCards"
-                  :key="card.team.id"
-                  class="home-standings-row"
-                  :class="{
-                    'home-standings-row--alt': index % 2 === 1,
-                    'home-standings-row--unplayed': card.standing.played === 0,
-                  }"
-                >
-                  <span class="home-standings-pos">{{ card.standing.position }}.º</span>
-                  <span class="home-standings-team">{{ card.team.name }}</span>
-                  <span class="text-right home-standings-muted">{{ card.standing.played }}</span>
-                  <span class="text-right home-standings-points">{{ card.standing.points }}</span>
-                </div>
-              </template>
-              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.standings.empty') }}</p>
-            </div>
-          </v-card>
-
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
             <div class="home-teams-header">
               <h2>{{ t('home.myTeams.title') }}</h2>
@@ -562,6 +532,36 @@ onMounted(async () => {
               </div>
               <span class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</span>
               <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.myTeams.cta') }}</RouterLink>
+            </div>
+          </v-card>
+
+          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
+            <h2 class="home-panel-title mb-3">{{ t('home.standings.title') }}</h2>
+
+            <div class="home-activity-scroll">
+              <template v-if="rankedTeamCards.length > 0">
+                <div class="home-standings-row home-standings-head">
+                  <span>{{ t('home.standings.position') }}</span>
+                  <span>{{ t('home.standings.team') }}</span>
+                  <span class="text-right">{{ t('home.standings.played') }}</span>
+                  <span class="text-right">{{ t('home.standings.points') }}</span>
+                </div>
+                <div
+                  v-for="(card, index) in rankedTeamCards"
+                  :key="card.team.id"
+                  class="home-standings-row"
+                  :class="{
+                    'home-standings-row--alt': index % 2 === 1,
+                    'home-standings-row--unplayed': card.standing.played === 0,
+                  }"
+                >
+                  <span class="home-standings-pos">{{ card.standing.position }}.º</span>
+                  <span class="home-standings-team">{{ card.team.name }}</span>
+                  <span class="text-right home-standings-muted">{{ card.standing.played }}</span>
+                  <span class="text-right home-standings-points">{{ card.standing.points }}</span>
+                </div>
+              </template>
+              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.standings.empty') }}</p>
             </div>
           </v-card>
         </div>
@@ -815,7 +815,7 @@ onMounted(async () => {
 
 .home-row-b {
   display: grid;
-  grid-template-columns: 1.2fr 1.5fr;
+  grid-template-columns: 1fr 1.7fr;
   gap: 16px;
   align-items: stretch;
 }
