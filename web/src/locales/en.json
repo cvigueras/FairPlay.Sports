@@ -16,7 +16,6 @@
   },
   "home": {
     "browseTeams": "Find a team to challenge",
-    "viewMyTeams": "View my teams",
     "loadFailed": "Couldn't load your dashboard.",
     "kpi": {
       "teams": "Teams assigned",

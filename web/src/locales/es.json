@@ -16,7 +16,6 @@
   },
   "home": {
     "browseTeams": "Buscar un equipo para desafiar",
-    "viewMyTeams": "Ver mis equipos",
     "loadFailed": "No se ha podido cargar tu panel.",
     "kpi": {
       "teams": "Equipos asignados",

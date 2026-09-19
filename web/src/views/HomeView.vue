@@ -335,9 +335,6 @@ onMounted(async () => {
         <!-- Header -->
         <div class="home-header mb-7">
           <div class="d-flex ga-2 home-header-actions">
-            <RouterLink :to="{ name: 'my-teams' }" class="fp-btn fp-btn-outline">
-              {{ t('home.viewMyTeams') }}
-            </RouterLink>
             <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">
               {{ t('home.browseTeams') }}
             </RouterLink>
