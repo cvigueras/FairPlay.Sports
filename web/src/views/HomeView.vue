@@ -567,6 +567,8 @@ onMounted(async () => {
 <style scoped>
 .home-container {
   max-width: 1200px;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .home-kpi-grid {
