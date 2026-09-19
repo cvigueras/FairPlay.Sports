@@ -1,4 +1,4 @@
-import type { KitPattern, PitchSurface } from '@/types/team'
+import type { AgeCategory, Division, KitPattern, PitchSurface } from '@/types/team'
 
 export type ChallengeStatus = 'Pending' | 'Accepted' | 'Rejected'
 export type TeamKitSlot = 'First' | 'Second'
@@ -17,9 +17,13 @@ export interface Challenge {
   challengerTeamId: string
   challengerTeamName: string
   challengerTeamHasCrest: boolean
+  challengerTeamCategory: AgeCategory
+  challengerTeamDivision?: Division | null
   challengedTeamId: string
   challengedTeamName: string
   challengedTeamHasCrest: boolean
+  challengedTeamCategory: AgeCategory
+  challengedTeamDivision?: Division | null
   homeTeamId: string
   awayTeamId: string
   matchDate: string

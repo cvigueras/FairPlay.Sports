@@ -81,6 +81,7 @@
       "tabAll": "All",
       "tabSent": "Sent",
       "tabReceived": "Received",
+      "filterTeam": "Filter by team",
       "empty": "You don't have any challenges yet.",
       "emptyFiltered": "No challenges in this tab.",
       "loadFailed": "We couldn't load your challenges.",

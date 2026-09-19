@@ -81,6 +81,7 @@
       "tabAll": "Todos",
       "tabSent": "Enviados",
       "tabReceived": "Recibidos",
+      "filterTeam": "Filtrar por equipo",
       "empty": "No tienes desafíos todavía.",
       "emptyFiltered": "No hay desafíos en esta pestaña.",
       "loadFailed": "No se han podido cargar tus desafíos.",

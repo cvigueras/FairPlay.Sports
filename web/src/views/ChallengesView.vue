@@ -13,7 +13,9 @@ import {
 import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { challengesApi, isActionablePending } from '@/lib/challenges'
+import { DIVISION_COLOR } from '@/lib/division'
 import { ApiError } from '@/lib/http'
 import { relativeTime } from '@/lib/relativeTime'
 import { tonalStyle } from '@/lib/tonalColor'
@@ -35,6 +37,7 @@ const actingId = ref<string | null>(null)
 
 type Tab = 'all' | 'sent' | 'received'
 const tab = ref<Tab>('all')
+const selectedTeamId = ref<string | null>(null)
 const selectedId = ref<string | null>(null)
 
 const STATUS_COLOR: Record<Challenge['status'], string> = {
@@ -47,11 +50,15 @@ interface TeamRef {
   id: string
   name: string
   hasCrest: boolean
+  category: Challenge['challengerTeamCategory']
+  division: Challenge['challengerTeamDivision']
+  classificationStyle: { category: string; division: string | null }
 }
 
 interface ChallengeItem {
   challenge: Challenge
   direction: 'sent' | 'received'
+  myTeam: TeamRef
   otherTeamName: string
   homeTeam: TeamRef
   awayTeam: TeamRef
@@ -61,6 +68,26 @@ interface ChallengeItem {
   createdAt: Date
   respondedAt: Date | null
   routeUrl: string | null
+}
+
+function teamRef(
+  id: string,
+  name: string,
+  hasCrest: boolean,
+  category: Challenge['challengerTeamCategory'],
+  division: Challenge['challengerTeamDivision'],
+): TeamRef {
+  return {
+    id,
+    name,
+    hasCrest,
+    category,
+    division: division ?? null,
+    classificationStyle: {
+      category: tonalStyle(AGE_CATEGORY_COLOR[category]),
+      division: division ? tonalStyle(DIVISION_COLOR[division]) : null,
+    },
+  }
 }
 
 /** The venue's own maps link when the team set one, else a Google Maps directions
@@ -76,14 +103,15 @@ const items = computed<ChallengeItem[]>(() =>
   challenges.value.map((c) => {
     const iAmChallenger = c.challengerTeamId in roleByTeamId.value
     const direction: ChallengeItem['direction'] = iAmChallenger ? 'sent' : 'received'
-    const challengerTeam: TeamRef = { id: c.challengerTeamId, name: c.challengerTeamName, hasCrest: c.challengerTeamHasCrest }
-    const challengedTeam: TeamRef = { id: c.challengedTeamId, name: c.challengedTeamName, hasCrest: c.challengedTeamHasCrest }
+    const challengerTeam = teamRef(c.challengerTeamId, c.challengerTeamName, c.challengerTeamHasCrest, c.challengerTeamCategory, c.challengerTeamDivision)
+    const challengedTeam = teamRef(c.challengedTeamId, c.challengedTeamName, c.challengedTeamHasCrest, c.challengedTeamCategory, c.challengedTeamDivision)
     const homeTeam = c.homeTeamId === c.challengerTeamId ? challengerTeam : challengedTeam
     const awayTeam = homeTeam.id === c.challengerTeamId ? challengedTeam : challengerTeam
 
     return {
       challenge: c,
       direction,
+      myTeam: iAmChallenger ? challengerTeam : challengedTeam,
       otherTeamName: iAmChallenger ? c.challengedTeamName : c.challengerTeamName,
       homeTeam,
       awayTeam,
@@ -106,7 +134,20 @@ watch(
   (count) => challengesStore.setPendingCount(count),
   { immediate: true },
 )
-const filteredItems = computed(() => (tab.value === 'all' ? items.value : items.value.filter((i) => i.direction === tab.value)))
+
+/** Only the user's own teams that actually have a challenge, so the filter never offers an
+ *  empty result. */
+const myTeamOptions = computed(() => {
+  const byId = new Map<string, string>()
+  for (const item of items.value) if (!byId.has(item.myTeam.id)) byId.set(item.myTeam.id, item.myTeam.name)
+  return [...byId.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+})
+
+const filteredItems = computed(() =>
+  items.value.filter(
+    (i) => (tab.value === 'all' || i.direction === tab.value) && (!selectedTeamId.value || i.myTeam.id === selectedTeamId.value),
+  ),
+)
 const selected = computed(
   () => filteredItems.value.find((i) => i.challenge.id === selectedId.value) ?? filteredItems.value[0] ?? null,
 )
@@ -188,6 +229,18 @@ onMounted(async () => {
                   {{ tabDef.label }}
                 </button>
               </div>
+              <v-select
+                v-model="selectedTeamId"
+                :items="myTeamOptions"
+                item-title="name"
+                item-value="id"
+                :label="t('challenges.list.filterTeam')"
+                variant="outlined"
+                density="compact"
+                clearable
+                hide-details
+                class="challenges-team-filter"
+              />
             </div>
 
             <div class="challenges-list-scroll">
@@ -210,6 +263,13 @@ onMounted(async () => {
                     <span class="challenges-row-name">{{ item.otherTeamName }}</span>
                   </div>
                   <span class="challenges-status-pill" :style="item.statusStyle">{{ t(`challenges.status.${item.challenge.status}`) }}</span>
+                </div>
+                <div class="challenges-row-tags">
+                  <span class="challenges-row-my-team">{{ item.myTeam.name }}</span>
+                  <span class="challenges-tag" :style="item.myTeam.classificationStyle.category">{{ t(`profile.team.enums.${item.myTeam.category}`) }}</span>
+                  <span v-if="item.myTeam.division" class="challenges-tag" :style="item.myTeam.classificationStyle.division!">
+                    {{ t(`profile.team.enums.${item.myTeam.division}`) }}
+                  </span>
                 </div>
                 <div class="challenges-row-meta">
                   <v-icon :icon="mdiCalendarOutline" size="12" />
@@ -243,12 +303,24 @@ onMounted(async () => {
                   <TeamCrest :team="selected.homeTeam" :size="64" />
                   <div class="challenges-team-name">{{ selected.homeTeam.name }}</div>
                   <div class="challenges-team-tag">{{ t('challenges.list.home') }}</div>
+                  <div class="challenges-team-classification">
+                    <span class="challenges-tag" :style="selected.homeTeam.classificationStyle.category">{{ t(`profile.team.enums.${selected.homeTeam.category}`) }}</span>
+                    <span v-if="selected.homeTeam.division" class="challenges-tag" :style="selected.homeTeam.classificationStyle.division!">
+                      {{ t(`profile.team.enums.${selected.homeTeam.division}`) }}
+                    </span>
+                  </div>
                 </div>
                 <div class="challenges-vs">VS</div>
                 <div class="challenges-team-col">
                   <TeamCrest :team="selected.awayTeam" :size="64" />
                   <div class="challenges-team-name">{{ selected.awayTeam.name }}</div>
                   <div class="challenges-team-tag">{{ t('challenges.list.away') }}</div>
+                  <div class="challenges-team-classification">
+                    <span class="challenges-tag" :style="selected.awayTeam.classificationStyle.category">{{ t(`profile.team.enums.${selected.awayTeam.category}`) }}</span>
+                    <span v-if="selected.awayTeam.division" class="challenges-tag" :style="selected.awayTeam.classificationStyle.division!">
+                      {{ t(`profile.team.enums.${selected.awayTeam.division}`) }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -463,6 +535,19 @@ onMounted(async () => {
   color: #16a34a;
 }
 
+.challenges-team-filter {
+  margin-top: 12px;
+}
+
+.challenges-tag {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .challenges-list-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -549,6 +634,22 @@ onMounted(async () => {
 .challenges-status-pill--lg {
   padding: 4px 12px;
   font-size: 11.5px;
+}
+
+.challenges-row-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.challenges-row-my-team {
+  font-size: 10.5px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
 }
 
 .challenges-row-meta {
@@ -643,6 +744,15 @@ onMounted(async () => {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #64748b;
+}
+
+.challenges-team-classification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
 }
 
 .challenges-vs {
