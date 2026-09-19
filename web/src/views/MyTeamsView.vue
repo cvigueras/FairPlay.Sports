@@ -239,7 +239,7 @@ async function confirmLeave() {
       <v-row class="my-teams-row">
         <!-- Left: join an existing team, and found a new one. Always available -
              no toggle needed to reveal it. -->
-        <v-col cols="12" md="4" class="py-6">
+        <v-col cols="12" md="4" class="py-6 my-teams-join-col">
           <v-card class="fp-card pa-6">
             <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
@@ -479,5 +479,39 @@ async function confirmLeave() {
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+/* Mobile only (below Vuetify's `md` breakpoint, where the two columns stack
+   instead of sitting side by side): the desktop layout above pins the row to
+   the viewport height and hides its overflow so only .fp-team-list scrolls
+   internally. Stacked on one narrow column, the join/create card alone can
+   already exceed that height, which clips the team list below it with no way
+   to reach it - "no funciona el scroll para abajo". Below `md` the row goes
+   back to natural page height/scroll instead, and the team list - the page's
+   main content - moves above the join/create form via `order`. */
+@media (max-width: 959.98px) {
+  .my-teams-container {
+    padding-block: 16px;
+  }
+
+  .my-teams-row {
+    height: auto;
+    overflow: visible;
+  }
+
+  .my-teams-list-col {
+    height: auto;
+    order: 1;
+  }
+
+  .my-teams-join-col {
+    order: 2;
+  }
+
+  .fp-team-list {
+    flex: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
 }
 </style>

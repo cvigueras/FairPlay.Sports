@@ -85,14 +85,6 @@ export const useAuthStore = defineStore('auth', () => {
     await loadMyTeams()
   }
 
-  /** Updates the user's name and email, then refreshes the cached user. */
-  async function updateProfile(payload: { userName: string; email: string }): Promise<void> {
-    if (!currentUser.value) return
-    currentUser.value = await http.put<User>(`/api/users/${currentUser.value.id}`, payload, {
-      token: accessToken.value,
-    })
-  }
-
   /** Changes the user's password, given the current one. */
   async function changePassword(payload: { currentPassword: string; newPassword: string }): Promise<void> {
     if (!currentUser.value) return
@@ -145,7 +137,6 @@ export const useAuthStore = defineStore('auth', () => {
     loadMyTeams,
     joinTeam,
     leaveTeam,
-    updateProfile,
     changePassword,
     uploadPhoto,
     tryRefresh,

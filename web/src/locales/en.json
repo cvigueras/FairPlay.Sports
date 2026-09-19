@@ -260,11 +260,13 @@
       "uploadFailed": "Could not upload the photo."
     },
     "account": {
+      "title": "Account information",
       "userName": "Username",
-      "email": "Email",
-      "save": "Save changes",
-      "saved": "Your details have been updated.",
-      "saveFailed": "Could not save your changes."
+      "email": "Email"
+    },
+    "status": {
+      "active": "Active account",
+      "inactive": "Inactive account"
     },
     "security": {
       "title": "Security",
