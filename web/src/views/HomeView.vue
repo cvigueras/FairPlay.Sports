@@ -455,29 +455,31 @@ onMounted(async () => {
           </div>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-5 d-flex ga-4 align-center home-next-match">
-            <template v-if="nextMatch && nextMatchDate">
-              <div class="home-next-match-date">
-                <span class="home-next-match-month">
-                  {{ nextMatchDate.toLocaleDateString(locale, { month: 'short' }) }}
-                </span>
-                <span class="home-next-match-day">{{ nextMatchDate.getDate() }}</span>
-              </div>
-              <div class="min-width-0">
-                <span class="home-kpi-label">{{ t('home.nextMatch.title') }}</span>
-                <div class="home-next-match-opponent">vs. {{ nextMatchOpponentName }}</div>
-                <div class="home-next-match-meta">
-                  <v-icon :icon="mdiCalendarOutline" size="14" />
-                  {{ nextMatchDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}
-                  <template v-if="nextMatch.venueName">
-                    · <v-icon :icon="mdiMapMarkerOutline" size="14" /> {{ nextMatch.venueName }}
-                  </template>
+          <v-card border flat rounded="xl" class="pa-5 home-next-match">
+            <div class="home-activity-scroll d-flex ga-4 align-center">
+              <template v-if="nextMatch && nextMatchDate">
+                <div class="home-next-match-date">
+                  <span class="home-next-match-month">
+                    {{ nextMatchDate.toLocaleDateString(locale, { month: 'short' }) }}
+                  </span>
+                  <span class="home-next-match-day">{{ nextMatchDate.getDate() }}</span>
                 </div>
+                <div class="min-width-0">
+                  <span class="home-kpi-label">{{ t('home.nextMatch.title') }}</span>
+                  <div class="home-next-match-opponent">vs. {{ nextMatchOpponentName }}</div>
+                  <div class="home-next-match-meta">
+                    <v-icon :icon="mdiCalendarOutline" size="14" />
+                    {{ nextMatchDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}
+                    <template v-if="nextMatch.venueName">
+                      · <v-icon :icon="mdiMapMarkerOutline" size="14" /> {{ nextMatch.venueName }}
+                    </template>
+                  </div>
+                </div>
+              </template>
+              <div v-else class="home-empty-block">
+                <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
+                <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
               </div>
-            </template>
-            <div v-else class="home-empty-block">
-              <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
-              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
             </div>
           </v-card>
         </div>
@@ -861,6 +863,8 @@ onMounted(async () => {
 }
 
 .home-next-match {
+  display: flex;
+  flex-direction: column;
   min-height: 96px;
 }
 
@@ -972,22 +976,19 @@ onMounted(async () => {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-}
-
-.home-activity-panel .home-activity-scroll {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f8fafc;
 }
 
-.home-activity-panel .home-activity-scroll::-webkit-scrollbar {
+.home-activity-scroll::-webkit-scrollbar {
   width: 8px;
 }
 
-.home-activity-panel .home-activity-scroll::-webkit-scrollbar-track {
+.home-activity-scroll::-webkit-scrollbar-track {
   background: #f8fafc;
 }
 
-.home-activity-panel .home-activity-scroll::-webkit-scrollbar-thumb {
+.home-activity-scroll::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 999px;
 }
