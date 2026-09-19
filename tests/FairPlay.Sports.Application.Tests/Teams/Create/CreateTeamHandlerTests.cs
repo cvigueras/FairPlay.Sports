@@ -1,7 +1,9 @@
 using FairPlay.Sports.Application.Common;
 using FairPlay.Sports.TestSupport.Teams;
+using FairPlay.Sports.Application.Standings;
 using FairPlay.Sports.Application.Teams;
 using FairPlay.Sports.Application.Teams.Create;
+using FairPlay.Sports.Domain.Standings;
 using FairPlay.Sports.Domain.Teams;
 using NSubstitute;
 
@@ -13,6 +15,7 @@ public class CreateTeamHandlerTests
     private static readonly DateTime Now = new(2026, 9, 2, 12, 0, 0, DateTimeKind.Utc);
 
     private ITeamRepository _repository = null!;
+    private IStandingRepository _standings = null!;
     private IClock _clock = null!;
     private CreateTeamHandler _handler = null!;
 
@@ -20,9 +23,10 @@ public class CreateTeamHandlerTests
     public void SetUp()
     {
         _repository = Substitute.For<ITeamRepository>();
+        _standings = Substitute.For<IStandingRepository>();
         _clock = Substitute.For<IClock>();
         _clock.UtcNow.Returns(Now);
-        _handler = new CreateTeamHandler(_repository, _clock);
+        _handler = new CreateTeamHandler(_repository, _standings, _clock);
     }
 
     [Test]
@@ -41,6 +45,7 @@ public class CreateTeamHandlerTests
             Assert.That(result.Error, Is.EqualTo(TeamMother.NameAlreadyExists));
         });
         await _repository.DidNotReceive().AddAsync(Arg.Any<Team>(), Arg.Any<CancellationToken>());
+        await _standings.DidNotReceive().AddAsync(Arg.Any<Standing>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
@@ -77,6 +82,18 @@ public class CreateTeamHandlerTests
                 !team.Active &&
                 team.Id != Guid.Empty &&
                 team.CreatedAt == Now),
+            Arg.Any<CancellationToken>());
+
+        await _standings.Received(1).AddAsync(
+            Arg.Is<Standing>(standing =>
+                standing.TeamId == result.Value!.Id &&
+                standing.Points == 0 &&
+                standing.Played == 0 &&
+                standing.Won == 0 &&
+                standing.Drawn == 0 &&
+                standing.Lost == 0 &&
+                standing.GoalsFor == 0 &&
+                standing.GoalsAgainst == 0),
             Arg.Any<CancellationToken>());
     }
 
