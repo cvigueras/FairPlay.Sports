@@ -441,8 +441,25 @@ onMounted(async () => {
           </v-card>
         </div>
 
-        <!-- Row B: teams -->
+        <!-- Row B: activity + teams -->
         <div class="home-row-b mb-6">
+          <v-card border flat rounded="xl" class="pa-5">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
+
+            <template v-if="activityEntries.length > 0">
+              <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
+                <div class="home-activity-icon" :style="tonalStyle(entry.color)">
+                  <v-icon :icon="entry.icon" size="15" :color="entry.color" />
+                </div>
+                <div>
+                  <div class="home-activity-text">{{ entry.text }}</div>
+                  <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
+                </div>
+              </div>
+            </template>
+            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
+          </v-card>
+
           <v-card border flat rounded="xl" class="pa-5">
             <div class="d-flex align-center justify-space-between mb-3">
               <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
@@ -471,7 +488,7 @@ onMounted(async () => {
           </v-card>
         </div>
 
-        <!-- Row C: standings + activity -->
+        <!-- Row C: standings -->
         <div class="home-row-c">
           <v-card border flat rounded="xl" class="pa-5">
             <div class="d-flex align-center justify-space-between mb-3">
@@ -499,23 +516,6 @@ onMounted(async () => {
               </div>
             </template>
             <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.standings.empty') }}</p>
-          </v-card>
-
-          <v-card border flat rounded="xl" class="pa-5">
-            <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
-
-            <template v-if="activityEntries.length > 0">
-              <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
-                <div class="home-activity-icon" :style="tonalStyle(entry.color)">
-                  <v-icon :icon="entry.icon" size="15" :color="entry.color" />
-                </div>
-                <div>
-                  <div class="home-activity-text">{{ entry.text }}</div>
-                  <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
-                </div>
-              </div>
-            </template>
-            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
           </v-card>
         </div>
       </template>
@@ -708,13 +708,14 @@ onMounted(async () => {
 
 .home-row-b {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1.7fr;
   gap: 16px;
+  align-items: stretch;
 }
 
 .home-row-c {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
@@ -932,7 +933,7 @@ onMounted(async () => {
 
 @media (max-width: 899px) {
   .home-hero-row,
-  .home-row-c {
+  .home-row-b {
     grid-template-columns: 1fr;
   }
 }
