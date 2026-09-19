@@ -728,7 +728,7 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  width: 150px;
+  width: 220px;
 }
 
 .challenges-team-name {
@@ -750,7 +750,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 5px;
   margin-top: 2px;
 }
