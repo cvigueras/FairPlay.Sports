@@ -1420,6 +1420,15 @@ onMounted(async () => {
   .home-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* The caption line ("2 enviados · 3 recibidos", the role list, etc.) is
+     the tallest, most variable part of a KPI card - often wrapping to 2-3
+     lines once the grid narrows to 2 columns here. Dropping it keeps every
+     card a short, even height instead of some being much taller than
+     others depending on how long their caption happens to be. */
+  .home-kpi-caption {
+    display: none;
+  }
 }
 
 /* Mobile (matches isMobile's own 900px threshold in the script): reshapes
