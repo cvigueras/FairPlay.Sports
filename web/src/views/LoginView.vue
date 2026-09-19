@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import { mdiCalendarMonthOutline, mdiSwordCross, mdiTranslate, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
@@ -12,6 +13,15 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
+const { mobile } = useDisplay()
+
+// Mobile redesigns the panel as a translucent "glass" card over the hero
+// photo (see .login-panel below) instead of desktop's solid light panel
+// beside it - the fairplayDark theme (vuetify.ts) was already defined for
+// exactly this, just unused until now. Applying it through v-theme-provider
+// recolors every Vuetify control inside (inputs, buttons, alerts) for free;
+// on desktop this resolves to the app's own default theme, a no-op.
+const panelTheme = computed(() => (mobile.value ? 'fairplayDark' : 'fairplay'))
 
 // Login and register share this one screen (hero + panel); switching between
 // them is a local state flip, not a route change, so the hero never remounts.
@@ -152,10 +162,38 @@ async function handleRegisterSubmit() {
         <div class="login-hero__brand">
           <img :src="logoUrl" :alt="t('common.appName')" class="login-hero__logo" />
           <span class="login-hero__brand-name">{{ t('common.appName') }}</span>
+
+          <!-- Mobile only: the language switcher moves up next to the brand
+               name, over the photo - desktop keeps its own instance where it
+               already was, top-right of the light panel below. -->
+          <v-menu v-if="mobile">
+            <template #activator="{ props }">
+              <v-btn
+                class="login-hero__lang"
+                variant="text"
+                size="small"
+                :prepend-icon="mdiTranslate"
+                :aria-label="t('language.label')"
+                v-bind="props"
+              >
+                {{ locale.toUpperCase() }}
+              </v-btn>
+            </template>
+            <v-list density="compact">
+              <v-list-item
+                v-for="code in SUPPORTED_LOCALES"
+                :key="code"
+                :active="code === locale"
+                @click="setLocale(code)"
+              >
+                <v-list-item-title>{{ t(`language.${code}`) }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
 
         <div class="login-hero__pitch">
-          <span class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
+          <span v-if="!mobile || mode === 'login'" class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
           <h1 class="login-hero__title">{{ t('login.heroTitle') }}</h1>
           <p class="login-hero__description">{{ t('login.heroDescription') }}</p>
         </div>
@@ -174,7 +212,8 @@ async function handleRegisterSubmit() {
       </section>
 
       <section class="login-panel">
-        <v-menu>
+        <v-theme-provider :theme="panelTheme">
+        <v-menu v-if="!mobile">
           <template #activator="{ props }">
             <v-btn
               class="login-panel__lang"
@@ -321,6 +360,7 @@ async function handleRegisterSubmit() {
             </template>
           </p>
         </div>
+        </v-theme-provider>
       </section>
     </div>
   </v-main>
@@ -482,23 +522,123 @@ async function handleRegisterSubmit() {
   text-decoration: none;
 }
 
+/* Mobile: no separate panel at all - the photo fills the whole screen and
+   both the hero's own content (brand, pitch) and the panel's (heading,
+   form, footer) stack directly on top of it via CSS Grid, sharing the same
+   cell instead of sitting in two flex rows one above the other. The hero's
+   content anchors to the top, the panel's to the bottom (where the photo's
+   own gradient is darkest), so a tall register form growing upward from
+   the bottom doesn't collide with the pitch text anchored at the top only
+   because the eyebrow badge (see the template) still drops for register to
+   keep that content short. .login-shell is pinned to the viewport height
+   (not min-height) so the page itself never scrolls; .login-panel keeps
+   overflow-y: auto as a fallback in case a very short viewport still can't
+   fit register's four fields between the top content and the bottom edge. */
 @media (max-width: 899px) {
   .login-shell {
-    flex-direction: column;
+    display: grid;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   .login-hero {
+    grid-area: 1 / 1;
     max-width: none;
-    padding: 32px 24px 36px;
-    gap: 28px;
+    height: 100%;
+    justify-content: flex-start;
+    padding: 18px 22px 20px;
+    gap: 44px;
+  }
+
+  .login-hero__pitch {
+    gap: 18px;
   }
 
   .login-hero__title {
-    font-size: 1.75rem;
+    font-size: 1.375rem;
+  }
+
+  .login-hero__description,
+  .login-hero__features {
+    display: none;
   }
 
   .login-panel {
-    padding: 40px 24px 48px;
+    grid-area: 1 / 1;
+    height: 100%;
+    min-height: 0;
+    /* Desktop leaves this as the default row (align-items/justify-content
+       center the form both ways next to the hero). Never overridden until
+       now, it silently stayed row here too, so "center"/"flex-end" below
+       were centering vertically and pushing horizontally - not the bottom-
+       anchored, horizontally-centered stack this layout actually wants -
+       which is what was making the form's left/right margins uneven. */
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 22px 32px;
+    background: none;
+    color: #ffffff;
+    /* Confirmed both login and register fit with zero overflow (measured),
+       so this is a fallback for an unusually short viewport, not something
+       that should normally engage - scrollbar-gutter: stable would reserve
+       its width unconditionally either way, which was actually the cause
+       of an uneven left/right margin (measured: 22px left, 32px right)
+       when nothing was even scrolling. */
+    overflow-y: auto;
+  }
+
+  .login-hero__brand {
+    justify-content: space-between;
+  }
+
+  .login-hero__lang {
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+  }
+
+  .login-panel__form {
+    width: 100%;
+    max-width: 340px;
+    gap: 12px;
+  }
+
+  /* "Iniciar sesión"/"Crear cuenta" and their subtitles are dropped
+     entirely on mobile - the hero's own headline ("Reta a otros
+     equipos...") already sits right above the form, so a second heading
+     read as redundant labelling once everything shares the same photo. */
+  .login-panel__heading {
+    display: none;
+  }
+
+  /* Same text-medium-emphasis dimming as the heading's subtitle above,
+     on "¿No tienes cuenta?"/"¿Ya tienes cuenta?". */
+  .login-panel__footer {
+    color: #ffffff;
+    opacity: 1;
+  }
+
+  /* Same reasoning for the 8px gap Vuetify's mb-2 puts under every field -
+     fine for login's two fields, adds up across register's four. */
+  .login-panel__form :deep(.mb-2) {
+    margin-bottom: 4px;
+  }
+
+  /* v-theme-provider (fairplayDark) already recolors every field's border,
+     label and text for a dark background - this adds the subtle tinted
+     fill the approved mockup gave each input, which an outlined field
+     otherwise leaves fully transparent. */
+  .login-panel :deep(.v-field) {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* fairplayDark's primary (#818CF8) is light enough that dark text reads
+     better on it than Vuetify's own automatic on-primary pick - matches
+     the approved mockup's button exactly instead of leaving it to chance. */
+  .login-panel :deep(.v-btn) {
+    color: #1e1b4b !important;
   }
 }
 </style>

@@ -407,7 +407,15 @@ onMounted(async () => {
         <div class="home-main-col">
         <!-- KPI row -->
         <div ref="kpiRowEl" class="home-kpi-grid mb-6">
-          <v-card v-for="kpi in kpiCards" :key="kpi.key" border flat rounded="xl" class="pa-5 home-kpi-card">
+          <v-card
+            v-for="kpi in kpiCards"
+            v-show="!isMobile || (kpi.key !== 'won' && kpi.key !== 'lost')"
+            :key="kpi.key"
+            border
+            flat
+            rounded="xl"
+            class="pa-5 home-kpi-card"
+          >
             <div class="d-flex align-center justify-space-between mb-2">
               <span class="home-kpi-label">{{ kpi.label }}</span>
               <div class="home-kpi-icon" :style="tonalStyle(kpi.color)">
@@ -436,20 +444,24 @@ onMounted(async () => {
 
             <div class="home-hero-legend">
               <span class="home-hero-legend-title">{{ t('home.balance.title') }}</span>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #4ade80" />
-                <span class="home-hero-legend-label">{{ t('home.balance.won') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.won }}</span>
-              </div>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #fb7185" />
-                <span class="home-hero-legend-label">{{ t('home.balance.lost') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.lost }}</span>
-              </div>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #64748b" />
-                <span class="home-hero-legend-label">{{ t('home.balance.drawn') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.drawn }}</span>
+              <div class="home-hero-legend-rows">
+                <div class="home-hero-legend-row" style="--legend-color: #4ade80">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.won') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.won }}</span>
+                </div>
+                <span class="home-hero-legend-sep">|</span>
+                <div class="home-hero-legend-row" style="--legend-color: #fb7185">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.lost') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.lost }}</span>
+                </div>
+                <span class="home-hero-legend-sep">|</span>
+                <div class="home-hero-legend-row" style="--legend-color: #64748b">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.drawn') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.drawn }}</span>
+                </div>
               </div>
             </div>
 
@@ -903,6 +915,19 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.home-hero-legend-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Mobile only (see the max-width: 899px rules below, which switch this to
+   inline): the "|" between two legend rows on one line - hidden here so it
+   never appears in desktop's stacked layout. */
+.home-hero-legend-sep {
+  display: none;
 }
 
 .home-hero-legend-title {
@@ -1450,6 +1475,43 @@ onMounted(async () => {
 
   .home-hero-legend {
     align-items: center;
+  }
+
+  /* Won/lost/drawn in one line, "|"-separated, instead of three stacked
+     rows - the title stays its own line above (.home-hero-legend is
+     untouched, still a column of [title, .home-hero-legend-rows]). */
+  .home-hero-legend-rows {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 10px;
+  }
+
+  .home-hero-legend-row {
+    gap: 5px;
+    font-size: 12.5px;
+  }
+
+  /* The color dot is redundant once the number itself carries the same
+     colour (below) - dropping it (and the value's own right-justifying
+     margin/padding, meaningless once the row is no longer full width)
+     buys back the space the "|" separators need. */
+  .home-hero-dot {
+    display: none;
+  }
+
+  /* Each row sets --legend-color inline to the same hex its (now hidden)
+     dot used, so the number keeps carrying which slice of the donut it is
+     even without the dot's own colour swatch. */
+  .home-hero-legend-value {
+    margin-left: 0;
+    padding-left: 0;
+    color: var(--legend-color);
+  }
+
+  .home-hero-legend-sep {
+    display: inline;
+    color: #475569;
   }
 
   .home-hero-divider {
