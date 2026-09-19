@@ -88,7 +88,7 @@ watch(
   },
 )
 
-/* ---- Row B: match the "activity" + "teams" panels' height to the hero row above ---- */
+/* ---- Row B: match the "standings" + "teams" panels' height to the hero row above ---- */
 
 const ROW_B_EXTRA_HEIGHT = 56
 
@@ -367,10 +367,12 @@ onMounted(async () => {
 
 <template>
   <v-main>
-    <v-container class="py-6 py-md-10 home-container">
+    <v-container class="py-6 py-md-10 home-outer-container">
       <v-progress-circular v-if="loading" indeterminate color="primary" class="d-block mx-auto my-16" />
 
       <template v-else>
+      <div class="home-layout">
+        <div class="home-main-col">
         <!-- KPI row -->
         <div class="home-kpi-grid mb-6">
           <v-card v-for="kpi in kpiCards" :key="kpi.key" border flat rounded="xl" class="pa-5 home-kpi-card">
@@ -480,24 +482,35 @@ onMounted(async () => {
           </v-card>
         </div>
 
-        <!-- Row B: activity + teams -->
-        <div class="home-row-b mb-6">
+        <!-- Row B: standings + teams -->
+        <div class="home-row-b">
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
+            <div class="d-flex align-center justify-space-between mb-3">
+              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.standings.title') }}</h2>
+              <RouterLink :to="{ name: 'standings' }" class="home-link">{{ t('home.standings.viewAll') }}</RouterLink>
+            </div>
 
             <div class="home-activity-scroll">
-              <template v-if="activityEntries.length > 0">
-                <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
-                  <div class="home-activity-icon" :style="tonalStyle(entry.color)">
-                    <v-icon :icon="entry.icon" size="15" :color="entry.color" />
-                  </div>
-                  <div>
-                    <div class="home-activity-text">{{ entry.text }}</div>
-                    <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
-                  </div>
+              <template v-if="rankedTeamCards.length > 0">
+                <div class="home-standings-row home-standings-head">
+                  <span>{{ t('home.standings.position') }}</span>
+                  <span>{{ t('home.standings.team') }}</span>
+                  <span class="text-right">{{ t('home.standings.played') }}</span>
+                  <span class="text-right">{{ t('home.standings.points') }}</span>
+                </div>
+                <div
+                  v-for="(card, index) in rankedTeamCards"
+                  :key="card.team.id"
+                  class="home-standings-row"
+                  :class="{ 'home-standings-row--highlight': index === 0 }"
+                >
+                  <span class="home-standings-pos">{{ card.standing.position }}.º</span>
+                  <span class="home-standings-team">{{ card.team.name }}</span>
+                  <span class="text-right home-standings-muted">{{ card.standing.played }}</span>
+                  <span class="text-right home-standings-points">{{ card.standing.points }}</span>
                 </div>
               </template>
-              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
+              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.standings.empty') }}</p>
             </div>
           </v-card>
 
@@ -528,47 +541,63 @@ onMounted(async () => {
             <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</p>
           </v-card>
         </div>
-
-        <!-- Row C: standings -->
-        <div class="home-row-c">
-          <v-card border flat rounded="xl" class="pa-5">
-            <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.standings.title') }}</h2>
-              <RouterLink :to="{ name: 'standings' }" class="home-link">{{ t('home.standings.viewAll') }}</RouterLink>
-            </div>
-
-            <template v-if="rankedTeamCards.length > 0">
-              <div class="home-standings-row home-standings-head">
-                <span>{{ t('home.standings.position') }}</span>
-                <span>{{ t('home.standings.team') }}</span>
-                <span class="text-right">{{ t('home.standings.played') }}</span>
-                <span class="text-right">{{ t('home.standings.points') }}</span>
-              </div>
-              <div
-                v-for="(card, index) in rankedTeamCards"
-                :key="card.team.id"
-                class="home-standings-row"
-                :class="{ 'home-standings-row--highlight': index === 0 }"
-              >
-                <span class="home-standings-pos">{{ card.standing.position }}.º</span>
-                <span class="home-standings-team">{{ card.team.name }}</span>
-                <span class="text-right home-standings-muted">{{ card.standing.played }}</span>
-                <span class="text-right home-standings-points">{{ card.standing.points }}</span>
-              </div>
-            </template>
-            <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.standings.empty') }}</p>
-          </v-card>
         </div>
+
+        <aside class="home-side-col">
+          <v-card border flat rounded="xl" class="pa-5 home-activity-panel">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
+
+            <div class="home-activity-scroll">
+              <template v-if="activityEntries.length > 0">
+                <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
+                  <div class="home-activity-icon" :style="tonalStyle(entry.color)">
+                    <v-icon :icon="entry.icon" size="15" :color="entry.color" />
+                  </div>
+                  <div>
+                    <div class="home-activity-text">{{ entry.text }}</div>
+                    <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
+                  </div>
+                </div>
+              </template>
+              <p v-else class="text-body-2 text-medium-emphasis">{{ t('home.activity.empty') }}</p>
+            </div>
+          </v-card>
+        </aside>
+      </div>
       </template>
     </v-container>
   </v-main>
 </template>
 
 <style scoped>
-.home-container {
-  max-width: 1200px;
+.home-outer-container {
+  max-width: 1600px;
   margin-left: 0;
   margin-right: auto;
+}
+
+.home-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+}
+
+.home-main-col {
+  flex: 1 1 auto;
+  max-width: 1200px;
+  min-width: 0;
+}
+
+.home-side-col {
+  flex: 0 0 340px;
+  display: flex;
+}
+
+.home-activity-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .home-kpi-grid {
@@ -754,12 +783,6 @@ onMounted(async () => {
   grid-template-columns: 1fr 1.7fr;
   gap: 16px;
   align-items: stretch;
-}
-
-.home-row-c {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
 }
 
 .home-link {
@@ -978,6 +1001,20 @@ onMounted(async () => {
   font-size: 12px;
   color: #94a3b8;
   margin-top: 2px;
+}
+
+@media (max-width: 1300px) {
+  .home-layout {
+    flex-direction: column;
+  }
+
+  .home-main-col {
+    max-width: none;
+  }
+
+  .home-side-col {
+    flex-basis: auto;
+  }
 }
 
 @media (max-width: 960px) {
