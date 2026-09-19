@@ -90,7 +90,7 @@ watch(
 
 /* ---- Row B: match the "standings" + "teams" panels' height to the hero row above ---- */
 
-const ROW_B_EXTRA_HEIGHT = 56
+const ROW_B_EXTRA_HEIGHT = 32
 
 const heroRowEl = ref<HTMLElement | null>(null)
 const heroRowHeight = ref<number | null>(null)
@@ -488,7 +488,7 @@ onMounted(async () => {
         <div class="home-row-b">
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.standings.title') }}</h2>
+              <h2 class="text-subtitle-2 font-weight-bold">{{ t('home.standings.title') }}</h2>
               <RouterLink :to="{ name: 'standings' }" class="home-link">{{ t('home.standings.viewAll') }}</RouterLink>
             </div>
 
@@ -518,7 +518,7 @@ onMounted(async () => {
 
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
             <div class="d-flex align-center justify-space-between mb-3">
-              <h2 class="text-subtitle-1 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
+              <h2 class="text-subtitle-2 font-weight-bold">{{ t('home.myTeams.title') }}</h2>
               <RouterLink :to="{ name: 'my-teams' }" class="home-view-all-btn">{{ t('home.myTeams.viewAll') }}</RouterLink>
             </div>
 
@@ -547,7 +547,7 @@ onMounted(async () => {
 
         <aside class="home-side-col">
           <v-card border flat rounded="xl" class="pa-5 home-activity-panel">
-            <h2 class="text-subtitle-1 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
+            <h2 class="text-subtitle-2 font-weight-bold mb-3">{{ t('home.activity.title') }}</h2>
 
             <div class="home-activity-scroll">
               <template v-if="activityEntries.length > 0">
@@ -601,6 +601,7 @@ onMounted(async () => {
   flex-direction: column;
   height: 560px;
   min-height: 0;
+  padding-top: 12px !important;
   background: #f8fafc !important;
 }
 
@@ -970,6 +971,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  padding-top: 12px !important;
 }
 
 .home-activity-scroll {
