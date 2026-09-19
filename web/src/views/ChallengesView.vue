@@ -597,6 +597,7 @@ onMounted(async () => {
 .challenges-teams-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 28px;
   margin-bottom: 28px;
 }
