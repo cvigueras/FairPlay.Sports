@@ -90,7 +90,7 @@ watch(
 
 /* ---- Row B: match the "standings" + "teams" panels' height to the hero row above ---- */
 
-const ROW_B_EXTRA_HEIGHT = 32
+const ROW_B_EXTRA_HEIGHT = 80
 
 const heroRowEl = ref<HTMLElement | null>(null)
 const heroRowHeight = ref<number | null>(null)

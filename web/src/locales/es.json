@@ -52,7 +52,7 @@
       "empty": "No tienes ningún partido programado."
     },
     "standings": {
-      "title": "Clasificación",
+      "title": "Tu clasificación",
       "position": "Pos",
       "team": "Equipo",
       "played": "PJ",
