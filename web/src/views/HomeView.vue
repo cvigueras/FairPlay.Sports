@@ -315,7 +315,7 @@ const activityEntries = computed<ActivityEntry[]>(() => {
     }
   }
 
-  return entries.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 5)
+  return entries.sort((a, b) => b.at.getTime() - a.at.getTime())
 })
 
 /* ---- Data loading -------------------------------------------------------------- */
@@ -597,7 +597,9 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 560px;
   min-height: 0;
+  background: #f8fafc !important;
 }
 
 .home-kpi-grid {
@@ -970,6 +972,24 @@ onMounted(async () => {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+}
+
+.home-activity-panel .home-activity-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.home-activity-panel .home-activity-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.home-activity-panel .home-activity-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.home-activity-panel .home-activity-scroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 999px;
 }
 
 .home-activity-row {
