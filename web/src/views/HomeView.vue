@@ -6,6 +6,7 @@ import {
   mdiAccountGroupOutline,
   mdiCalendarBlankOutline,
   mdiCalendarOutline,
+  mdiChevronDown,
   mdiChevronRight,
   mdiCheckCircleOutline,
   mdiCloseCircleOutline,
@@ -63,6 +64,25 @@ const heroRowEl = ref<HTMLElement | null>(null)
 const heroRowHeight = ref<number | null>(null)
 const desktopRowMql = window.matchMedia('(min-width: 900px)')
 
+/** Mobile only: whether "Tus equipos", "Tu clasificación" and "Actividad
+ *  reciente" render as closed-by-default accordions instead of the desktop's
+ *  always-open panels - same breakpoint the height-matching logic above
+ *  already treats as "not desktop" (rowBCardStyle/activityPanelStyle both
+ *  fall back to no fixed height there), so a collapsed panel is free to size
+ *  to its own (short) content instead of fighting a measured height. */
+const isMobile = ref(!desktopRowMql.matches)
+function updateIsMobile() {
+  isMobile.value = !desktopRowMql.matches
+}
+
+const teamsPanelOpen = ref(false)
+const standingsPanelOpen = ref(false)
+const activityPanelOpen = ref(false)
+
+const showTeamsContent = computed(() => !isMobile.value || teamsPanelOpen.value)
+const showStandingsContent = computed(() => !isMobile.value || standingsPanelOpen.value)
+const showActivityContent = computed(() => !isMobile.value || activityPanelOpen.value)
+
 const ROW_B_HEIGHT_SCALE = 0.85
 
 const rowBCardStyle = computed(() =>
@@ -82,10 +102,12 @@ onBeforeUnmount(() => {
   kpiRowResizeObserver?.disconnect()
   desktopRowMql.removeEventListener('change', recomputeHeroRowHeight)
   desktopRowMql.removeEventListener('change', recomputeKpiRowHeight)
+  desktopRowMql.removeEventListener('change', updateIsMobile)
 })
 
 desktopRowMql.addEventListener('change', recomputeHeroRowHeight)
 desktopRowMql.addEventListener('change', recomputeKpiRowHeight)
+desktopRowMql.addEventListener('change', updateIsMobile)
 
 watch(
   () => heroRowEl.value,
@@ -385,7 +407,15 @@ onMounted(async () => {
         <div class="home-main-col">
         <!-- KPI row -->
         <div ref="kpiRowEl" class="home-kpi-grid mb-6">
-          <v-card v-for="kpi in kpiCards" :key="kpi.key" border flat rounded="xl" class="pa-5 home-kpi-card">
+          <v-card
+            v-for="kpi in kpiCards"
+            v-show="!isMobile || (kpi.key !== 'won' && kpi.key !== 'lost')"
+            :key="kpi.key"
+            border
+            flat
+            rounded="xl"
+            class="pa-5 home-kpi-card"
+          >
             <div class="d-flex align-center justify-space-between mb-2">
               <span class="home-kpi-label">{{ kpi.label }}</span>
               <div class="home-kpi-icon" :style="tonalStyle(kpi.color)">
@@ -414,20 +444,24 @@ onMounted(async () => {
 
             <div class="home-hero-legend">
               <span class="home-hero-legend-title">{{ t('home.balance.title') }}</span>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #4ade80" />
-                <span class="home-hero-legend-label">{{ t('home.balance.won') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.won }}</span>
-              </div>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #fb7185" />
-                <span class="home-hero-legend-label">{{ t('home.balance.lost') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.lost }}</span>
-              </div>
-              <div class="home-hero-legend-row">
-                <span class="home-hero-dot" style="background: #64748b" />
-                <span class="home-hero-legend-label">{{ t('home.balance.drawn') }}</span>
-                <span class="home-hero-legend-value">{{ standingsTotals.drawn }}</span>
+              <div class="home-hero-legend-rows">
+                <div class="home-hero-legend-row" style="--legend-color: #4ade80">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.won') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.won }}</span>
+                </div>
+                <span class="home-hero-legend-sep">|</span>
+                <div class="home-hero-legend-row" style="--legend-color: #fb7185">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.lost') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.lost }}</span>
+                </div>
+                <span class="home-hero-legend-sep">|</span>
+                <div class="home-hero-legend-row" style="--legend-color: #64748b">
+                  <span class="home-hero-dot" style="background: var(--legend-color)" />
+                  <span class="home-hero-legend-label">{{ t('home.balance.drawn') }}</span>
+                  <span class="home-hero-legend-value">{{ standingsTotals.drawn }}</span>
+                </div>
               </div>
             </div>
 
@@ -527,53 +561,94 @@ onMounted(async () => {
         <!-- Row B: teams + standings -->
         <div class="home-row-b">
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
-            <div class="home-teams-header">
+            <h2 v-if="isMobile" class="home-panel-toggle-h2">
+              <button
+                type="button"
+                class="home-teams-header home-panel-toggle"
+                :aria-expanded="teamsPanelOpen"
+                @click="teamsPanelOpen = !teamsPanelOpen"
+              >
+                <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                  <span class="home-panel-toggle-title">{{ t('home.myTeams.title') }}</span>
+                  <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#4F46E5')">
+                    {{ teamCards.length }}
+                  </span>
+                </span>
+                <v-icon
+                  :icon="mdiChevronDown"
+                  size="18"
+                  class="home-panel-chevron"
+                  :class="{ 'home-panel-chevron--open': teamsPanelOpen }"
+                />
+              </button>
+            </h2>
+            <div v-else class="home-teams-header">
               <h2>{{ t('home.myTeams.title') }}</h2>
               <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#4F46E5')">
                 {{ teamCards.length }}
               </span>
             </div>
 
-            <template v-if="teamCards.length > 0">
-              <div class="home-teams-list home-activity-scroll">
-                <RouterLink
-                  v-for="{ membership, team } in teamCards"
-                  :key="membership.id"
-                  :to="{ name: 'team-detail', params: { id: team.id } }"
-                  class="home-teams-row"
-                >
-                  <TeamCrest :team="team" :size="34" />
-                  <div class="min-width-0">
-                    <div class="home-teams-row-name">{{ team.name }}</div>
-                    <div class="home-teams-row-tags">
-                      <span class="home-teams-tag" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
-                        {{ t(`profile.team.enums.${team.category}`) }}
-                      </span>
-                      <span v-if="team.division" class="home-teams-tag" :style="tonalStyle(DIVISION_COLOR[team.division])">
-                        {{ t(`profile.team.enums.${team.division}`) }}
-                      </span>
+            <template v-if="showTeamsContent">
+              <template v-if="teamCards.length > 0">
+                <div class="home-teams-list home-activity-scroll">
+                  <RouterLink
+                    v-for="{ membership, team } in teamCards"
+                    :key="membership.id"
+                    :to="{ name: 'team-detail', params: { id: team.id } }"
+                    class="home-teams-row"
+                  >
+                    <TeamCrest :team="team" :size="34" />
+                    <div class="min-width-0">
+                      <div class="home-teams-row-name">{{ team.name }}</div>
+                      <div class="home-teams-row-tags">
+                        <span class="home-teams-tag" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                          {{ t(`profile.team.enums.${team.category}`) }}
+                        </span>
+                        <span v-if="team.division" class="home-teams-tag" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                          {{ t(`profile.team.enums.${team.division}`) }}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </RouterLink>
+                </div>
+                <RouterLink :to="{ name: 'my-teams' }" class="home-teams-add">
+                  <v-icon :icon="mdiPlusOutline" size="14" />
+                  {{ t('home.myTeams.createAnother') }}
                 </RouterLink>
+              </template>
+              <div v-else class="home-empty-block">
+                <div class="home-empty-icon">
+                  <v-icon :icon="mdiShieldOutline" size="18" color="#94a3b8" />
+                </div>
+                <span class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</span>
+                <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.myTeams.cta') }}</RouterLink>
               </div>
-              <RouterLink :to="{ name: 'my-teams' }" class="home-teams-add">
-                <v-icon :icon="mdiPlusOutline" size="14" />
-                {{ t('home.myTeams.createAnother') }}
-              </RouterLink>
             </template>
-            <div v-else class="home-empty-block">
-              <div class="home-empty-icon">
-                <v-icon :icon="mdiShieldOutline" size="18" color="#94a3b8" />
-              </div>
-              <span class="text-body-2 text-medium-emphasis">{{ t('home.myTeams.empty') }}</span>
-              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.myTeams.cta') }}</RouterLink>
-            </div>
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <h2 class="home-panel-title mb-3">{{ t('home.standings.title') }}</h2>
+            <h2 v-if="isMobile" class="home-panel-toggle-h2 mb-3">
+              <button
+                type="button"
+                class="home-panel-header-row home-panel-toggle"
+                :aria-expanded="standingsPanelOpen"
+                @click="standingsPanelOpen = !standingsPanelOpen"
+              >
+                <span class="home-panel-toggle-title">{{ t('home.standings.title') }}</span>
+                <v-icon
+                  :icon="mdiChevronDown"
+                  size="18"
+                  class="home-panel-chevron"
+                  :class="{ 'home-panel-chevron--open': standingsPanelOpen }"
+                />
+              </button>
+            </h2>
+            <div v-else class="home-panel-header-row mb-3">
+              <h2 class="home-panel-title">{{ t('home.standings.title') }}</h2>
+            </div>
 
-            <div class="home-activity-scroll">
+            <div v-if="showStandingsContent" class="home-activity-scroll">
               <template v-if="rankedTeamCards.length > 0">
                 <div class="home-standings-row home-standings-head">
                   <span>{{ t('home.standings.position') }}</span>
@@ -604,9 +679,27 @@ onMounted(async () => {
 
         <aside class="home-side-col">
           <v-card border flat rounded="xl" class="pa-5 home-activity-panel" :style="activityPanelStyle">
-            <h2 class="home-panel-title mb-5">{{ t('home.activity.title') }}</h2>
+            <h2 v-if="isMobile" class="home-panel-toggle-h2 mb-5">
+              <button
+                type="button"
+                class="home-panel-header-row home-panel-toggle"
+                :aria-expanded="activityPanelOpen"
+                @click="activityPanelOpen = !activityPanelOpen"
+              >
+                <span class="home-panel-toggle-title">{{ t('home.activity.title') }}</span>
+                <v-icon
+                  :icon="mdiChevronDown"
+                  size="18"
+                  class="home-panel-chevron"
+                  :class="{ 'home-panel-chevron--open': activityPanelOpen }"
+                />
+              </button>
+            </h2>
+            <div v-else class="home-panel-header-row mb-5">
+              <h2 class="home-panel-title">{{ t('home.activity.title') }}</h2>
+            </div>
 
-            <div class="home-activity-scroll">
+            <div v-if="showActivityContent" class="home-activity-scroll">
               <template v-if="activityEntries.length > 0">
                 <div v-for="entry in activityEntries" :key="entry.id" class="home-activity-row">
                   <div class="home-activity-icon" :style="tonalStyle(entry.color)">
@@ -680,6 +773,54 @@ onMounted(async () => {
   color: #0f172a;
   margin: 0;
   padding-bottom: 10px;
+}
+
+/* Shared by a panel's title row on desktop (a plain div) and its accordion
+   toggle button on mobile (see isMobile in the script) - a flex row with the
+   title/count on the left and, on mobile, the chevron pushed to the right by
+   space-between (never margin-left: auto - with more than two children that
+   claims all the free space for itself and leaves nothing for space-between
+   to center the rest with). Each instance keeps the .mb-3/.mb-5 utility
+   class .home-panel-title itself used to carry alone. */
+.home-panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Mobile only: resets the toggle <button> back to look like the plain
+   header div it replaces - a heading (<h2>) wraps it, which is the standard
+   accessible pattern for a collapsible section's trigger, so the whole row
+   is tappable instead of just a small chevron icon. */
+.home-panel-toggle-h2 {
+  margin: 0;
+}
+
+.home-panel-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-panel-toggle-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.home-panel-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.home-panel-chevron--open {
+  transform: rotate(180deg);
 }
 
 .home-kpi-label {
@@ -774,6 +915,19 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.home-hero-legend-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Mobile only (see the max-width: 899px rules below, which switch this to
+   inline): the "|" between two legend rows on one line - hidden here so it
+   never appears in desktop's stacked layout. */
+.home-hero-legend-sep {
+  display: none;
 }
 
 .home-hero-legend-title {
@@ -1277,6 +1431,13 @@ onMounted(async () => {
 
   .home-side-col {
     flex-basis: auto;
+    /* align-self: flex-start (desktop) means "don't stretch" on the cross
+       axis - vertically, in the row layout above. Once .home-layout goes to
+       flex-direction: column here, the cross axis flips to horizontal, so
+       the same flex-start instead means "don't stretch in width", shrinking
+       this to a fit-content column instead of the full-width panel every
+       other card gets. */
+    align-self: stretch;
   }
 }
 
@@ -1284,18 +1445,124 @@ onMounted(async () => {
   .home-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* The caption line ("2 enviados · 3 recibidos", the role list, etc.) is
+     the tallest, most variable part of a KPI card - often wrapping to 2-3
+     lines once the grid narrows to 2 columns here. Dropping it keeps every
+     card a short, even height instead of some being much taller than
+     others depending on how long their caption happens to be. */
+  .home-kpi-caption {
+    display: none;
+  }
 }
 
+/* Mobile (matches isMobile's own 900px threshold in the script): reshapes
+   the balance card and "Tus equipos" list to the approved mobile design
+   instead of just letting them wrap - flex-wrap alone doesn't reproduce a
+   centered, stacked donut+legend or a horizontal team-chip strip. */
 @media (max-width: 899px) {
   .home-hero-row,
   .home-row-b {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 599px) {
-  .home-kpi-grid {
-    grid-template-columns: 1fr;
+  .home-hero-inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .home-hero-legend {
+    align-items: center;
+  }
+
+  /* Won/lost/drawn in one line, "|"-separated, instead of three stacked
+     rows - the title stays its own line above (.home-hero-legend is
+     untouched, still a column of [title, .home-hero-legend-rows]). */
+  .home-hero-legend-rows {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 10px;
+  }
+
+  .home-hero-legend-row {
+    gap: 5px;
+    font-size: 12.5px;
+  }
+
+  /* The color dot is redundant once the number itself carries the same
+     colour (below) - dropping it (and the value's own right-justifying
+     margin/padding, meaningless once the row is no longer full width)
+     buys back the space the "|" separators need. */
+  .home-hero-dot {
+    display: none;
+  }
+
+  /* Each row sets --legend-color inline to the same hex its (now hidden)
+     dot used, so the number keeps carrying which slice of the donut it is
+     even without the dot's own colour swatch. */
+  .home-hero-legend-value {
+    margin-left: 0;
+    padding-left: 0;
+    color: var(--legend-color);
+  }
+
+  .home-hero-legend-sep {
+    display: inline;
+    color: #475569;
+  }
+
+  .home-hero-divider {
+    width: 100%;
+    height: 1px;
+    align-self: stretch;
+  }
+
+  .home-hero-stats {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .home-hero-stat {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .home-hero-stat-icon {
+    display: none;
+  }
+
+  .home-teams-list {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+
+  .home-teams-row {
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    width: 132px;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+  }
+
+  .home-teams-row:hover {
+    background: #ffffff;
+    border-color: #94a3b8;
+  }
+
+  .home-teams-row-tags {
+    flex-wrap: wrap;
   }
 }
 </style>

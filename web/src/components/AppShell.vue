@@ -117,8 +117,11 @@ function initialRail(): boolean {
 }
 
 // `drawer` opens/closes the overlay drawer on mobile; `rail` collapses it to an
-// icon strip on desktop. Default is expanded; the rail choice is remembered.
-const drawer = ref(true)
+// icon strip on desktop. Default is expanded on desktop; on mobile it starts
+// closed, since there the drawer is a temporary overlay that would otherwise
+// cover the whole screen the moment the app loads (e.g. right after login).
+// The rail choice is remembered.
+const drawer = ref(!mobile.value)
 const rail = ref(initialRail())
 
 function toggleNav(): void {

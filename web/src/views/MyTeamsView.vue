@@ -6,6 +6,8 @@ import {
   mdiAccountPlusOutline,
   mdiAccountRemoveOutline,
   mdiCardAccountDetailsOutline,
+  mdiChevronDown,
+  mdiClose,
   mdiPencilOutline,
   mdiPlusCircleOutline,
   mdiShieldOutline,
@@ -15,6 +17,7 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
+import TeamCrest from '@/components/TeamCrest.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
@@ -46,6 +49,11 @@ const joinRole = ref<TeamMemberRole | null>(null)
 const joinDisplayName = ref(auth.currentUser?.userName ?? '')
 const savingTeam = ref(false)
 const joinErrors = reactive<Record<string, string>>({})
+/** Mobile only (see .fp-join-mobile below): the join form starts collapsed
+ *  behind a toggle button instead of always open, so a narrow screen shows
+ *  the member's own teams first. Unused on desktop, where the form stays
+ *  permanently visible regardless of this flag. */
+const joinPanelOpen = ref(false)
 
 /* ---- Join an existing team ----------------------------------------------
    The roster easily runs past any list-everything page size, so the picker
@@ -94,6 +102,15 @@ const myTeamCards = computed(() =>
     .sort((a, b) => new Date(b.membership.createdAt).getTime() - new Date(a.membership.createdAt).getTime()),
 )
 
+/** Mobile only (see .fp-team-accordion below): which rows currently have
+ *  their details expanded, keyed by membership id - mirrors TeamsView's own
+ *  expand-in-place row pattern. */
+const expandedTeamRows = reactive<Record<string, boolean>>({})
+
+function toggleTeamRow(id: string) {
+  expandedTeamRows[id] = !expandedTeamRows[id]
+}
+
 async function loadMyTeamDetails() {
   loadingMyTeams.value = true
   try {
@@ -139,6 +156,7 @@ async function saveTeam() {
     selectedTeam.value = null
     joinRole.value = null
     teamSearch.value = ''
+    joinPanelOpen.value = false
   } catch (error) {
     ui.notify(error instanceof ApiError ? error.message : t('profile.team.saveFailed'), 'error')
   } finally {
@@ -240,7 +258,7 @@ async function confirmLeave() {
         <!-- Left: join an existing team, and found a new one. Always available -
              no toggle needed to reveal it. -->
         <v-col cols="12" md="4" class="py-6 my-teams-join-col">
-          <v-card class="fp-card pa-6">
+          <v-card class="fp-card pa-6 fp-join-card">
             <h2 class="fp-section-title mb-4">{{ t('profile.team.joinTitle') }}</h2>
 
             <FlatField :label="t('profile.team.displayName')" class="mb-4">
@@ -318,6 +336,114 @@ async function confirmLeave() {
               {{ t('profile.team.createAnother') }}
             </button>
           </v-card>
+
+          <!-- Mobile only (see the max-width: 959.98px rules below, which
+               hide .fp-join-card above instead): the same join form, but
+               collapsed behind a toggle button so a narrow screen leads with
+               the member's own teams, not a form. -->
+          <div class="fp-join-mobile">
+            <button
+              type="button"
+              class="fp-btn fp-btn-tonal fp-btn-block fp-join-toggle"
+              :class="{ 'fp-join-toggle--open': joinPanelOpen }"
+              :aria-expanded="joinPanelOpen"
+              @click="joinPanelOpen = !joinPanelOpen"
+            >
+              <v-icon :icon="mdiAccountPlusOutline" size="18" />
+              {{ t('profile.team.joinTitle') }}
+              <v-icon :icon="mdiChevronDown" size="18" class="fp-join-toggle-chevron" />
+            </button>
+
+            <v-card v-if="joinPanelOpen" class="fp-card pa-4 mt-3">
+              <div class="d-flex align-center justify-space-between mb-4">
+                <h2 class="fp-section-title">{{ t('profile.team.joinTitle') }}</h2>
+                <button
+                  type="button"
+                  class="fp-icon-btn"
+                  :aria-label="t('profile.team.cancel')"
+                  @click="joinPanelOpen = false"
+                >
+                  <v-icon :icon="mdiClose" size="16" />
+                </button>
+              </div>
+
+              <FlatField :label="t('profile.team.displayName')" class="mb-4">
+                <input v-model="joinDisplayName" class="fp-input" type="text" disabled />
+              </FlatField>
+
+              <FlatField :label="t('profile.team.select')" :error="joinErrors.team" required class="mb-4">
+                <v-autocomplete
+                  v-model="selectedTeamId"
+                  v-model:search="teamSearch"
+                  :items="joinableTeams"
+                  :loading="searchingTeams"
+                  no-filter
+                  item-title="name"
+                  item-value="id"
+                  :placeholder="t('profile.team.selectPlaceholder')"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  autocomplete="off"
+                  :error="!!joinErrors.team"
+                  class="fp-autocomplete"
+                >
+                  <template #item="{ item, props: itemProps }">
+                    <v-list-item v-bind="itemProps" :title="item.name">
+                      <template #subtitle>
+                        {{ t(`profile.team.enums.${item.type}`) }} ·
+                        <template v-if="item.division">{{ t(`profile.team.enums.${item.division}`) }} · </template>
+                        {{ t(`profile.team.enums.${item.category}`) }}
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-autocomplete>
+              </FlatField>
+
+              <div v-if="selectedTeam" class="mb-4 text-center">
+                <v-img
+                  v-if="selectedTeam.hasCrest"
+                  :src="teamsApi.crestUrl(selectedTeam.id)"
+                  :alt="selectedTeam.name"
+                  height="160"
+                  class="mx-auto"
+                  style="max-width: 200px"
+                />
+                <p v-else class="text-caption text-medium-emphasis py-4">
+                  {{ t('profile.team.noCrest') }}
+                </p>
+              </div>
+
+              <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" required class="mb-4">
+                <RolePills v-model="joinRole" />
+              </FlatField>
+
+              <button
+                type="button"
+                class="fp-btn fp-btn-tonal fp-btn-block"
+                :disabled="savingTeam"
+                @click="saveTeam"
+              >
+                <v-progress-circular v-if="savingTeam" indeterminate size="16" width="2" color="white" />
+                <template v-else>
+                  <v-icon :icon="mdiAccountPlusOutline" size="18" />
+                  {{ t('profile.team.save') }}
+                </template>
+              </button>
+            </v-card>
+
+            <!-- Create a new team: always available, independent of the
+                 join panel above. -->
+            <button
+              type="button"
+              class="fp-btn fp-btn-solid fp-btn-block mt-3"
+              @click="wizardOpen = true"
+            >
+              <v-icon :icon="mdiPlusCircleOutline" size="18" />
+              {{ t('profile.team.createAnother') }}
+            </button>
+          </div>
         </v-col>
 
         <!-- Right: the member's own teams, in a scrollable panel once the list grows. -->
@@ -401,6 +527,104 @@ async function confirmLeave() {
               </div>
             </v-card>
           </div>
+
+          <!-- Mobile only (see the max-width: 959.98px rules below, which
+               swap this in for .fp-team-list above): one row per team -
+               crest, name, your role - that expands in place instead of the
+               desktop card's always-open layout, matching the Teams
+               screen's own mobile row/expand pattern. -->
+          <div class="fp-team-accordion">
+            <v-card class="fp-card fp-accordion-card">
+              <template v-for="{ membership, team } in myTeamCards" :key="membership.id">
+                <button
+                  type="button"
+                  class="fp-accordion-row"
+                  :aria-expanded="!!expandedTeamRows[membership.id]"
+                  @click="toggleTeamRow(membership.id)"
+                >
+                  <TeamCrest :team="team" :size="32" />
+                  <span class="fp-accordion-name text-truncate">{{ team.name }}</span>
+                  <span class="fp-role-chip fp-role-chip--sm" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
+                    {{ t(`profile.team.memberRoles.${membership.role}`) }}
+                  </span>
+                  <v-icon
+                    :icon="mdiChevronDown"
+                    size="18"
+                    class="fp-accordion-chevron"
+                    :class="{ 'fp-accordion-chevron--open': expandedTeamRows[membership.id] }"
+                  />
+                </button>
+
+                <div v-if="expandedTeamRows[membership.id]" class="fp-accordion-details">
+                  <div class="fp-accordion-grid">
+                    <div class="fp-accordion-cell">
+                      <span class="fp-accordion-label">{{ t('profile.team.type') }}</span>
+                      <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
+                        {{ t(`profile.team.enums.${team.type}`) }}
+                      </span>
+                    </div>
+                    <div class="fp-accordion-cell">
+                      <span class="fp-accordion-label">{{ t('profile.team.division') }}</span>
+                      <span v-if="team.division" class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                        {{ t(`profile.team.enums.${team.division}`) }}
+                      </span>
+                      <span v-else class="text-body-2 text-medium-emphasis">—</span>
+                    </div>
+                    <div class="fp-accordion-cell">
+                      <span class="fp-accordion-label">{{ t('profile.team.category') }}</span>
+                      <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">
+                        {{ t(`profile.team.enums.${team.category}`) }}
+                      </span>
+                    </div>
+                    <div class="fp-accordion-cell">
+                      <span class="fp-accordion-label">{{ t('profile.team.city') }}</span>
+                      <span class="fp-accordion-value">{{ team.city }}</span>
+                    </div>
+                  </div>
+
+                  <div class="fp-accordion-cell">
+                    <span class="fp-accordion-label">{{ t('profile.team.displayName') }}</span>
+                    <span class="fp-accordion-value">
+                      <v-icon size="14" :icon="mdiAccountOutline" />
+                      {{ membership.displayName }}
+                    </span>
+                  </div>
+
+                  <div v-if="team.venueName" class="fp-accordion-cell">
+                    <span class="fp-accordion-label">{{ t('profile.team.venueGroup') }}</span>
+                    <span class="fp-accordion-value">
+                      <v-icon size="14" :icon="mdiSoccerField" />
+                      {{ team.venueName }}
+                    </span>
+                  </div>
+
+                  <div class="fp-accordion-actions">
+                    <router-link
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      class="fp-accordion-action"
+                      :aria-label="t('profile.team.viewDetails')"
+                      @click.stop
+                    >
+                      <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
+                      {{ t('profile.team.viewDetails') }}
+                    </router-link>
+                    <button type="button" class="fp-accordion-action" @click="openEdit(team.id)">
+                      <v-icon :icon="mdiPencilOutline" size="18" />
+                      {{ t('profile.team.editTitle') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="fp-accordion-action fp-accordion-action--danger"
+                      @click="leavingTeam = team"
+                    >
+                      <v-icon :icon="mdiAccountRemoveOutline" size="18" />
+                      {{ t('profile.team.leave') }}
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </v-card>
+          </div>
         </v-col>
       </v-row>
     </v-container>
@@ -481,14 +705,169 @@ async function confirmLeave() {
   padding-right: 4px;
 }
 
+/* Mobile-only replacement for .fp-team-list above (see the max-width:
+   959.98px rules below, which swap the two): one row per team that expands
+   in place, matching the Teams screen's own mobile pattern, instead of the
+   desktop card's always-open layout - hidden here so it never renders
+   twice while both exist unconditionally in the template. */
+.fp-team-accordion {
+  display: none;
+}
+
+/* Mobile-only replacement for .fp-join-card above (see the max-width:
+   959.98px rules below, which swap the two): the join form starts
+   collapsed behind a toggle button instead of always open. */
+.fp-join-mobile {
+  display: none;
+}
+
+/* Positioned absolutely (rather than pushed right with margin-left: auto)
+   so it doesn't eat the flex row's free space - an auto margin there
+   claims it all for itself, leaving .fp-btn's justify-content: center
+   nothing left to center the icon+label against, so the text reads
+   left-aligned instead. */
+.fp-join-toggle {
+  position: relative;
+}
+
+.fp-join-toggle-chevron {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.15s ease;
+}
+
+.fp-join-toggle--open .fp-join-toggle-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.fp-accordion-card {
+  overflow: hidden;
+}
+
+.fp-accordion-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  background: rgb(var(--v-theme-surface));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.fp-accordion-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.fp-role-chip--sm {
+  padding: 3px 10px;
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+
+.fp-accordion-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.fp-accordion-chevron--open {
+  transform: rotate(180deg);
+}
+
+.fp-accordion-details {
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: rgb(var(--v-theme-background));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fp-accordion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fp-accordion-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fp-accordion-cell .fp-chip {
+  align-self: flex-start;
+}
+
+.fp-accordion-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.fp-accordion-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.fp-accordion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.fp-accordion-action {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: rgb(var(--v-theme-surface));
+  color: #334155;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.fp-accordion-action--danger {
+  color: rgb(var(--v-theme-error));
+  border-color: #fecaca;
+}
+
 /* Mobile only (below Vuetify's `md` breakpoint, where the two columns stack
    instead of sitting side by side): the desktop layout above pins the row to
    the viewport height and hides its overflow so only .fp-team-list scrolls
-   internally. Stacked on one narrow column, the join/create card alone can
-   already exceed that height, which clips the team list below it with no way
-   to reach it - "no funciona el scroll para abajo". Below `md` the row goes
-   back to natural page height/scroll instead, and the team list - the page's
-   main content - moves above the join/create form via `order`. */
+   internally. Stacked on one narrow column, that used to clip the team list
+   below the join form with no way to reach it - "no funciona el scroll para
+   abajo". Below `md` the row goes back to natural page height/scroll
+   instead; the join form (top, natural DOM order) collapses behind
+   .fp-join-mobile's toggle instead of .fp-join-card's always-open form, and
+   the accordion list replaces the always-open desktop team cards. */
 @media (max-width: 959.98px) {
   .my-teams-container {
     padding-block: 16px;
@@ -501,17 +880,28 @@ async function confirmLeave() {
 
   .my-teams-list-col {
     height: auto;
-    order: 1;
+    padding-top: 0;
   }
 
   .my-teams-join-col {
-    order: 2;
+    padding-top: 8px;
+    padding-bottom: 0;
+  }
+
+  .fp-join-card {
+    display: none;
+  }
+
+  .fp-join-mobile {
+    display: block;
   }
 
   .fp-team-list {
-    flex: none;
-    overflow-y: visible;
-    padding-right: 0;
+    display: none;
+  }
+
+  .fp-team-accordion {
+    display: block;
   }
 }
 </style>

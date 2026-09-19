@@ -72,6 +72,10 @@
       "challengeRejectedByMe": "Rechazaste el desafío de {team}",
       "challengeAcceptedByOther": "{team} aceptó tu desafío",
       "challengeRejectedByOther": "{team} rechazó tu desafío"
+    },
+    "panel": {
+      "expand": "Mostrar panel",
+      "collapse": "Ocultar panel"
     }
   },
   "challenges": {
