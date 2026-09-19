@@ -331,7 +331,7 @@ function goNext() {
                   <v-chip size="x-small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
                     {{ t(`profile.team.enums.${team.category}`) }}
                   </v-chip>
-                  <v-chip size="x-small" variant="tonal" :color="DIVISION_COLOR[team.division]">
+                  <v-chip v-if="team.division" size="x-small" variant="tonal" :color="DIVISION_COLOR[team.division]">
                     {{ t(`profile.team.enums.${team.division}`) }}
                   </v-chip>
                 </div>

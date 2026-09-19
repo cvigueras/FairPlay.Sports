@@ -17,8 +17,18 @@ internal static class TeamWriteRules
         validator.RuleFor(x => x.Coach).NotEmpty().MaximumLength(100);
         validator.RuleFor(x => x.City).NotEmpty().MaximumLength(100);
         validator.RuleFor(x => x.Type).IsInEnum();
-        validator.RuleFor(x => x.Division).IsInEnum();
         validator.RuleFor(x => x.Category).IsInEnum();
+
+        // Aficionados teams don't compete in divisions - a division is required for every
+        // other category, and Aficionados must not be given one.
+        validator.RuleFor(x => x.Division)
+            .Must(division => division is not null && division != Division.Default && Enum.IsDefined(division.Value))
+            .WithMessage("A valid division is required.")
+            .When(x => x.Category != AgeCategory.Aficionados);
+        validator.RuleFor(x => x.Division)
+            .Null()
+            .WithMessage("Aficionados teams don't have a division.")
+            .When(x => x.Category == AgeCategory.Aficionados);
 
         validator.RuleFor(x => x.ShortName).MaximumLength(Team.MaxShortNameLength);
 

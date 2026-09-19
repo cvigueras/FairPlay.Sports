@@ -15,8 +15,63 @@
     "challenges": "Desafíos"
   },
   "home": {
-    "greeting": "Hola, {name}",
-    "subtitle": "Este es tu panel de FairPlay Sports. Pronto habrá más aquí."
+    "browseTeams": "Buscar un equipo para desafiar",
+    "loadFailed": "No se ha podido cargar tu panel.",
+    "kpi": {
+      "teams": "Equipos asignados",
+      "teamsCaptionEmpty": "Únete a un equipo para empezar",
+      "activeChallenges": "Desafíos activos",
+      "activeChallengesCaption": "{sent} enviados · {received} recibidos",
+      "won": "Partidos ganados",
+      "wonCaption": "{pct}% de victorias · {played} jugados",
+      "wonCaptionEmpty": "Aún sin partidos resueltos",
+      "lost": "Partidos perdidos",
+      "lostCaption": "según tu clasificación actual"
+    },
+    "balance": {
+      "title": "Balance de tus equipos",
+      "won": "Ganados",
+      "lost": "Perdidos",
+      "drawn": "Empatados",
+      "winRate": "victorias",
+      "empty": "Sin partidos resueltos"
+    },
+    "stats": {
+      "teams": "equipos asignados a tu cuenta",
+      "challenges": "desafíos enviados y recibidos en total",
+      "played": "partidos jugados en total"
+    },
+    "myTeams": {
+      "title": "Tus equipos",
+      "viewAll": "Ver todos mis equipos",
+      "createAnother": "Crear otro equipo",
+      "empty": "Aún no perteneces a ningún equipo."
+    },
+    "nextMatch": {
+      "title": "Próximo partido",
+      "viewDetail": "Ver detalle",
+      "empty": "No tienes ningún partido programado."
+    },
+    "standings": {
+      "title": "Clasificación",
+      "viewAll": "Ver clasificación completa",
+      "position": "Pos",
+      "team": "Equipo",
+      "played": "PJ",
+      "points": "Pts",
+      "empty": "Todavía no hay clasificación para tus equipos."
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "empty": "Todavía no hay actividad.",
+      "joinedTeam": "Te uniste a {team} como {role}",
+      "challengeSent": "Enviaste un desafío a {team}",
+      "challengeReceived": "Recibiste un desafío de {team}",
+      "challengeAcceptedByMe": "Aceptaste el desafío de {team}",
+      "challengeRejectedByMe": "Rechazaste el desafío de {team}",
+      "challengeAcceptedByOther": "{team} aceptó tu desafío",
+      "challengeRejectedByOther": "{team} rechazó tu desafío"
+    }
   },
   "challenges": {
     "placeholder": "Aquí tus retos",
@@ -216,11 +271,14 @@
       "type": "Modalidad",
       "division": "División",
       "category": "Categoría",
+      "selectType": "Selecciona una modalidad",
+      "selectDivision": "Selecciona una división",
+      "selectCategory": "Selecciona una categoría",
       "crest": "Escudo del equipo",
       "createFailed": "No se ha podido crear el equipo.",
       "memberRole": "Tu rol en el equipo",
       "displayName": "Tu nombre o apodo",
-      "required": "Obligatorio.",
+      "required": "Campo obligatorio.",
       "crestRequired": "La imagen del escudo es obligatoria.",
       "urlInvalid": "Introduce un enlace http(s) completo.",
       "foundedYearRange": "Introduce un año entre 1850 y {max}.",

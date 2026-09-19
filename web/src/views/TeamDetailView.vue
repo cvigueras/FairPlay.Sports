@@ -178,7 +178,13 @@ async function handleSendChallenge(payload: SendChallengePayload) {
                 <v-chip size="small" variant="tonal" :color="MODALITY_COLOR[team.type]" :prepend-icon="mdiSoccer">
                   {{ t(`profile.team.enums.${team.type}`) }}
                 </v-chip>
-                <v-chip size="small" variant="tonal" :color="DIVISION_COLOR[team.division]" :prepend-icon="mdiTrophyOutline">
+                <v-chip
+                  v-if="team.division"
+                  size="small"
+                  variant="tonal"
+                  :color="DIVISION_COLOR[team.division]"
+                  :prepend-icon="mdiTrophyOutline"
+                >
                   {{ t(`profile.team.enums.${team.division}`) }}
                 </v-chip>
               </div>

@@ -58,9 +58,9 @@ const model = reactive({
   role: null as TeamMemberRole | null,
   coach: '',
   city: '',
-  type: 'Futsal' as FootballType,
-  division: 'First' as Division,
-  category: 'Alevines' as AgeCategory,
+  type: null as FootballType | null,
+  division: null as Division | null,
+  category: null as AgeCategory | null,
   shortName: '',
   foundedYear: null as number | null,
   venueName: '',
@@ -110,9 +110,9 @@ function resetForm() {
     role: null,
     coach: '',
     city: '',
-    type: 'Futsal',
-    division: 'First',
-    category: 'Alevines',
+    type: null,
+    division: null,
+    category: null,
     shortName: '',
     foundedYear: null,
     venueName: '',
@@ -157,11 +157,12 @@ function applyInitial(team: Team) {
     venueSurface: team.venueSurface ?? null,
     venueMapsUrl: team.venueMapsUrl ?? '',
     colorPrimary: team.colorPrimary || '#16a34a',
-    colorSecondary: team.colorSecondary || '#ffffff',
+    colorSecondary: team.kitPattern === 'Plain' ? '#ffffff' : team.colorSecondary || '#ffffff',
     shortsColor: team.shortsColor || '#1e293b',
     kitPattern: team.kitPattern ?? 'Plain',
     alternateColorPrimary: team.alternateColorPrimary || '#0f172a',
-    alternateColorSecondary: team.alternateColorSecondary || '#ffffff',
+    alternateColorSecondary:
+      team.alternateKitPattern === 'Plain' ? '#ffffff' : team.alternateColorSecondary || '#ffffff',
     alternateShortsColor: team.alternateShortsColor || '#1e293b',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
@@ -193,6 +194,35 @@ watch(
   },
 )
 
+/** A plain shirt has no secondary colour to show, so the picker hides it and
+ *  parks it at white - the neutral default the other patterns start from. */
+watch(
+  () => model.kitPattern,
+  (pattern) => {
+    if (pattern !== 'Plain') return
+    model.colorSecondary = '#ffffff'
+    if (kitColorSlot.value === 'secondary') kitColorSlot.value = 'primary'
+  },
+)
+watch(
+  () => model.alternateKitPattern,
+  (pattern) => {
+    if (pattern !== 'Plain') return
+    model.alternateColorSecondary = '#ffffff'
+    if (alternateKitColorSlot.value === 'secondary') alternateKitColorSlot.value = 'primary'
+  },
+)
+
+/** Aficionados doesn't compete in divisions, so its selector hides - drop
+ *  whatever was picked before so it doesn't linger if the category changes
+ *  again. */
+watch(
+  () => model.category,
+  (category) => {
+    if (category === 'Aficionados') model.division = null
+  },
+)
+
 const enumItems = <T extends string>(values: readonly T[], prefix: string) =>
   values.map((value) => ({ value, title: t(`${prefix}.${value}`) }))
 const typeItems = computed(() => enumItems(FOOTBALL_TYPES, 'profile.team.enums'))
@@ -217,7 +247,7 @@ const anyVenueField = computed(
     !!model.venueName.trim() || !!model.venueAddress.trim() || !!model.venueSurface || !!model.venueMapsUrl.trim(),
 )
 const STEP_FIELDS: Record<number, string[]> = {
-  1: ['name', 'role', 'coach', 'city', 'crest'],
+  1: ['name', 'role', 'coach', 'city', 'crest', 'type', 'division', 'category'],
   2: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl', 'foundedYear'],
   3: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
   4: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
@@ -233,6 +263,9 @@ function validate(): boolean {
   if (!model.coach.trim()) errors.coach = required
   if (!model.city.trim()) errors.city = required
   if (!isEdit.value && !crest.value) errors.crest = t('profile.team.crestRequired')
+  if (!model.type) errors.type = required
+  if (!model.category) errors.category = required
+  if (model.category !== 'Aficionados' && !model.division) errors.division = required
 
   if (model.foundedYear != null) {
     const year = model.foundedYear
@@ -301,9 +334,9 @@ function submit() {
     name,
     coach: model.coach.trim(),
     city: model.city.trim(),
-    type: model.type,
-    division: model.division,
-    category: model.category,
+    type: model.type!,
+    division: model.category === 'Aficionados' ? null : model.division,
+    category: model.category!,
     shortName: trimmedOrUndefined(model.shortName),
     foundedYear: model.foundedYear ?? undefined,
     venueName: trimmedOrUndefined(model.venueName),
@@ -374,7 +407,9 @@ function goNext() {
             <img v-if="crestPreviewUrl" class="fp-crest-thumb" :src="crestPreviewUrl" alt="" />
             <span v-else class="fp-crest-empty"><v-icon :icon="mdiImageOutline" size="24" /></span>
             <span class="fp-crest-copy">
-              <strong>{{ t('profile.team.crest') }}</strong>
+              <strong>
+                {{ t('profile.team.crest') }}<span v-if="!isEdit" class="fp-required-mark">*</span>
+              </strong>
               <span>{{ t('profile.team.wizard.crestHint') }}</span>
             </span>
           </div>
@@ -385,19 +420,20 @@ function goNext() {
             :label="t('profile.team.wizard.nameLabel')"
             :hint="isEdit ? '' : t('profile.team.wizard.nameHint')"
             :error="errors.name"
+            required
             class="mb-4"
           >
             <input v-model="model.name" class="fp-input" :class="{ 'fp-invalid': errors.name }" type="text" />
           </FlatField>
 
-          <FlatField v-if="!isEdit" :label="t('profile.team.memberRole')" class="mb-3">
+          <FlatField v-if="!isEdit" :label="t('profile.team.memberRole')" required class="mb-3">
             <RolePills v-model="model.role" />
             <span v-if="errors.role" class="fp-error">{{ errors.role }}</span>
           </FlatField>
 
           <v-row dense>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.coach')" :error="errors.coach">
+              <FlatField :label="t('profile.team.coach')" :error="errors.coach" required>
                 <input
                   v-model="model.coach"
                   class="fp-input"
@@ -408,7 +444,7 @@ function goNext() {
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.city')" :error="errors.city">
+              <FlatField :label="t('profile.team.city')" :error="errors.city" required>
                 <input v-model="model.city" class="fp-input" :class="{ 'fp-invalid': errors.city }" type="text" />
               </FlatField>
             </v-col>
@@ -416,23 +452,26 @@ function goNext() {
 
           <v-row dense class="mt-1">
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.type')">
-                <select v-model="model.type" class="fp-select">
+              <FlatField :label="t('profile.team.type')" :error="errors.type" required>
+                <select v-model="model.type" class="fp-select" :class="{ 'fp-invalid': errors.type }">
+                  <option :value="null">{{ t('profile.team.selectType') }}</option>
                   <option v-for="opt in typeItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.division')">
-                <select v-model="model.division" class="fp-select">
-                  <option v-for="opt in divisionItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
+              <FlatField :label="t('profile.team.category')" :error="errors.category" required>
+                <select v-model="model.category" class="fp-select" :class="{ 'fp-invalid': errors.category }">
+                  <option :value="null">{{ t('profile.team.selectCategory') }}</option>
+                  <option v-for="opt in categoryItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
-            <v-col cols="12">
-              <FlatField :label="t('profile.team.category')">
-                <select v-model="model.category" class="fp-select">
-                  <option v-for="opt in categoryItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
+            <v-col v-if="model.category !== 'Aficionados'" cols="12">
+              <FlatField :label="t('profile.team.division')" :error="errors.division" required>
+                <select v-model="model.division" class="fp-select" :class="{ 'fp-invalid': errors.division }">
+                  <option :value="null">{{ t('profile.team.selectDivision') }}</option>
+                  <option v-for="opt in divisionItems" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
                 </select>
               </FlatField>
             </v-col>
@@ -520,7 +559,9 @@ function goNext() {
 
             <div class="fp-kit-controls">
               <div>
-                <div class="fp-kit-section-title">{{ t('profile.team.shirtColorsGroup') }}</div>
+                <div class="fp-kit-section-title">
+                  {{ t('profile.team.shirtColorsGroup') }}<span class="fp-required-mark">*</span>
+                </div>
                 <div class="fp-kit-swatch-row">
                   <button
                     type="button"
@@ -532,6 +573,7 @@ function goNext() {
                     {{ t('profile.team.colorPrimary') }}
                   </button>
                   <button
+                    v-if="model.kitPattern !== 'Plain'"
                     type="button"
                     class="fp-kit-swatch-slot"
                     :class="{ 'fp-kit-swatch-slot--active': kitColorSlot === 'secondary' }"
@@ -550,8 +592,9 @@ function goNext() {
                       class="fp-kit-palette-swatch"
                       :style="{ background: c.value }"
                       :disabled="
+                        model.kitPattern !== 'Plain' &&
                         (kitColorSlot === 'primary' ? model.colorSecondary : model.colorPrimary).toLowerCase() ===
-                        c.value.toLowerCase()
+                          c.value.toLowerCase()
                       "
                       :aria-label="t(`profile.team.colorNames.${c.labelKey}`)"
                       :title="t(`profile.team.colorNames.${c.labelKey}`)"
@@ -583,7 +626,9 @@ function goNext() {
               </div>
 
               <div>
-                <div class="fp-kit-section-title">{{ t('profile.team.shortsColor') }}</div>
+                <div class="fp-kit-section-title">
+                  {{ t('profile.team.shortsColor') }}<span class="fp-required-mark">*</span>
+                </div>
                 <div class="fp-kit-section-hint">{{ t('profile.team.shortsColorHint') }}</div>
                 <div class="fp-kit-swatch-row">
                   <span class="fp-kit-swatch-slot fp-kit-swatch-slot--single">
@@ -664,6 +709,7 @@ function goNext() {
                     {{ t('profile.team.colorPrimary') }}
                   </button>
                   <button
+                    v-if="model.alternateKitPattern !== 'Plain'"
                     type="button"
                     class="fp-kit-swatch-slot"
                     :class="{ 'fp-kit-swatch-slot--active': alternateKitColorSlot === 'secondary' }"
@@ -682,6 +728,7 @@ function goNext() {
                       class="fp-kit-palette-swatch"
                       :style="{ background: c.value }"
                       :disabled="
+                        model.alternateKitPattern !== 'Plain' &&
                         (alternateKitColorSlot === 'primary'
                           ? model.alternateColorSecondary
                           : model.alternateColorPrimary

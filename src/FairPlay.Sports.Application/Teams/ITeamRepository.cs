@@ -41,7 +41,7 @@ public interface ITeamRepository
     Task<bool> ExistsByNameAsync(
         string name,
         FootballType type,
-        Division division,
+        Division? division,
         AgeCategory category,
         Guid? excludeTeamId = null,
         CancellationToken cancellationToken = default);

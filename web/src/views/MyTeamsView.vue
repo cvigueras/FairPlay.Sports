@@ -18,6 +18,7 @@ import RolePills from '@/components/RolePills.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
+import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
@@ -246,7 +247,7 @@ async function confirmLeave() {
               <input v-model="joinDisplayName" class="fp-input" type="text" disabled />
             </FlatField>
 
-            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" class="mb-4">
+            <FlatField :label="t('profile.team.select')" :error="joinErrors.team" required class="mb-4">
               <v-autocomplete
                 v-model="selectedTeamId"
                 v-model:search="teamSearch"
@@ -268,7 +269,7 @@ async function confirmLeave() {
                   <v-list-item v-bind="itemProps" :title="item.name">
                     <template #subtitle>
                       {{ t(`profile.team.enums.${item.type}`) }} ·
-                      {{ t(`profile.team.enums.${item.division}`) }} ·
+                      <template v-if="item.division">{{ t(`profile.team.enums.${item.division}`) }} · </template>
                       {{ t(`profile.team.enums.${item.category}`) }}
                     </template>
                   </v-list-item>
@@ -290,7 +291,7 @@ async function confirmLeave() {
               </p>
             </div>
 
-            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" class="mb-4">
+            <FlatField :label="t('profile.team.memberRole')" :error="joinErrors.role" required class="mb-4">
               <RolePills v-model="joinRole" />
             </FlatField>
 
@@ -330,13 +331,15 @@ async function confirmLeave() {
               <div class="fp-team-body">
                 <div class="fp-team-row1">
                   <span class="fp-team-name">{{ team.name }}</span>
-                  <span class="fp-role-chip">{{ t(`profile.team.memberRoles.${membership.role}`) }}</span>
+                  <span class="fp-role-chip" :style="tonalStyle(MEMBER_ROLE_COLOR[membership.role])">
+                    {{ t(`profile.team.memberRoles.${membership.role}`) }}
+                  </span>
                 </div>
                 <div class="fp-chip-row">
                   <span class="fp-chip" :style="tonalStyle(MODALITY_COLOR[team.type])">
                     {{ t(`profile.team.enums.${team.type}`) }}
                   </span>
-                  <span class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
+                  <span v-if="team.division" class="fp-chip" :style="tonalStyle(DIVISION_COLOR[team.division])">
                     {{ t(`profile.team.enums.${team.division}`) }}
                   </span>
                   <span class="fp-chip" :style="tonalStyle(AGE_CATEGORY_COLOR[team.category])">

@@ -76,7 +76,7 @@ async function handleLoginSubmit() {
 
   // Navigate only after a successful sign-in; a router rejection here must not
   // surface as a "wrong credentials" message.
-  await router.push('/profile')
+  await router.push('/')
 }
 
 const registerForm = reactive({

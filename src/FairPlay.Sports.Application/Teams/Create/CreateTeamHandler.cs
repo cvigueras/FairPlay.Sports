@@ -1,13 +1,17 @@
 using FairPlay.Sports.Application.Common;
+using FairPlay.Sports.Application.Standings;
 using FairPlay.Sports.Application.Teams;
+using FairPlay.Sports.Domain.Standings;
 using FairPlay.Sports.Domain.Teams;
 using MediatR;
 
 namespace FairPlay.Sports.Application.Teams.Create;
 
-public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) : IRequestHandler<CreateTeamCommand, Result<TeamDto>>
+public sealed class CreateTeamHandler(ITeamRepository repository, IStandingRepository standings, IClock clock)
+    : IRequestHandler<CreateTeamCommand, Result<TeamDto>>
 {
     private readonly ITeamRepository _repository = repository;
+    private readonly IStandingRepository _standings = standings;
     private readonly IClock _clock = clock;
 
     public async Task<Result<TeamDto>> Handle(CreateTeamCommand request, CancellationToken cancellationToken)
@@ -26,6 +30,9 @@ public sealed class CreateTeamHandler(ITeamRepository repository, IClock clock) 
             request.ToProfile());
 
         await _repository.AddAsync(team, cancellationToken);
+
+        var standing = Standing.Create(Guid.NewGuid(), team.Id, 0, 0, 0, 0, 0, 0, 0, _clock.UtcNow);
+        await _standings.AddAsync(standing, cancellationToken);
 
         return Result<TeamDto>.Success(TeamDto.FromDomain(team));
     }

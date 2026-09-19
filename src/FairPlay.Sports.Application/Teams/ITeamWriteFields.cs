@@ -14,7 +14,7 @@ public interface ITeamWriteFields
     string City { get; }
 
     FootballType Type { get; }
-    Division Division { get; }
+    Division? Division { get; }
     AgeCategory Category { get; }
 
     string? ShortName { get; }

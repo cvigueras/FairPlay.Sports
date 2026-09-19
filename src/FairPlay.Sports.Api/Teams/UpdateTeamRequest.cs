@@ -7,7 +7,7 @@ public sealed record UpdateTeamRequest(
     string Coach,
     string City,
     FootballType Type = default,
-    Division Division = default,
+    Division? Division = null,
     AgeCategory Category = default,
     string? ShortName = null,
     int? FoundedYear = null,

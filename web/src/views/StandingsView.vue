@@ -213,7 +213,11 @@ function medalClass(position: number): string {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(standing, index) in result.items" :key="standing.id">
+                  <tr
+                    v-for="(standing, index) in result.items"
+                    :key="standing.id"
+                    :class="{ 'standings-row--unplayed': standing.played === 0 }"
+                  >
                     <td class="standings-col-position">
                       <span class="standings-medal" :class="medalClass(positionOf(index))">
                         {{ positionOf(index) }}
@@ -279,6 +283,7 @@ function medalClass(position: number): string {
                 <button
                   type="button"
                   class="standings-mobile-row"
+                  :class="{ 'standings-row--unplayed': standing.played === 0 }"
                   :aria-expanded="!!expandedRows[standing.id]"
                   @click="toggleRow(standing.id)"
                 >
@@ -538,6 +543,16 @@ function medalClass(position: number): string {
   border-bottom: 1px solid #f1f5f9;
 }
 
+/* Teams that haven't played a match yet - shaded so it's clear their
+   position/points are still provisional, without hiding them from the list. */
+.standings-row--unplayed {
+  background: #f8fafc;
+}
+
+.standings-row--unplayed .standings-club-link {
+  color: #64748b;
+}
+
 .standings-table td {
   padding: 0.7rem 0.85rem;
 }
@@ -728,6 +743,14 @@ function medalClass(position: number): string {
 
 .standings-mobile-chevron--open {
   transform: rotate(180deg);
+}
+
+.standings-mobile-row.standings-row--unplayed {
+  background: #f8fafc;
+}
+
+.standings-mobile-row.standings-row--unplayed .standings-mobile-club {
+  color: #64748b;
 }
 
 .standings-mobile-details {

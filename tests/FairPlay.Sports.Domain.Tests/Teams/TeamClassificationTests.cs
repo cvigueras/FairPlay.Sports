@@ -37,6 +37,26 @@ public class TeamClassificationTests
             Throws.ArgumentException);
 
     [Test]
+    public void Ctor_WithNonAficionadosAndNoDivision_Throws() =>
+        Assert.That(
+            () => new TeamClassification(FootballType.Futsal, null, AgeCategory.Juveniles),
+            Throws.ArgumentException);
+
+    [Test]
+    public void Ctor_WithAficionadosAndADivision_Throws() =>
+        Assert.That(
+            () => new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Aficionados),
+            Throws.ArgumentException);
+
+    [Test]
+    public void Ctor_WithAficionadosAndNoDivision_LeavesDivisionNull()
+    {
+        var classification = new TeamClassification(FootballType.Futsal, null, AgeCategory.Aficionados);
+
+        Assert.That(classification.Division, Is.Null);
+    }
+
+    [Test]
     public void Equality_IsByValue()
     {
         var a = new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Juveniles);
