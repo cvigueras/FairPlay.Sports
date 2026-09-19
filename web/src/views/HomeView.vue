@@ -640,7 +640,7 @@ onMounted(async () => {
 <style scoped>
 .home-outer-container {
   max-width: 1600px;
-  margin-left: 0;
+  margin-left: auto;
   margin-right: auto;
 }
 
