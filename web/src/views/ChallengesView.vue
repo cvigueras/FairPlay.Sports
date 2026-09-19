@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
@@ -12,11 +12,12 @@ import {
 import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
-import { CHALLENGE_ACTOR_ROLES, challengesApi } from '@/lib/challenges'
+import { challengesApi, isActionablePending } from '@/lib/challenges'
 import { ApiError } from '@/lib/http'
 import { relativeTime } from '@/lib/relativeTime'
 import { tonalStyle } from '@/lib/tonalColor'
 import { useAuthStore } from '@/stores/auth'
+import { useChallengesStore } from '@/stores/challenges'
 import { useUiStore } from '@/stores/ui'
 import type { Challenge } from '@/types/challenge'
 import type { TeamMemberRole } from '@/types/team'
@@ -24,6 +25,7 @@ import type { TeamMemberRole } from '@/types/team'
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
+const challengesStore = useChallengesStore()
 
 const loading = ref(true)
 const challenges = ref<Challenge[]>([])
@@ -67,9 +69,6 @@ const items = computed<ChallengeItem[]>(() =>
     const challengedTeam: TeamRef = { id: c.challengedTeamId, name: c.challengedTeamName, hasCrest: c.challengedTeamHasCrest }
     const homeTeam = c.homeTeamId === c.challengerTeamId ? challengerTeam : challengedTeam
     const awayTeam = homeTeam.id === c.challengerTeamId ? challengedTeam : challengerTeam
-    const myTeamId = iAmChallenger ? c.challengerTeamId : c.challengedTeamId
-    const myRole = roleByTeamId.value[myTeamId]
-    const canAct = !!myRole && CHALLENGE_ACTOR_ROLES.includes(myRole)
 
     return {
       challenge: c,
@@ -78,7 +77,7 @@ const items = computed<ChallengeItem[]>(() =>
       homeTeam,
       awayTeam,
       statusStyle: tonalStyle(STATUS_COLOR[c.status]),
-      actionable: c.status === 'Pending' && direction === 'received' && canAct,
+      actionable: isActionablePending(c, roleByTeamId.value),
       matchDate: new Date(c.matchDate),
       createdAt: new Date(c.createdAt),
       respondedAt: c.respondedAt ? new Date(c.respondedAt) : null,
@@ -87,6 +86,14 @@ const items = computed<ChallengeItem[]>(() =>
 )
 
 const pendingCount = computed(() => items.value.filter((i) => i.challenge.status === 'Pending').length)
+
+// Keeps the nav badge in sync with whatever this view just loaded or changed,
+// without a second fetch of its own - see stores/challenges.ts.
+watch(
+  () => items.value.filter((i) => i.actionable).length,
+  (count) => challengesStore.setPendingCount(count),
+  { immediate: true },
+)
 const filteredItems = computed(() => (tab.value === 'all' ? items.value : items.value.filter((i) => i.direction === tab.value)))
 const selected = computed(
   () => filteredItems.value.find((i) => i.challenge.id === selectedId.value) ?? filteredItems.value[0] ?? null,

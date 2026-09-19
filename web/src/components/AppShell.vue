@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
@@ -17,6 +17,7 @@ import {
 } from '@mdi/js'
 import { baseUrl } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
+import { useChallengesStore } from '@/stores/challenges'
 import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import logoUrl from '@/assets/logo.webp'
@@ -26,7 +27,16 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const ui = useUiStore()
+const challengesStore = useChallengesStore()
 const { mobile } = useDisplay()
+
+onMounted(async () => {
+  try {
+    await challengesStore.refreshPendingCount()
+  } catch {
+    // Best-effort: the nav badge just stays at 0 if this fails.
+  }
+})
 
 const userInitial = computed(() => auth.currentUser?.userName?.charAt(0).toUpperCase() ?? '')
 const userMenuOpen = ref(false)
@@ -130,8 +140,7 @@ const navItems = [
   { to: '/my-teams', icon: mdiShieldOutline, label: 'nav.myTeams' },
   { to: '/teams', icon: mdiAccountGroupOutline, label: 'nav.teams' },
   { to: '/standings', icon: mdiTrophyOutline, label: 'nav.standings' },
-  // TODO: badge is a placeholder count until the challenges API exists.
-  { to: '/challenges', icon: mdiSwordCross, label: 'nav.challenges', badge: 3 },
+  { to: '/challenges', icon: mdiSwordCross, label: 'nav.challenges' },
 ]
 
 const isLoggingOut = ref(false)
@@ -252,8 +261,8 @@ async function handleLogout(): Promise<void> {
         :title="t(item.label)"
         rounded="lg"
       >
-        <template v-if="item.badge && !rail" #append>
-          <span class="nav-badge">{{ item.badge }}</span>
+        <template v-if="item.to === '/challenges' && challengesStore.pendingCount > 0 && !rail" #append>
+          <span class="nav-badge">{{ challengesStore.pendingCount }}</span>
         </template>
       </v-list-item>
     </v-list>
