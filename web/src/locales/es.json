@@ -50,8 +50,7 @@
     "nextMatch": {
       "title": "Próximo partido",
       "viewDetail": "Ver detalle",
-      "empty": "No tienes ningún partido programado.",
-      "emptyCta": "Buscar equipo"
+      "empty": "No tienes ningún partido programado."
     },
     "standings": {
       "title": "Clasificación",

@@ -50,8 +50,7 @@
     "nextMatch": {
       "title": "Next match",
       "viewDetail": "View detail",
-      "empty": "You have no match scheduled.",
-      "emptyCta": "Find a team"
+      "empty": "You have no match scheduled."
     },
     "standings": {
       "title": "Standings",

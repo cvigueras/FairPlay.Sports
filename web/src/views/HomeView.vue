@@ -332,15 +332,6 @@ onMounted(async () => {
       <v-progress-circular v-if="loading" indeterminate color="primary" class="d-block mx-auto my-16" />
 
       <template v-else>
-        <!-- Header -->
-        <div class="home-header mb-7">
-          <div class="d-flex ga-2 home-header-actions">
-            <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">
-              {{ t('home.browseTeams') }}
-            </RouterLink>
-          </div>
-        </div>
-
         <!-- KPI row -->
         <div class="home-kpi-grid mb-6">
           <v-card v-for="kpi in kpiCards" :key="kpi.key" border flat rounded="xl" class="pa-5 home-kpi-card">
@@ -473,7 +464,7 @@ onMounted(async () => {
             </template>
             <div v-else class="home-empty-block">
               <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
-              <RouterLink :to="{ name: 'teams' }" class="home-link">{{ t('home.nextMatch.emptyCta') }}</RouterLink>
+              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
             </div>
           </v-card>
         </div>
@@ -533,14 +524,6 @@ onMounted(async () => {
 <style scoped>
 .home-container {
   max-width: 1200px;
-}
-
-.home-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 16px;
 }
 
 .home-kpi-grid {
@@ -850,6 +833,7 @@ onMounted(async () => {
 .home-empty-block {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
 }
 
@@ -948,15 +932,6 @@ onMounted(async () => {
 @media (max-width: 599px) {
   .home-kpi-grid {
     grid-template-columns: 1fr;
-  }
-
-  .home-header-actions {
-    width: 100%;
-  }
-
-  .home-header-actions .fp-btn {
-    flex: 1;
-    text-align: center;
   }
 }
 </style>
