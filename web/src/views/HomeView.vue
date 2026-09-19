@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
@@ -49,6 +49,44 @@ const teamStandings = ref<Record<string, TeamStandingSummary>>({})
 const challenges = ref<Challenge[]>([])
 
 const myTeamIds = computed(() => new Set(teamCards.value.map((card) => card.team.id)))
+
+/* ---- "Tus equipos" row: show only as many tiles as fit, no horizontal scroll ---- */
+
+const TEAM_TILE_WIDTH = 148
+const TEAM_TILE_GAP = 12
+
+const teamCarouselEl = ref<HTMLElement | null>(null)
+const visibleTeamSlotCount = ref(0)
+
+const visibleTeamCards = computed(() => teamCards.value.slice(0, Math.min(visibleTeamSlotCount.value, teamCards.value.length)))
+const showAddTeamTile = computed(() => visibleTeamSlotCount.value > teamCards.value.length)
+
+function recomputeVisibleTeamSlots() {
+  const width = teamCarouselEl.value?.clientWidth ?? 0
+  const maxItems = Math.floor((width + TEAM_TILE_GAP) / (TEAM_TILE_WIDTH + TEAM_TILE_GAP))
+  const combinedCount = teamCards.value.length + 1
+  visibleTeamSlotCount.value = Math.max(0, Math.min(maxItems, combinedCount))
+}
+
+let teamCarouselResizeObserver: ResizeObserver | undefined
+
+onBeforeUnmount(() => {
+  teamCarouselResizeObserver?.disconnect()
+})
+
+watch(
+  () => [teamCarouselEl.value, teamCards.value.length] as const,
+  async ([el]) => {
+    if (!el) return
+    if (!teamCarouselResizeObserver) {
+      teamCarouselResizeObserver = new ResizeObserver(() => recomputeVisibleTeamSlots())
+    }
+    teamCarouselResizeObserver.disconnect()
+    teamCarouselResizeObserver.observe(el as HTMLElement)
+    await nextTick()
+    recomputeVisibleTeamSlots()
+  },
+)
 
 /* ---- KPI row -------------------------------------------------------------- */
 
@@ -395,9 +433,9 @@ onMounted(async () => {
               <RouterLink :to="{ name: 'my-teams' }" class="home-link">{{ t('home.myTeams.viewAll') }}</RouterLink>
             </div>
 
-            <div v-if="teamCards.length > 0" class="home-team-carousel">
+            <div v-if="teamCards.length > 0" ref="teamCarouselEl" class="home-team-carousel">
               <RouterLink
-                v-for="{ membership, team } in teamCards"
+                v-for="{ membership, team } in visibleTeamCards"
                 :key="membership.id"
                 :to="{ name: 'team-detail', params: { id: team.id } }"
                 class="home-team-tile"
@@ -408,7 +446,7 @@ onMounted(async () => {
                   {{ t(`profile.team.memberRoles.${membership.role}`) }}
                 </span>
               </RouterLink>
-              <RouterLink :to="{ name: 'my-teams' }" class="home-team-tile home-team-tile--add">
+              <RouterLink v-if="showAddTeamTile" :to="{ name: 'my-teams' }" class="home-team-tile home-team-tile--add">
                 <v-icon :icon="mdiPlusCircleOutline" size="20" />
                 {{ t('home.myTeams.createAnother') }}
               </RouterLink>
@@ -700,8 +738,8 @@ onMounted(async () => {
 .home-team-carousel {
   display: flex;
   gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .home-team-tile {
