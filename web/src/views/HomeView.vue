@@ -20,6 +20,7 @@ import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { challengesApi } from '@/lib/challenges'
 import { DIVISION_COLOR } from '@/lib/division'
 import { ApiError } from '@/lib/http'
+import { relativeTime } from '@/lib/relativeTime'
 import { standingsApi } from '@/lib/standings'
 import { teamsApi } from '@/lib/teams'
 import { tonalStyle } from '@/lib/tonalColor'
@@ -272,16 +273,6 @@ interface ActivityEntry {
   color: string
   text: string
   at: Date
-}
-
-function relativeTime(date: Date): string {
-  const diffMs = date.getTime() - Date.now()
-  const diffHours = Math.round(diffMs / 3_600_000)
-  const diffDays = Math.round(diffMs / 86_400_000)
-  const rtf = new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' })
-  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, 'hour')
-  if (Math.abs(diffDays) < 30) return rtf.format(diffDays, 'day')
-  return rtf.format(Math.round(diffDays / 30), 'month')
 }
 
 const activityEntries = computed<ActivityEntry[]>(() => {
@@ -623,7 +614,7 @@ onMounted(async () => {
                   </div>
                   <div>
                     <div class="home-activity-text">{{ entry.text }}</div>
-                    <div class="home-activity-time">{{ relativeTime(entry.at) }}</div>
+                    <div class="home-activity-time">{{ relativeTime(entry.at, locale) }}</div>
                   </div>
                 </div>
               </template>
