@@ -47,8 +47,10 @@
       "empty": "Aún no perteneces a ningún equipo."
     },
     "nextMatch": {
-      "title": "Próximo partido",
+      "title": "Próximos partidos",
       "viewDetail": "Ver detalle",
+      "next": "Próximo",
+      "more": "+{count} más",
       "empty": "No tienes ningún partido programado."
     },
     "standings": {

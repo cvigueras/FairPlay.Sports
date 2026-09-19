@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
   mdiAccountGroupOutline,
+  mdiCalendarBlankOutline,
   mdiCalendarOutline,
+  mdiChevronRight,
   mdiCheckCircleOutline,
   mdiCloseCircleOutline,
   mdiMapMarkerOutline,
@@ -216,25 +218,34 @@ const balanceDonutStyle = computed(() => {
   }
 })
 
-/* ---- Next match -------------------------------------------------------------- */
+/* ---- Upcoming matches ---------------------------------------------------------- */
 
-const nextMatch = computed(() => {
+interface UpcomingMatchCard {
+  id: string
+  opponent: string
+  date: Date
+  venueName?: string | null
+}
+
+const UPCOMING_MATCHES_VISIBLE = 3
+
+const upcomingMatches = computed<UpcomingMatchCard[]>(() => {
   const now = Date.now()
-  return (
-    challenges.value
-      .filter((c) => c.status === 'Accepted' && new Date(c.matchDate).getTime() > now)
-      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime())[0] ?? null
-  )
+  return challenges.value
+    .filter((c) => c.status === 'Accepted' && new Date(c.matchDate).getTime() > now)
+    .map((c) => ({
+      id: c.id,
+      opponent: myTeamIds.value.has(c.challengerTeamId) ? c.challengedTeamName : c.challengerTeamName,
+      date: new Date(c.matchDate),
+      venueName: c.venueName,
+    }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
 })
 
-const nextMatchOpponentName = computed(() => {
-  if (!nextMatch.value) return ''
-  return myTeamIds.value.has(nextMatch.value.challengerTeamId)
-    ? nextMatch.value.challengedTeamName
-    : nextMatch.value.challengerTeamName
-})
-
-const nextMatchDate = computed(() => (nextMatch.value ? new Date(nextMatch.value.matchDate) : null))
+const visibleUpcomingMatches = computed(() => upcomingMatches.value.slice(0, UPCOMING_MATCHES_VISIBLE))
+const upcomingMatchesOverflowCount = computed(() =>
+  Math.max(0, upcomingMatches.value.length - UPCOMING_MATCHES_VISIBLE),
+)
 
 /* ---- Standings mini table ----------------------------------------------------- */
 
@@ -456,30 +467,57 @@ onMounted(async () => {
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 home-next-match">
-            <div class="home-activity-scroll d-flex ga-4 align-center">
-              <template v-if="nextMatch && nextMatchDate">
-                <div class="home-next-match-date">
-                  <span class="home-next-match-month">
-                    {{ nextMatchDate.toLocaleDateString(locale, { month: 'short' }) }}
-                  </span>
-                  <span class="home-next-match-day">{{ nextMatchDate.getDate() }}</span>
-                </div>
-                <div class="min-width-0">
-                  <span class="home-kpi-label">{{ t('home.nextMatch.title') }}</span>
-                  <div class="home-next-match-opponent">vs. {{ nextMatchOpponentName }}</div>
-                  <div class="home-next-match-meta">
-                    <v-icon :icon="mdiCalendarOutline" size="14" />
-                    {{ nextMatchDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}
-                    <template v-if="nextMatch.venueName">
-                      · <v-icon :icon="mdiMapMarkerOutline" size="14" /> {{ nextMatch.venueName }}
-                    </template>
+            <div class="home-next-match-header">
+              <h2>{{ t('home.nextMatch.title') }}</h2>
+              <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#16a34a')">
+                {{ upcomingMatches.length }}
+              </span>
+            </div>
+
+            <template v-if="upcomingMatches.length > 0">
+              <div class="home-next-match-list">
+                <RouterLink
+                  v-for="(match, index) in visibleUpcomingMatches"
+                  :key="match.id"
+                  :to="{ name: 'challenges' }"
+                  class="home-next-match-row"
+                  :class="{ 'home-next-match-row--next': index === 0 }"
+                >
+                  <div class="home-next-match-date" :class="{ 'home-next-match-date--next': index === 0 }">
+                    <span class="home-next-match-month">
+                      {{ match.date.toLocaleDateString(locale, { month: 'short' }) }}
+                    </span>
+                    <span class="home-next-match-day">{{ match.date.getDate() }}</span>
                   </div>
-                </div>
-              </template>
-              <div v-else class="home-empty-block">
-                <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
-                <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
+                  <div class="min-width-0">
+                    <div v-if="index === 0" class="home-next-match-tag">{{ t('home.nextMatch.next') }}</div>
+                    <div class="home-next-match-opponent">vs. {{ match.opponent }}</div>
+                    <div class="home-next-match-meta">
+                      <v-icon :icon="mdiCalendarOutline" size="12" />
+                      {{ match.date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}
+                      <template v-if="match.venueName">
+                        · <v-icon :icon="mdiMapMarkerOutline" size="12" />
+                        <span class="home-next-match-venue">{{ match.venueName }}</span>
+                      </template>
+                    </div>
+                  </div>
+                </RouterLink>
               </div>
+              <RouterLink
+                v-if="upcomingMatchesOverflowCount > 0"
+                :to="{ name: 'challenges' }"
+                class="home-next-match-overflow"
+              >
+                {{ t('home.nextMatch.more', { count: upcomingMatchesOverflowCount }) }}
+                <v-icon :icon="mdiChevronRight" size="14" />
+              </RouterLink>
+            </template>
+            <div v-else class="home-empty-block">
+              <div class="home-next-match-empty-icon">
+                <v-icon :icon="mdiCalendarBlankOutline" size="18" color="#94a3b8" />
+              </div>
+              <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
+              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
             </div>
           </v-card>
         </div>
@@ -854,47 +892,154 @@ onMounted(async () => {
   min-height: 96px;
 }
 
-.home-next-match-date {
-  width: 58px;
+.home-next-match-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
   flex-shrink: 0;
+}
+
+.home-next-match-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.home-next-match-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.home-next-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-next-match-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
   border-radius: 12px;
-  background: rgba(var(--v-theme-primary), 0.1);
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-next-match-row:hover {
+  background: #f8fafc;
+}
+
+.home-next-match-row--next {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.home-next-match-row--next:hover {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.home-next-match-date {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
+}
+
+.home-next-match-date--next {
+  background: rgba(22, 163, 74, 0.14);
 }
 
 .home-next-match-month {
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  color: rgb(var(--v-theme-primary));
   text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.home-next-match-date--next .home-next-match-month {
+  color: rgb(var(--v-theme-primary));
 }
 
 .home-next-match-day {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 22px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1;
+  color: #64748b;
+}
+
+.home-next-match-date--next .home-next-match-day {
   color: rgb(var(--v-theme-primary));
 }
 
+.home-next-match-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-primary));
+  margin-bottom: 1px;
+}
+
 .home-next-match-opponent {
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #0f172a;
-  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-next-match-meta {
-  font-size: 12.5px;
+  font-size: 11px;
   color: #64748b;
-  margin-top: 3px;
+  margin-top: 1px;
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.home-next-match-venue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-next-match-overflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 7px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-next-match-overflow:hover {
+  border-color: #94a3b8;
+  color: #475569;
 }
 
 .home-empty-block {
@@ -902,6 +1047,25 @@ onMounted(async () => {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+}
+
+.home-next-match .home-empty-block {
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.home-next-match-empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .home-standings-row {
