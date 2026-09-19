@@ -9,6 +9,7 @@ import {
   mdiChevronRight,
   mdiCheckCircleOutline,
   mdiCloseCircleOutline,
+  mdiMagnify,
   mdiMapMarkerOutline,
   mdiPlusOutline,
   mdiShieldOutline,
@@ -77,10 +78,13 @@ let heroRowResizeObserver: ResizeObserver | undefined
 
 onBeforeUnmount(() => {
   heroRowResizeObserver?.disconnect()
+  kpiRowResizeObserver?.disconnect()
   desktopRowMql.removeEventListener('change', recomputeHeroRowHeight)
+  desktopRowMql.removeEventListener('change', recomputeKpiRowHeight)
 })
 
 desktopRowMql.addEventListener('change', recomputeHeroRowHeight)
+desktopRowMql.addEventListener('change', recomputeKpiRowHeight)
 
 watch(
   () => heroRowEl.value,
@@ -93,6 +97,43 @@ watch(
     heroRowResizeObserver.observe(el)
     await nextTick()
     recomputeHeroRowHeight()
+  },
+)
+
+/* ---- Sidebar: stretch the activity panel flush with the row-b cards below.
+   Derived from the same measured heights as rowBCardStyle (plus the KPI
+   row), rather than re-measuring the main column directly - the main
+   column's own box size changes in lockstep with heroRowHeight/rowBCardStyle
+   one render later, so observing it directly races those updates. ---- */
+
+const ROW_GAP = 24
+
+const kpiRowEl = ref<HTMLElement | null>(null)
+const kpiRowHeight = ref<number | null>(null)
+
+const activityPanelStyle = computed(() => {
+  if (!kpiRowHeight.value || !heroRowHeight.value) return undefined
+  const rowBHeight = (heroRowHeight.value + ROW_B_EXTRA_HEIGHT) * ROW_B_HEIGHT_SCALE
+  return { height: `${kpiRowHeight.value + ROW_GAP + heroRowHeight.value + ROW_GAP + rowBHeight}px` }
+})
+
+function recomputeKpiRowHeight() {
+  kpiRowHeight.value = desktopRowMql.matches ? (kpiRowEl.value?.clientHeight ?? null) : null
+}
+
+let kpiRowResizeObserver: ResizeObserver | undefined
+
+watch(
+  () => kpiRowEl.value,
+  async (el) => {
+    if (!el) return
+    if (!kpiRowResizeObserver) {
+      kpiRowResizeObserver = new ResizeObserver(() => recomputeKpiRowHeight())
+    }
+    kpiRowResizeObserver.disconnect()
+    kpiRowResizeObserver.observe(el)
+    await nextTick()
+    recomputeKpiRowHeight()
   },
 )
 
@@ -352,7 +393,7 @@ onMounted(async () => {
       <div class="home-layout">
         <div class="home-main-col">
         <!-- KPI row -->
-        <div class="home-kpi-grid mb-6">
+        <div ref="kpiRowEl" class="home-kpi-grid mb-6">
           <v-card v-for="kpi in kpiCards" :key="kpi.key" border flat rounded="xl" class="pa-5 home-kpi-card">
             <div class="d-flex align-center justify-space-between mb-2">
               <span class="home-kpi-label">{{ kpi.label }}</span>
@@ -484,7 +525,10 @@ onMounted(async () => {
                 <v-icon :icon="mdiCalendarBlankOutline" size="18" color="#94a3b8" />
               </div>
               <span class="text-body-2 text-medium-emphasis">{{ t('home.nextMatch.empty') }}</span>
-              <RouterLink :to="{ name: 'teams' }" class="fp-btn fp-btn-solid">{{ t('home.browseTeams') }}</RouterLink>
+              <RouterLink :to="{ name: 'teams' }" class="home-next-match-cta">
+                <v-icon :icon="mdiMagnify" size="14" />
+                {{ t('home.browseTeams') }}
+              </RouterLink>
             </div>
           </v-card>
         </div>
@@ -568,8 +612,8 @@ onMounted(async () => {
         </div>
 
         <aside class="home-side-col">
-          <v-card border flat rounded="xl" class="pa-5 home-activity-panel">
-            <h2 class="home-panel-title mb-3">{{ t('home.activity.title') }}</h2>
+          <v-card border flat rounded="xl" class="pa-5 home-activity-panel" :style="activityPanelStyle">
+            <h2 class="home-panel-title mb-5">{{ t('home.activity.title') }}</h2>
 
             <div class="home-activity-scroll">
               <template v-if="activityEntries.length > 0">
@@ -610,18 +654,24 @@ onMounted(async () => {
   flex: 1 1 auto;
   max-width: 1200px;
   min-width: 0;
+  /* Never let the sidebar's own (unbounded) content height stretch this
+     column via home-layout's align-items - its height must stay purely a
+     function of its own rows, since activityPanelStyle measures it and
+     feeds that back into the sidebar card's explicit height. Without this,
+     the two feed off each other and both grow without bound. */
+  align-self: flex-start;
 }
 
 .home-side-col {
   flex: 0 0 340px;
   display: flex;
+  align-self: flex-start;
 }
 
 .home-activity-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 560px;
   min-height: 0;
   padding-top: 10px !important;
   background: #f8fafc !important;
@@ -913,6 +963,26 @@ onMounted(async () => {
 .home-teams-add:hover {
   border-color: #94a3b8;
   color: #475569;
+}
+
+.home-next-match-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px dashed #16a34a;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-next-match-cta:hover {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: #15803d;
+  color: #15803d;
 }
 
 .home-next-match {
