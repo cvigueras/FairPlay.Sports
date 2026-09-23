@@ -1089,4 +1089,52 @@ function goNext() {
   color: #64748b;
   max-width: 320px;
 }
+
+/* Below 600px the two-column grid (fixed 190px preview + 1fr controls)
+   squeezes the controls column to ~80-110px inside the dialog - titles
+   wrap, the colour-slot buttons crush and all 9 pattern icons stack one
+   per row. Stack to a single column instead, and size touch targets up a
+   touch; same treatment for the 1st and 2nd kit since both reuse these
+   classes. Desktop (>= 600px) keeps the grid untouched. */
+@media (max-width: 599px) {
+  .fp-kit-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fp-kit-preview-col {
+    align-items: center;
+  }
+
+  .fp-kit-preview-card {
+    min-height: 0;
+    width: 100%;
+  }
+
+  .fp-kit-swatch-row {
+    flex-direction: column;
+  }
+
+  .fp-kit-palette-swatch {
+    width: 34px;
+    height: 34px;
+  }
+
+  .fp-kit-pattern {
+    width: 60px;
+    height: 60px;
+  }
+
+  .fp-kit-toggle-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fp-kit-toggle-pill {
+    width: 100%;
+  }
+
+  .fp-kit-toggle-pill button {
+    flex: 1;
+  }
+}
 </style>
