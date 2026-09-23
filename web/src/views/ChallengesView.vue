@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import {
   mdiAlertOutline,
   mdiArrowDown,
@@ -29,6 +30,9 @@ const { t, locale } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 const challengesStore = useChallengesStore()
+// xs (< 600px) matches the CSS's own @media (max-width: 599px) breakpoint,
+// so the crest size switches in lockstep with the rest of the mobile layout.
+const { xs } = useDisplay()
 
 const loading = ref(true)
 const challenges = ref<Challenge[]>([])
@@ -300,7 +304,7 @@ onMounted(async () => {
 
               <div class="challenges-teams-row">
                 <div class="challenges-team-col">
-                  <TeamCrest :team="selected.homeTeam" :size="64" />
+                  <TeamCrest :team="selected.homeTeam" :size="xs ? 52 : 64" />
                   <div class="challenges-team-name">{{ selected.homeTeam.name }}</div>
                   <div class="challenges-team-tag">{{ t('challenges.list.home') }}</div>
                   <div class="challenges-team-classification">
@@ -312,7 +316,7 @@ onMounted(async () => {
                 </div>
                 <div class="challenges-vs">VS</div>
                 <div class="challenges-team-col">
-                  <TeamCrest :team="selected.awayTeam" :size="64" />
+                  <TeamCrest :team="selected.awayTeam" :size="xs ? 52 : 64" />
                   <div class="challenges-team-name">{{ selected.awayTeam.name }}</div>
                   <div class="challenges-team-tag">{{ t('challenges.list.away') }}</div>
                   <div class="challenges-team-classification">
@@ -941,6 +945,68 @@ onMounted(async () => {
 
   .challenges-detail-col {
     min-height: 480px;
+  }
+}
+
+/* Real phone widths: the 1100px breakpoint above only stacks list and detail,
+   it doesn't touch any internal sizing, so the team-vs-team row (two fixed
+   220px columns + 28px gap), the 2-column info/kits grids and the detail
+   panel's desktop padding all stay too wide for a ~390px screen. */
+@media (max-width: 599px) {
+  .challenges-list-col {
+    max-height: 320px;
+  }
+
+  .challenges-list-header {
+    padding: 16px 14px 12px;
+  }
+
+  .challenges-detail-scroll {
+    padding: 20px 16px;
+  }
+
+  .challenges-detail-scroll--actionable {
+    padding-bottom: 88px;
+  }
+
+  .challenges-teams-row {
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .challenges-team-col {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 150px;
+    gap: 6px;
+  }
+
+  /* The tags default to flex-shrink: 0 so they never get crushed in the
+     list row - here that made them wrap onto a second line instead
+     (and, with the two columns then different heights, the shorter
+     crest looked vertically offset against the other one). Let them
+     shrink and ellipsize instead, so both tags always stay side by side. */
+  .challenges-team-classification .challenges-tag {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .challenges-info-grid,
+  .challenges-kits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .challenges-actions-bar {
+    padding: 14px 16px;
+    justify-content: stretch;
+  }
+
+  .challenges-actions-bar .fp-btn {
+    flex: 1;
   }
 }
 </style>
