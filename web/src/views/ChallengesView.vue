@@ -982,8 +982,17 @@ onMounted(async () => {
     gap: 6px;
   }
 
-  .challenges-team-classification {
-    flex-wrap: wrap;
+  /* The tags default to flex-shrink: 0 so they never get crushed in the
+     list row - here that made them wrap onto a second line instead
+     (and, with the two columns then different heights, the shorter
+     crest looked vertically offset against the other one). Let them
+     shrink and ellipsize instead, so both tags always stay side by side. */
+  .challenges-team-classification .challenges-tag {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .challenges-info-grid,
