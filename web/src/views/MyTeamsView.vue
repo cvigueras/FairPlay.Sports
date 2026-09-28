@@ -860,32 +860,52 @@ async function confirmLeave() {
 }
 
 /* Mobile only (below Vuetify's `md` breakpoint, where the two columns stack
-   instead of sitting side by side): the desktop layout above pins the row to
-   the viewport height and hides its overflow so only .fp-team-list scrolls
-   internally. Stacked on one narrow column, that used to clip the team list
-   below the join form with no way to reach it - "no funciona el scroll para
-   abajo". Below `md` the row goes back to natural page height/scroll
-   instead; the join form (top, natural DOM order) collapses behind
-   .fp-join-mobile's toggle instead of .fp-join-card's always-open form, and
-   the accordion list replaces the always-open desktop team cards. */
+   instead of sitting side by side): the join/create controls (top, natural
+   DOM order) stay put while only the team list below scrolls, mirroring the
+   desktop row's own "only .fp-team-list scrolls" split. The join column gets
+   its own capped height + scroll instead of being left to grow freely -
+   unbounded, an expanded join form could eat the whole row and leave the
+   list with no space at all, reintroducing the old "no funciona el scroll
+   para abajo" bug where the list became unreachable. The join form
+   collapses behind .fp-join-mobile's toggle instead of .fp-join-card's
+   always-open form, and the accordion list replaces the always-open desktop
+   team cards. */
 @media (max-width: 959.98px) {
   .my-teams-container {
     padding-block: 16px;
   }
 
   .my-teams-row {
-    height: auto;
-    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    /* Vuetify's v-row defaults to flex-wrap: wrap. Left as is, the column
+       below can't fit both cols=12 columns within this fixed height, so the
+       second one (the team list) wraps into a new column-direction "line"
+       instead of stretching to fill it - one that ends up with no width to
+       render in, making the whole list disappear. */
+    flex-wrap: nowrap;
+    height: calc(100vh - 64px - 32px);
+    overflow: hidden;
+  }
+
+  /* !important: Vuetify's v-col always sets flex-shrink: 0 and a fixed
+     flex-basis (100% here, from cols="12") regardless of breakpoint - left
+     alone, that forces this column to claim the row's full height and
+     pushes .my-teams-list-col out of view entirely (clipped by the row's
+     own overflow: hidden), which is exactly how the list disappeared. */
+  .my-teams-join-col {
+    flex: 0 0 auto !important;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-top: 8px;
+    padding-bottom: 0;
   }
 
   .my-teams-list-col {
+    flex: 1 1 auto !important;
     height: auto;
+    min-height: 0;
     padding-top: 0;
-  }
-
-  .my-teams-join-col {
-    padding-top: 8px;
-    padding-bottom: 0;
   }
 
   .fp-join-card {
@@ -901,7 +921,19 @@ async function confirmLeave() {
   }
 
   .fp-team-accordion {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Without this, the lone .fp-accordion-card flex item shrinks to fit
+     .fp-team-accordion's constrained height instead of growing to its full
+     row-list height, and its own overflow: hidden (for rounded corners)
+     then clips the rest instead of leaving it for the parent to scroll to. */
+  .fp-accordion-card {
+    flex-shrink: 0;
   }
 }
 </style>
