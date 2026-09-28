@@ -8,9 +8,15 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build"
+    "type-check": "vue-tsc --build",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@mdi/js": "^7.4.47",
     "pinia": "^4.0.2",
     "vue": "^3.5.40",
@@ -19,6 +25,8 @@
     "vuetify": "^4.2.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2",
     "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^24.13.3",
