@@ -7,6 +7,8 @@ import {
   mdiArrowDown,
   mdiArrowUp,
   mdiCalendarOutline,
+  mdiChevronLeft,
+  mdiChevronRight,
   mdiDirections,
   mdiMapMarkerOutline,
   mdiSwordCross,
@@ -156,6 +158,27 @@ const selected = computed(
   () => filteredItems.value.find((i) => i.challenge.id === selectedId.value) ?? filteredItems.value[0] ?? null,
 )
 
+/** Mobile only (see the challenges-detail-nav-arrow buttons below): step
+ *  through filteredItems without the row list, which a phone screen has no
+ *  room to show alongside the detail. */
+const selectedIndex = computed(() =>
+  selected.value ? filteredItems.value.findIndex((i) => i.challenge.id === selected.value!.challenge.id) : -1,
+)
+const hasPrevChallenge = computed(() => selectedIndex.value > 0)
+const hasNextChallenge = computed(
+  () => selectedIndex.value >= 0 && selectedIndex.value < filteredItems.value.length - 1,
+)
+
+function goToPrevChallenge(): void {
+  if (!hasPrevChallenge.value) return
+  selectedId.value = filteredItems.value[selectedIndex.value - 1]?.challenge.id ?? null
+}
+
+function goToNextChallenge(): void {
+  if (!hasNextChallenge.value) return
+  selectedId.value = filteredItems.value[selectedIndex.value + 1]?.challenge.id ?? null
+}
+
 const tabs = computed(() => [
   { key: 'all' as const, label: t('challenges.list.tabAll') },
   { key: 'sent' as const, label: t('challenges.list.tabSent') },
@@ -293,13 +316,41 @@ onMounted(async () => {
           <div v-if="selected" class="challenges-detail-col">
             <div class="challenges-detail-scroll" :class="{ 'challenges-detail-scroll--actionable': selected.actionable }">
               <div class="challenges-detail-header">
-                <span class="challenges-status-pill challenges-status-pill--lg" :style="selected.statusStyle">
-                  {{ t(`challenges.status.${selected.challenge.status}`) }}
-                </span>
-                <span class="challenges-detail-direction">
-                  <v-icon :icon="selected.direction === 'sent' ? mdiArrowUp : mdiArrowDown" size="13" />
-                  {{ t(selected.direction === 'sent' ? 'challenges.list.directionSent' : 'challenges.list.directionReceived') }}
-                </span>
+                <!-- Mobile only (see the max-width: 599px rules below): steps
+                     through filteredItems, replacing the row list a phone
+                     screen has no room to keep alongside the detail. Docked
+                     in this always-visible header row (not floating over the
+                     scrollable body below) so they never cover any text or
+                     images. -->
+                <button
+                  type="button"
+                  class="challenges-detail-nav-arrow challenges-detail-nav-arrow--prev"
+                  :disabled="!hasPrevChallenge"
+                  :aria-label="t('challenges.list.previous')"
+                  @click="goToPrevChallenge"
+                >
+                  <v-icon :icon="mdiChevronLeft" size="20" />
+                </button>
+
+                <div class="challenges-detail-header-info">
+                  <span class="challenges-status-pill challenges-status-pill--lg" :style="selected.statusStyle">
+                    {{ t(`challenges.status.${selected.challenge.status}`) }}
+                  </span>
+                  <span class="challenges-detail-direction">
+                    <v-icon :icon="selected.direction === 'sent' ? mdiArrowUp : mdiArrowDown" size="13" />
+                    {{ t(selected.direction === 'sent' ? 'challenges.list.directionSent' : 'challenges.list.directionReceived') }}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  class="challenges-detail-nav-arrow challenges-detail-nav-arrow--next"
+                  :disabled="!hasNextChallenge"
+                  :aria-label="t('challenges.list.next')"
+                  @click="goToNextChallenge"
+                >
+                  <v-icon :icon="mdiChevronRight" size="20" />
+                </button>
               </div>
 
               <div class="challenges-teams-row">
@@ -680,6 +731,13 @@ onMounted(async () => {
   color: #94a3b8;
 }
 
+/* Mobile only (see the max-width: 599px rules below): hidden and takes no
+   space on desktop, where the row list beside the detail already lets the
+   user pick a challenge directly. */
+.challenges-detail-nav-arrow {
+  display: none;
+}
+
 .challenges-detail-col {
   flex: 1 1 auto;
   min-width: 0;
@@ -709,6 +767,16 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   margin-bottom: 24px;
+}
+
+/* Groups the status pill + direction text as one flex item, so the mobile
+   nav arrows (see the max-width: 599px rules below) can sit at the header's
+   own far edges via justify-content: space-between without splitting the
+   two apart. */
+.challenges-detail-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .challenges-detail-direction {
@@ -954,11 +1022,52 @@ onMounted(async () => {
    panel's desktop padding all stay too wide for a ~390px screen. */
 @media (max-width: 599px) {
   .challenges-list-col {
-    max-height: 320px;
+    max-height: none;
+  }
+
+  /* The row list duplicated what the detail panel below already shows for
+     the current filter/tab selection, and had no room to earn its keep on a
+     phone screen - drop it, keeping just the title/tabs/team filter header. */
+  .challenges-list-scroll {
+    display: none;
   }
 
   .challenges-list-header {
     padding: 16px 14px 12px;
+    border-bottom: none;
+  }
+
+  /* Steps through filteredItems in place of the row list dropped above.
+     Docked at the header's own edges (space-between, with the pill+direction
+     group in the middle) instead of floating over the scrollable body below
+     - that way they never end up on top of any text or image, whatever the
+     scroll position. */
+  .challenges-detail-header {
+    justify-content: space-between;
+  }
+
+  .challenges-detail-nav-arrow {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+  }
+
+  .challenges-detail-nav-arrow:hover:not(:disabled) {
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+
+  .challenges-detail-nav-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   .challenges-detail-scroll {
