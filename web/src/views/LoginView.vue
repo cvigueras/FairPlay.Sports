@@ -611,13 +611,16 @@ async function handleRegisterSubmit() {
        flex-end), its own box still covers the empty space above that
        content, over .login-hero's brand row. That silently ate every click
        aimed at .login-hero__lang there, so the button looked dead. Passing
-       clicks through the empty area and re-enabling them on the actual
-       form/footer content (v-theme-provider's own wrapper) fixes it without
-       otherwise changing the layout. */
+       clicks through the empty area and re-enabling them on .login-panel's
+       actual children fixes it without otherwise changing the layout.
+       v-theme-provider itself renders no wrapper element here (no
+       withBackground prop), so its direct children - the mobile v-menu (not
+       rendered; desktop-only), .login-panel__form and .login-panel__footer -
+       are the real, styleable targets. */
     pointer-events: none;
   }
 
-  .login-panel > .v-theme-provider {
+  .login-panel > * {
     pointer-events: auto;
   }
 
