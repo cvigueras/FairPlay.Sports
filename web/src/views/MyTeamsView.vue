@@ -675,14 +675,18 @@ async function confirmLeave() {
   padding-block: 0;
 }
 
-/* Pinned to the viewport height below the app bar (64px) - there's no
-   pagination to cap the list at a guessed height, so it may as well use
-   all the room the window actually gives it. A fixed `height` (not
-   `min-height`) plus `overflow: hidden` keeps the row itself, and the join
-   form beside the list, from ever growing past that and scrolling the
-   whole page - only .fp-team-list's own overflow scrolls. */
+/* Pinned to the viewport height below the app bar - there's no pagination to
+   cap the list at a guessed height, so it may as well use all the room the
+   window actually gives it. `100dvh` (not `100vh`) and Vuetify's own
+   `--v-layout-top` (not a hardcoded 64px) match the pattern StandingsView/
+   TeamsView already use, since plain `100vh` is taller than the real
+   visible area on mobile browsers (it ignores the address bar), which was
+   silently creating the outer page scroll this was supposed to prevent. A
+   fixed `height` (not `min-height`) plus `overflow: hidden` keeps the row
+   itself, and the join form beside the list, from ever growing past that
+   and scrolling the whole page - only .fp-team-list's own overflow scrolls. */
 .my-teams-row {
-  height: calc(100vh - 64px);
+  height: calc(100dvh - var(--v-layout-top, 64px));
   overflow: hidden;
 }
 
@@ -691,7 +695,7 @@ async function confirmLeave() {
    0), so the column is pinned to the same explicit height as the row
    instead of depending on stretch to propagate it down. */
 .my-teams-list-col {
-  height: calc(100vh - 64px);
+  height: calc(100dvh - var(--v-layout-top, 64px));
   min-height: 0;
 }
 
@@ -884,7 +888,12 @@ async function confirmLeave() {
        instead of stretching to fill it - one that ends up with no width to
        render in, making the whole list disappear. */
     flex-wrap: nowrap;
-    height: calc(100vh - 64px - 32px);
+    /* 100dvh (not 100vh) + Vuetify's own --v-layout-top (not a hardcoded
+       64px), matching StandingsView/TeamsView - plain 100vh counts the
+       space behind a mobile browser's address bar as visible, so the row
+       was actually taller than the real viewport, quietly pushing the outer
+       page into its own scroll on top of .fp-team-accordion's. */
+    height: calc(100dvh - var(--v-layout-top, 64px) - 32px);
     overflow: hidden;
   }
 
@@ -926,6 +935,12 @@ async function confirmLeave() {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    /* On the scroll container itself (not a margin on something fixed
+       outside it), so the breathing room only comes into view once you've
+       actually scrolled to the last team - a margin out here would just be
+       dead space shown from the very first paint regardless of scroll
+       position. */
+    padding-bottom: 16px;
   }
 
   /* Without this, the lone .fp-accordion-card flex item shrinks to fit
