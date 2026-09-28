@@ -36,7 +36,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          # Matches web/package.json's engines field - the Capacitor CLI
+          # (v8) hard-requires Node >=22 and refuses to run on older ones.
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
