@@ -15,6 +15,7 @@ import {
   mdiPlusOutline,
   mdiShieldOutline,
   mdiSwordCross,
+  mdiTrophyOutline,
 } from '@mdi/js'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
@@ -82,6 +83,12 @@ const activityPanelOpen = ref(false)
 const showTeamsContent = computed(() => !isMobile.value || teamsPanelOpen.value)
 const showStandingsContent = computed(() => !isMobile.value || standingsPanelOpen.value)
 const showActivityContent = computed(() => !isMobile.value || activityPanelOpen.value)
+
+/** Mobile only: true while a row-B accordion is closed, so its card can drop
+ *  the extra bottom padding/margin that only made sense to keep the open
+ *  content from feeling cramped. */
+const teamsCollapsed = computed(() => isMobile.value && !teamsPanelOpen.value)
+const standingsCollapsed = computed(() => isMobile.value && !standingsPanelOpen.value)
 
 const ROW_B_HEIGHT_SCALE = 0.85
 
@@ -278,6 +285,16 @@ const upcomingMatchesOverflowCount = computed(() =>
   Math.max(0, upcomingMatches.value.length - UPCOMING_MATCHES_VISIBLE),
 )
 
+/** Mobile only: the card collapses to just the single closest-by-date match
+ *  (upcomingMatches is already sorted ascending, so that's index 0) instead
+ *  of the desktop's short list. */
+const displayedUpcomingMatches = computed(() =>
+  isMobile.value ? upcomingMatches.value.slice(0, 1) : visibleUpcomingMatches.value,
+)
+const displayedUpcomingMatchesOverflowCount = computed(() =>
+  isMobile.value ? Math.max(0, upcomingMatches.value.length - 1) : upcomingMatchesOverflowCount.value,
+)
+
 /* ---- Standings mini table ----------------------------------------------------- */
 
 const rankedTeamCards = computed(() =>
@@ -406,10 +423,9 @@ onMounted(async () => {
       <div class="home-layout">
         <div class="home-main-col">
         <!-- KPI row -->
-        <div ref="kpiRowEl" class="home-kpi-grid mb-6">
+        <div v-if="!isMobile" ref="kpiRowEl" class="home-kpi-grid mb-6">
           <v-card
             v-for="kpi in kpiCards"
-            v-show="!isMobile || (kpi.key !== 'won' && kpi.key !== 'lost')"
             :key="kpi.key"
             border
             flat
@@ -500,7 +516,7 @@ onMounted(async () => {
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 home-next-match">
-            <div class="home-next-match-header">
+            <div v-if="!isMobile" class="home-next-match-header">
               <h2>{{ t('home.nextMatch.title') }}</h2>
               <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#4F46E5')">
                 {{ upcomingMatches.length }}
@@ -510,7 +526,7 @@ onMounted(async () => {
             <template v-if="upcomingMatches.length > 0">
               <div class="home-next-match-list">
                 <RouterLink
-                  v-for="(match, index) in visibleUpcomingMatches"
+                  v-for="(match, index) in displayedUpcomingMatches"
                   :key="match.id"
                   :to="{ name: 'challenges' }"
                   class="home-next-match-row"
@@ -537,11 +553,11 @@ onMounted(async () => {
                 </RouterLink>
               </div>
               <RouterLink
-                v-if="upcomingMatchesOverflowCount > 0"
+                v-if="displayedUpcomingMatchesOverflowCount > 0"
                 :to="{ name: 'challenges' }"
                 class="home-next-match-overflow"
               >
-                {{ t('home.nextMatch.more', { count: upcomingMatchesOverflowCount }) }}
+                {{ t('home.nextMatch.more', { count: displayedUpcomingMatchesOverflowCount }) }}
                 <v-icon :icon="mdiChevronRight" size="14" />
               </RouterLink>
             </template>
@@ -560,15 +576,26 @@ onMounted(async () => {
 
         <!-- Row B: teams + standings -->
         <div class="home-row-b">
-          <v-card border flat rounded="xl" class="pa-5 home-row-b-card home-teams-panel" :style="rowBCardStyle">
+          <v-card
+            border
+            flat
+            rounded="xl"
+            class="pa-5 home-row-b-card home-teams-panel"
+            :class="{ 'home-row-b-card--collapsed': teamsCollapsed }"
+            :style="rowBCardStyle"
+          >
             <h2 v-if="isMobile" class="home-panel-toggle-h2">
               <button
                 type="button"
                 class="home-teams-header home-panel-toggle"
+                :class="{ 'home-teams-header--collapsed': teamsCollapsed }"
                 :aria-expanded="teamsPanelOpen"
                 @click="teamsPanelOpen = !teamsPanelOpen"
               >
                 <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                  <span class="home-panel-toggle-icon" :style="tonalStyle('#4F46E5')">
+                    <v-icon :icon="mdiShieldOutline" size="13" color="#4F46E5" />
+                  </span>
                   <span class="home-panel-toggle-title">{{ t('home.myTeams.title') }}</span>
                   <span v-if="teamCards.length > 0" class="home-teams-count" :style="tonalStyle('#4F46E5')">
                     {{ teamCards.length }}
@@ -627,15 +654,27 @@ onMounted(async () => {
             </template>
           </v-card>
 
-          <v-card border flat rounded="xl" class="pa-5 home-row-b-card" :style="rowBCardStyle">
-            <h2 v-if="isMobile" class="home-panel-toggle-h2 mb-3">
+          <v-card
+            border
+            flat
+            rounded="xl"
+            class="pa-5 home-row-b-card"
+            :class="{ 'home-row-b-card--collapsed': standingsCollapsed }"
+            :style="rowBCardStyle"
+          >
+            <h2 v-if="isMobile" class="home-panel-toggle-h2" :class="{ 'mb-3': !standingsCollapsed }">
               <button
                 type="button"
                 class="home-panel-header-row home-panel-toggle"
                 :aria-expanded="standingsPanelOpen"
                 @click="standingsPanelOpen = !standingsPanelOpen"
               >
-                <span class="home-panel-toggle-title">{{ t('home.standings.title') }}</span>
+                <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                  <span class="home-panel-toggle-icon" :style="tonalStyle('#C9A227')">
+                    <v-icon :icon="mdiTrophyOutline" size="13" color="#C9A227" />
+                  </span>
+                  <span class="home-panel-toggle-title">{{ t('home.standings.title') }}</span>
+                </span>
                 <v-icon
                   :icon="mdiChevronDown"
                   size="18"
@@ -648,7 +687,7 @@ onMounted(async () => {
               <h2 class="home-panel-title">{{ t('home.standings.title') }}</h2>
             </div>
 
-            <div v-if="showStandingsContent" class="home-activity-scroll">
+            <div v-if="showStandingsContent" class="home-activity-scroll home-standings-body">
               <template v-if="rankedTeamCards.length > 0">
                 <div class="home-standings-row home-standings-head">
                   <span>{{ t('home.standings.position') }}</span>
@@ -677,7 +716,7 @@ onMounted(async () => {
         </div>
         </div>
 
-        <aside class="home-side-col">
+        <aside v-if="!isMobile" class="home-side-col">
           <v-card border flat rounded="xl" class="pa-5 home-activity-panel" :style="activityPanelStyle">
             <h2 v-if="isMobile" class="home-panel-toggle-h2 mb-5">
               <button
@@ -811,6 +850,16 @@ onMounted(async () => {
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
+}
+
+.home-panel-toggle-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .home-panel-chevron {
@@ -1368,6 +1417,17 @@ onMounted(async () => {
   padding-top: 10px !important;
 }
 
+/* Mobile only (isMobile also gates teamsCollapsed/standingsCollapsed): a
+   closed accordion shows nothing but its header row, so the padding/margin
+   that gave the open content room to breathe is just dead space here. */
+.home-row-b-card--collapsed {
+  padding-bottom: 10px !important;
+}
+
+.home-teams-header--collapsed {
+  margin-bottom: 0;
+}
+
 .home-activity-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -1536,6 +1596,18 @@ onMounted(async () => {
 
   .home-hero-stat-icon {
     display: none;
+  }
+
+  /* An open accordion's header sits right above its body here, with none of
+     the desktop row-b-card's own top padding in between (that's still
+     spoken for by the toggle button) - so the body needs its own margin to
+     stop feeling glued to the title. A closed accordion never renders this
+     element at all (showTeamsContent/showStandingsContent go false), so it
+     can't add height there. */
+  .home-teams-list,
+  .home-teams-panel .home-empty-block,
+  .home-standings-body {
+    margin-top: 12px;
   }
 
   .home-teams-list {

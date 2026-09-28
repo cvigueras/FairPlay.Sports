@@ -605,6 +605,23 @@ async function handleRegisterSubmit() {
        of an uneven left/right margin (measured: 22px left, 32px right)
        when nothing was even scrolling. */
     overflow-y: auto;
+    /* .login-hero and .login-panel share the same grid cell above, each at
+       the full cell height - .login-panel paints on top (later in the DOM),
+       so even though its content hugs the bottom (justify-content:
+       flex-end), its own box still covers the empty space above that
+       content, over .login-hero's brand row. That silently ate every click
+       aimed at .login-hero__lang there, so the button looked dead. Passing
+       clicks through the empty area and re-enabling them on .login-panel's
+       actual children fixes it without otherwise changing the layout.
+       v-theme-provider itself renders no wrapper element here (no
+       withBackground prop), so its direct children - the mobile v-menu (not
+       rendered; desktop-only), .login-panel__form and .login-panel__footer -
+       are the real, styleable targets. */
+    pointer-events: none;
+  }
+
+  .login-panel > * {
+    pointer-events: auto;
   }
 
   .login-hero__brand {

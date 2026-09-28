@@ -81,11 +81,12 @@
   "challenges": {
     "list": {
       "title": "Desafíos",
-      "countSummary": "{count} desafíos · {pending} pendientes",
       "tabAll": "Todos",
       "tabSent": "Enviados",
       "tabReceived": "Recibidos",
       "filterTeam": "Filtrar por equipo",
+      "previous": "Desafío anterior",
+      "next": "Siguiente desafío",
       "empty": "No tienes desafíos todavía.",
       "emptyFiltered": "No hay desafíos en esta pestaña.",
       "loadFailed": "No se han podido cargar tus desafíos.",

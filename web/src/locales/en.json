@@ -81,11 +81,12 @@
   "challenges": {
     "list": {
       "title": "Challenges",
-      "countSummary": "{count} challenges · {pending} pending",
       "tabAll": "All",
       "tabSent": "Sent",
       "tabReceived": "Received",
       "filterTeam": "Filter by team",
+      "previous": "Previous challenge",
+      "next": "Next challenge",
       "empty": "You don't have any challenges yet.",
       "emptyFiltered": "No challenges in this tab.",
       "loadFailed": "We couldn't load your challenges.",
