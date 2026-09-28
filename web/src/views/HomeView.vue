@@ -677,7 +677,7 @@ onMounted(async () => {
               <h2 class="home-panel-title">{{ t('home.standings.title') }}</h2>
             </div>
 
-            <div v-if="showStandingsContent" class="home-activity-scroll">
+            <div v-if="showStandingsContent" class="home-activity-scroll home-standings-body">
               <template v-if="rankedTeamCards.length > 0">
                 <div class="home-standings-row home-standings-head">
                   <span>{{ t('home.standings.position') }}</span>
@@ -1586,6 +1586,18 @@ onMounted(async () => {
 
   .home-hero-stat-icon {
     display: none;
+  }
+
+  /* An open accordion's header sits right above its body here, with none of
+     the desktop row-b-card's own top padding in between (that's still
+     spoken for by the toggle button) - so the body needs its own margin to
+     stop feeling glued to the title. A closed accordion never renders this
+     element at all (showTeamsContent/showStandingsContent go false), so it
+     can't add height there. */
+  .home-teams-list,
+  .home-teams-panel .home-empty-block,
+  .home-standings-body {
+    margin-top: 12px;
   }
 
   .home-teams-list {
