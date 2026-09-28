@@ -329,7 +329,7 @@ onMounted(async () => {
                   :aria-label="t('challenges.list.previous')"
                   @click="goToPrevChallenge"
                 >
-                  <v-icon :icon="mdiChevronLeft" size="20" />
+                  <v-icon :icon="mdiChevronLeft" size="24" />
                 </button>
 
                 <div class="challenges-detail-header-info">
@@ -349,7 +349,7 @@ onMounted(async () => {
                   :aria-label="t('challenges.list.next')"
                   @click="goToNextChallenge"
                 >
-                  <v-icon :icon="mdiChevronRight" size="20" />
+                  <v-icon :icon="mdiChevronRight" size="24" />
                 </button>
               </div>
 
@@ -784,6 +784,7 @@ onMounted(async () => {
   align-items: center;
   gap: 4px;
   font-size: 12px;
+  font-weight: 700;
   color: #64748b;
 }
 
@@ -839,7 +840,7 @@ onMounted(async () => {
 
 .challenges-vs {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #cbd5e1;
 }
@@ -1061,8 +1062,8 @@ onMounted(async () => {
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
