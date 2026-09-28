@@ -1,0 +1,102 @@
+name: iOS (simulator build)
+
+# No Apple Developer account / code signing yet (see capacitor.config.ts),
+# so this only proves the native iOS project builds and actually launches -
+# it can't produce a signed .ipa for a real device or TestFlight. Scoped to
+# web/** changes (plus manual runs) since macOS runners are far slower/
+# pricier than Linux ones and nothing here depends on the .NET backend.
+on:
+  push:
+    paths:
+      - "web/**"
+      - ".github/workflows/ios-simulator.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/ios-simulator.yml"
+  workflow_dispatch:
+
+jobs:
+  ios-simulator-build:
+    name: Build and boot in iOS Simulator (unsigned)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          # Matches web/package.json's engines field - the Capacitor CLI
+          # (v8) hard-requires Node >=22 and refuses to run on older ones.
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and build the web app
+        run: npm run build
+
+      - name: Sync the iOS native project
+        run: npx cap sync ios
+
+      # Diagnostic: Capacitor's iOS template ships no committed .xcscheme
+      # (Xcode autocreates one), so this prints the real scheme/target names
+      # in the log - if the build step below ever fails because "App" isn't
+      # a valid scheme, this is where to find the actual name to use instead.
+      - name: List available schemes
+        run: xcodebuild -list -project ios/App/App.xcodeproj
+
+      - name: Build for the iOS Simulator (unsigned)
+        working-directory: web/ios/App
+        run: |
+          xcodebuild build \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/build" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Boot a simulator and launch the app
+        working-directory: web/ios/App
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/build/Build/Products/Debug-iphonesimulator/App.app"
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP_PATH/Info.plist")
+
+          # Runner-provided simulators vary by image version - pick whatever
+          # iPhone is already available instead of hardcoding one that might
+          # not exist on this runner.
+          DEVICE_UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | test("iPhone"))][0].udid')
+
+          xcrun simctl boot "$DEVICE_UDID"
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+          xcrun simctl install "$DEVICE_UDID" "$APP_PATH"
+          xcrun simctl launch "$DEVICE_UDID" "$BUNDLE_ID"
+
+          # Give the WebView a moment to render before capturing proof it's
+          # actually on screen, not just that the process launched.
+          sleep 8
+          xcrun simctl io "$DEVICE_UDID" screenshot "$RUNNER_TEMP/ios-simulator-screenshot.png"
+
+      - name: Upload simulator screenshot
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ios-simulator-screenshot
+          path: ${{ runner.temp }}/ios-simulator-screenshot.png
+          if-no-files-found: warn
