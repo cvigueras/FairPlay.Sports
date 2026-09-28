@@ -677,7 +677,7 @@ onMounted(async () => {
         </div>
         </div>
 
-        <aside class="home-side-col">
+        <aside v-if="!isMobile" class="home-side-col">
           <v-card border flat rounded="xl" class="pa-5 home-activity-panel" :style="activityPanelStyle">
             <h2 v-if="isMobile" class="home-panel-toggle-h2 mb-5">
               <button
