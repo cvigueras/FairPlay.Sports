@@ -285,6 +285,16 @@ const upcomingMatchesOverflowCount = computed(() =>
   Math.max(0, upcomingMatches.value.length - UPCOMING_MATCHES_VISIBLE),
 )
 
+/** Mobile only: the card collapses to just the single closest-by-date match
+ *  (upcomingMatches is already sorted ascending, so that's index 0) instead
+ *  of the desktop's short list. */
+const displayedUpcomingMatches = computed(() =>
+  isMobile.value ? upcomingMatches.value.slice(0, 1) : visibleUpcomingMatches.value,
+)
+const displayedUpcomingMatchesOverflowCount = computed(() =>
+  isMobile.value ? Math.max(0, upcomingMatches.value.length - 1) : upcomingMatchesOverflowCount.value,
+)
+
 /* ---- Standings mini table ----------------------------------------------------- */
 
 const rankedTeamCards = computed(() =>
@@ -506,7 +516,7 @@ onMounted(async () => {
           </v-card>
 
           <v-card border flat rounded="xl" class="pa-5 home-next-match">
-            <div class="home-next-match-header">
+            <div v-if="!isMobile" class="home-next-match-header">
               <h2>{{ t('home.nextMatch.title') }}</h2>
               <span v-if="upcomingMatches.length > 0" class="home-next-match-count" :style="tonalStyle('#4F46E5')">
                 {{ upcomingMatches.length }}
@@ -516,7 +526,7 @@ onMounted(async () => {
             <template v-if="upcomingMatches.length > 0">
               <div class="home-next-match-list">
                 <RouterLink
-                  v-for="(match, index) in visibleUpcomingMatches"
+                  v-for="(match, index) in displayedUpcomingMatches"
                   :key="match.id"
                   :to="{ name: 'challenges' }"
                   class="home-next-match-row"
@@ -543,11 +553,11 @@ onMounted(async () => {
                 </RouterLink>
               </div>
               <RouterLink
-                v-if="upcomingMatchesOverflowCount > 0"
+                v-if="displayedUpcomingMatchesOverflowCount > 0"
                 :to="{ name: 'challenges' }"
                 class="home-next-match-overflow"
               >
-                {{ t('home.nextMatch.more', { count: upcomingMatchesOverflowCount }) }}
+                {{ t('home.nextMatch.more', { count: displayedUpcomingMatchesOverflowCount }) }}
                 <v-icon :icon="mdiChevronRight" size="14" />
               </RouterLink>
             </template>
