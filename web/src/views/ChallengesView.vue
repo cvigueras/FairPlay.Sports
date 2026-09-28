@@ -803,9 +803,19 @@ onMounted(async () => {
   width: 220px;
 }
 
+/* A long name wraps to 2 lines while the other team's stays on 1 - reserving
+   room for 2 lines here keeps both .challenges-team-col columns the same
+   height, so .challenges-teams-row's align-items: center (which centers
+   each column as a whole) doesn't leave one crest and its tags sitting
+   lower than the other's. */
 .challenges-team-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14.5px;
   font-weight: 700;
+  line-height: 18px;
+  min-height: 36px;
   color: #0f172a;
   text-align: center;
 }
