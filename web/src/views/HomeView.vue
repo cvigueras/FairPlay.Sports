@@ -413,10 +413,9 @@ onMounted(async () => {
       <div class="home-layout">
         <div class="home-main-col">
         <!-- KPI row -->
-        <div ref="kpiRowEl" class="home-kpi-grid mb-6">
+        <div v-if="!isMobile" ref="kpiRowEl" class="home-kpi-grid mb-6">
           <v-card
             v-for="kpi in kpiCards"
-            v-show="!isMobile || (kpi.key !== 'won' && kpi.key !== 'lost')"
             :key="kpi.key"
             border
             flat
