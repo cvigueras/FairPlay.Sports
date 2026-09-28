@@ -131,8 +131,6 @@ const items = computed<ChallengeItem[]>(() =>
   }),
 )
 
-const pendingCount = computed(() => items.value.filter((i) => i.challenge.status === 'Pending').length)
-
 // Keeps the nav badge in sync with whatever this view just loaded or changed,
 // without a second fetch of its own - see stores/challenges.ts.
 watch(
@@ -242,8 +240,15 @@ onMounted(async () => {
           <!-- LEFT: list -->
           <div class="challenges-list-col">
             <div class="challenges-list-header">
-              <h1 class="challenges-title">{{ t('challenges.list.title') }}</h1>
-              <p class="challenges-count">{{ t('challenges.list.countSummary', { count: filteredItems.length, pending: pendingCount }) }}</p>
+              <div class="challenges-title-row">
+                <h1 class="challenges-title">{{ t('challenges.list.title') }}</h1>
+                <!-- Mobile only (see the max-width: 599px rules below): same
+                     source, colors and CSS as the nav-badge in AppShell.vue -
+                     the count summary line that used to sit here is gone, so
+                     this is the only place left to surface the pending
+                     count once the sidebar itself is off-screen. -->
+                <span v-if="challengesStore.pendingCount > 0" class="challenges-title-badge">{{ challengesStore.pendingCount }}</span>
+              </div>
               <div class="challenges-tabs">
                 <button
                   v-for="tabDef in tabs"
@@ -549,6 +554,13 @@ onMounted(async () => {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.challenges-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
 .challenges-title {
   margin: 0;
   font-size: 19px;
@@ -557,10 +569,10 @@ onMounted(async () => {
   font-family: 'Space Grotesk', sans-serif;
 }
 
-.challenges-count {
-  margin: 4px 0 14px;
-  font-size: 12.5px;
-  color: #64748b;
+/* Mobile only (see the max-width: 599px rules below) - hidden on desktop,
+   where the sidebar's own .nav-badge (AppShell.vue) already shows this. */
+.challenges-title-badge {
+  display: none;
 }
 
 .challenges-tabs {
@@ -1046,6 +1058,24 @@ onMounted(async () => {
   .challenges-list-header {
     padding: 16px 14px 12px;
     border-bottom: none;
+  }
+
+  /* Same source (challengesStore.pendingCount), color and CSS as
+     AppShell.vue's own .nav-badge, since the sidebar it normally sits in is
+     off-screen here. */
+  .challenges-title-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #4F46E5;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
   }
 
   /* Steps through filteredItems in place of the row list dropped above.

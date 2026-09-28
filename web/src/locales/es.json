@@ -81,7 +81,6 @@
   "challenges": {
     "list": {
       "title": "Desafíos",
-      "countSummary": "{count} desafíos · {pending} pendientes",
       "tabAll": "Todos",
       "tabSent": "Enviados",
       "tabReceived": "Recibidos",
