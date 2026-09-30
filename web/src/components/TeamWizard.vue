@@ -558,6 +558,7 @@ function goNext() {
             <template #label>
               {{ t('teams.venueStatus.badge') }}
               <v-icon :icon="mdiSoccerField" size="18" color="#2E7D32" class="ms-1" />
+              <span class="text-body-2 text-medium-emphasis ms-1">{{ t('teams.venueStatus.hint') }}</span>
             </template>
           </v-checkbox>
 

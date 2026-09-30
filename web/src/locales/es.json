@@ -193,7 +193,8 @@
       "badge": "Campo disponible",
       "enabled": "Tu equipo tiene el campo disponible: los demás lo verán en su ficha.",
       "disabled": "Tu equipo ya no aparece con el campo disponible.",
-      "failed": "No se ha podido actualizar el equipo."
+      "failed": "No se ha podido actualizar el equipo.",
+      "hint": "(si te desafían o desafías, dispones de campo, regido por unos días y horas libres)"
     },
     "newTeam": "Nuevo equipo"
   },
