@@ -24,4 +24,8 @@ public sealed record GetTeamsPageRequest
     public AgeCategory? Category { get; init; }
 
     public bool? Active { get; init; }
+
+    public bool? AcceptsChallenges { get; init; }
+
+    public bool? VenueAvailable { get; init; }
 }

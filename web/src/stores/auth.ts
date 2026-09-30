@@ -13,8 +13,13 @@ interface AuthResponse {
 
 export interface RegisterPayload {
   userName: string
+  firstName: string
+  lastName: string
   email: string
   password: string
+  primaryRole: TeamMemberRole
+  acceptedPrivacyPolicy: boolean
+  confirmedMinimumAge: boolean
 }
 
 /**

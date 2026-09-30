@@ -6,7 +6,7 @@ namespace FairPlay.Sports.Application.Teams.Create;
 
 public sealed record CreateTeamCommand(
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type,
     Division? Division,
@@ -27,4 +27,6 @@ public sealed record CreateTeamCommand(
     string? AlternateColorSecondary = null,
     KitPattern? AlternateKitPattern = null,
     string? ShortsColor = null,
-    string? AlternateShortsColor = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;
+    string? AlternateShortsColor = null,
+    bool AcceptsChallenges = false,
+    bool VenueAvailable = false) : IRequest<Result<TeamDto>>, ITeamWriteFields;

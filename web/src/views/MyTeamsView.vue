@@ -19,6 +19,8 @@ import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
+import { useCreateTeam, type NewTeamInput } from '@/composables/useCreateTeam'
+import { useEditTeam } from '@/composables/useEditTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
@@ -43,7 +45,7 @@ const teamDetails = ref<Record<string, Team>>({})
 const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
 const selectedTeam = ref<Team | null>(null)
-const joinRole = ref<TeamMemberRole | null>(null)
+const joinRole = ref<TeamMemberRole | null>(auth.currentUser?.primaryRole ?? null)
 /** Fixed to the account's username - joining a team always uses it, not a
  *  per-team nickname (that's what the create wizard's own name field is for). */
 const joinDisplayName = ref(auth.currentUser?.userName ?? '')
@@ -154,7 +156,7 @@ async function saveTeam() {
     ui.notify(t('profile.team.saved'), 'success')
     selectedTeamId.value = null
     selectedTeam.value = null
-    joinRole.value = null
+    joinRole.value = auth.currentUser?.primaryRole ?? null
     teamSearch.value = ''
     joinPanelOpen.value = false
   } catch (error) {
@@ -166,63 +168,31 @@ async function saveTeam() {
 
 /* ---- Create a new team (wizard) --------------------------------------- */
 
-const wizardOpen = ref(false)
-const creatingTeam = ref(false)
+const { wizardOpen, creating: creatingTeam, create: createTeam } = useCreateTeam()
 
-async function handleCreate({
-  payload,
-  role,
-  displayName,
-  crest,
-}: {
-  payload: CreateTeamPayload
-  role: TeamMemberRole
-  displayName: string
-  crest: File | null
-}) {
-  creatingTeam.value = true
-  try {
-    const created = await teamsApi.create(payload, auth.accessToken)
-    if (crest) await teamsApi.uploadCrest(created.id, crest, auth.accessToken)
-
-    const withCrest = { ...created, hasCrest: !!crest }
-    await auth.joinTeam(created.id, role, displayName)
-    teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
-    wizardOpen.value = false
-  } catch (error) {
-    ui.notify(error instanceof ApiError ? error.message : t('profile.team.createFailed'), 'error')
-  } finally {
-    creatingTeam.value = false
-  }
+async function handleCreate(input: NewTeamInput) {
+  const created = await createTeam(input)
+  if (created) teamDetails.value = { ...teamDetails.value, [created.id]: created }
 }
 
 /* ---- Edit a team ------------------------------------------------------------ */
 
-const editingTeamId = ref<string | null>(null)
-const editingTeam = computed(() =>
-  editingTeamId.value ? (teamDetails.value[editingTeamId.value] ?? null) : null,
-)
-const savingEdit = ref(false)
+const {
+  editing: editingTeam,
+  saving: savingEdit,
+  open: openEditTeam,
+  close: closeEdit,
+  update: updateTeam,
+} = useEditTeam()
 
 function openEdit(teamId: string) {
-  editingTeamId.value = teamId
+  const team = teamDetails.value[teamId]
+  if (team) openEditTeam(team)
 }
 
-async function handleUpdate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
-  if (!editingTeam.value) return
-  savingEdit.value = true
-  try {
-    const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
-    if (crest) await teamsApi.uploadCrest(updated.id, crest, auth.accessToken)
-
-    const withCrest = crest ? { ...updated, hasCrest: true } : updated
-    teamDetails.value = { ...teamDetails.value, [withCrest.id]: withCrest }
-    editingTeamId.value = null
-  } catch (error) {
-    ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
-  } finally {
-    savingEdit.value = false
-  }
+async function handleUpdate(input: { payload: CreateTeamPayload; crest: File | null }) {
+  const updated = await updateTeam(input)
+  if (updated) teamDetails.value = { ...teamDetails.value, [updated.id]: updated }
 }
 
 /* ---- Leave a team ------------------------------------------------------------ */
@@ -250,7 +220,7 @@ async function confirmLeave() {
   <v-main>
     <v-container v-if="user" class="my-teams-container">
       <!-- The page title moved to the breadcrumb (see AppShell). -->
-      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning mb-5">
+      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning justify-center text-center mb-5">
         {{ t('profile.activation.needsTeam') }}
       </div>
 
@@ -490,7 +460,7 @@ async function confirmLeave() {
                     <router-link
                       v-bind="tooltipProps"
                       :to="{ name: 'team-detail', params: { id: team.id } }"
-                      class="fp-icon-btn"
+                      class="fp-icon-btn fp-icon-btn--view"
                       :aria-label="t('profile.team.viewDetails')"
                       @click.stop
                     >
@@ -503,7 +473,7 @@ async function confirmLeave() {
                     <button
                       type="button"
                       v-bind="tooltipProps"
-                      class="fp-icon-btn"
+                      class="fp-icon-btn fp-icon-btn--edit"
                       :aria-label="t('profile.team.editTitle')"
                       @click="openEdit(team.id)"
                     >
@@ -601,14 +571,14 @@ async function confirmLeave() {
                   <div class="fp-accordion-actions">
                     <router-link
                       :to="{ name: 'team-detail', params: { id: team.id } }"
-                      class="fp-accordion-action"
+                      class="fp-accordion-action fp-accordion-action--view"
                       :aria-label="t('profile.team.viewDetails')"
                       @click.stop
                     >
                       <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
                       {{ t('profile.team.viewDetails') }}
                     </router-link>
-                    <button type="button" class="fp-accordion-action" @click="openEdit(team.id)">
+                    <button type="button" class="fp-accordion-action fp-accordion-action--edit" @click="openEdit(team.id)">
                       <v-icon :icon="mdiPencilOutline" size="18" />
                       {{ t('profile.team.editTitle') }}
                     </button>
@@ -638,7 +608,7 @@ async function confirmLeave() {
       :model-value="!!editingTeam"
       :initial="editingTeam"
       :loading="savingEdit"
-      @update:model-value="(open) => { if (!open) editingTeamId = null }"
+      @update:model-value="(open) => { if (!open) closeEdit() }"
       @update="handleUpdate"
     />
 
@@ -861,6 +831,17 @@ async function confirmLeave() {
 .fp-accordion-action--danger {
   color: rgb(var(--v-theme-error));
   border-color: #fecaca;
+}
+
+/* View details: the same blue as the "Ver detalles" button of the team list. */
+.fp-accordion-action--view {
+  color: #2196f3;
+  border-color: #2196f3;
+}
+
+.fp-accordion-action--edit {
+  color: #b45309;
+  border-color: #fcd34d;
 }
 
 /* Mobile only (below Vuetify's `md` breakpoint, where the two columns stack

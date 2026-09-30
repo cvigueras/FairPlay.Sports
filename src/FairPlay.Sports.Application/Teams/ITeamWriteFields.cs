@@ -10,7 +10,7 @@ namespace FairPlay.Sports.Application.Teams;
 public interface ITeamWriteFields
 {
     string Name { get; }
-    string Coach { get; }
+    string? Coach { get; }
     string City { get; }
 
     FootballType Type { get; }

@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
+import {
+  mdiCheck,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiClose,
+  mdiHandshakeOutline,
+  mdiImageOutline,
+  mdiSoccerField,
+} from '@mdi/js'
 import FlatField from '@/components/FlatField.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
+import OptionCard from '@/components/OptionCard.vue'
 import RolePills from '@/components/RolePills.vue'
 import { KIT_COLOR_PALETTE } from '@/lib/kitColors'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
+import { fullName } from '@/lib/userName'
 import {
   AGE_CATEGORIES,
   DIVISIONS,
@@ -41,6 +51,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const auth = useAuthStore()
+
+/** Who is creating the team: the field on step 1 shows their name, labelled with
+ *  the role they picked, and it is also the name they join the team under. */
+const myName = computed(() => fullName(auth.currentUser))
 
 /** Editing an existing team reuses this same wizard, pre-filled from
  *  `initial`, instead of founding a new one - so no member role to pick and
@@ -76,6 +90,8 @@ const model = reactive({
   alternateShortsColor: '#1e293b',
   alternateKitPattern: 'Plain' as KitPattern,
   noSecondKit: false,
+  acceptsChallenges: false,
+  venueAvailable: false,
   contactEmail: '',
   contactPhone: '',
   website: '',
@@ -107,7 +123,7 @@ function resetForm() {
   alternateKitColorSlot.value = 'primary'
   Object.assign(model, {
     name: '',
-    role: null,
+    role: auth.currentUser?.primaryRole ?? null,
     coach: '',
     city: '',
     type: null,
@@ -128,6 +144,8 @@ function resetForm() {
     alternateShortsColor: '#1e293b',
     alternateKitPattern: 'Plain',
     noSecondKit: false,
+    acceptsChallenges: false,
+    venueAvailable: false,
     contactEmail: '',
     contactPhone: '',
     website: '',
@@ -166,6 +184,8 @@ function applyInitial(team: Team) {
     alternateShortsColor: team.alternateShortsColor || '#1e293b',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
+    acceptsChallenges: team.acceptsChallenges,
+    venueAvailable: team.venueAvailable,
     contactEmail: team.contactEmail ?? '',
     contactPhone: team.contactPhone ?? '',
     website: team.website ?? '',
@@ -184,14 +204,10 @@ watch(
   },
 )
 
-/** Picking "Entrenador" as your own role means you ARE the team's coach, so
- *  the coach-name field just mirrors your account name and locks - picking
- *  any other role hands manual control of that field back. */
-watch(
-  () => model.role,
-  (role) => {
-    if (role === 'Coach') model.coach = auth.currentUser?.userName ?? ''
-  },
+/** The step-1 name field is labelled after the role picked ("Entrenador",
+ *  "Delegado"...), since it holds the creator's own name in that role. */
+const roleFieldLabel = computed(() =>
+  model.role ? t(`profile.team.memberRoles.${model.role}`) : t('profile.team.yourName'),
 )
 
 /** A plain shirt has no secondary colour to show, so the picker hides it and
@@ -247,7 +263,7 @@ const anyVenueField = computed(
     !!model.venueName.trim() || !!model.venueAddress.trim() || !!model.venueSurface || !!model.venueMapsUrl.trim(),
 )
 const STEP_FIELDS: Record<number, string[]> = {
-  1: ['name', 'role', 'coach', 'city', 'crest', 'type', 'division', 'category'],
+  1: ['name', 'role', 'city', 'crest', 'type', 'division', 'category'],
   2: ['venueName', 'venueAddress', 'venueSurface', 'venueMapsUrl', 'foundedYear'],
   3: ['colorPrimary', 'colorSecondary', 'shortsColor', 'kitPattern'],
   4: ['alternateColorPrimary', 'alternateColorSecondary', 'alternateShortsColor', 'alternateKitPattern'],
@@ -260,7 +276,6 @@ function validate(): boolean {
 
   if (!model.name.trim()) errors.name = required
   if (!isEdit.value && !model.role) errors.role = required
-  if (!model.coach.trim()) errors.coach = required
   if (!model.city.trim()) errors.city = required
   if (!isEdit.value && !crest.value) errors.crest = t('profile.team.crestRequired')
   if (!model.type) errors.type = required
@@ -332,7 +347,10 @@ function submit() {
   const name = model.name.trim()
   const payload: CreateTeamPayload = {
     name,
-    coach: model.coach.trim(),
+    // Creating: the creator's name is the coach only if they are the coach. Editing: as typed.
+    coach: isEdit.value ? trimmedOrUndefined(model.coach) : model.role === 'Coach' ? myName.value : undefined,
+    acceptsChallenges: model.acceptsChallenges,
+    venueAvailable: model.venueAvailable,
     city: model.city.trim(),
     type: model.type!,
     division: model.category === 'Aficionados' ? null : model.division,
@@ -356,7 +374,7 @@ function submit() {
     website: trimmedOrUndefined(model.website),
   }
   if (isEdit.value) emit('update', { payload, crest: crest.value })
-  else emit('submit', { payload, role: model.role!, displayName: name, crest: crest.value })
+  else emit('submit', { payload, role: model.role!, displayName: myName.value, crest: crest.value })
 }
 
 function goNext() {
@@ -433,14 +451,11 @@ function goNext() {
 
           <v-row dense>
             <v-col cols="12" sm="6">
-              <FlatField :label="t('profile.team.coach')" :error="errors.coach" required>
-                <input
-                  v-model="model.coach"
-                  class="fp-input"
-                  :class="{ 'fp-invalid': errors.coach }"
-                  type="text"
-                  :disabled="model.role === 'Coach'"
-                />
+              <FlatField v-if="!isEdit" :label="roleFieldLabel">
+                <input :value="myName" class="fp-input" type="text" disabled />
+              </FlatField>
+              <FlatField v-else :label="t('profile.team.coach')">
+                <input v-model="model.coach" class="fp-input" type="text" />
               </FlatField>
             </v-col>
             <v-col cols="12" sm="6">
@@ -476,6 +491,15 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <OptionCard
+            v-model="model.acceptsChallenges"
+            class="mt-4"
+            :title="t('teams.challengeStatus.badge')"
+            :description="t('teams.challengeStatus.hint')"
+            :icon="mdiHandshakeOutline"
+            color="#F44336"
+          />
         </template>
 
         <!-- Step 2: Campo, con la ficha del club debajo -->
@@ -539,6 +563,15 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <OptionCard
+            v-model="model.venueAvailable"
+            class="mt-4"
+            :title="t('teams.venueStatus.badge')"
+            :description="t('teams.venueStatus.hint')"
+            :icon="mdiSoccerField"
+            color="#2E7D32"
+          />
         </template>
 
         <!-- Step 3: 1ª equipación -->

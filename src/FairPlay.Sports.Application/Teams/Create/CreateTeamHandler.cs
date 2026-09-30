@@ -27,7 +27,9 @@ public sealed class CreateTeamHandler(ITeamRepository repository, IStandingRepos
             request.City,
             request.ToClassification(),
             _clock.UtcNow,
-            request.ToProfile());
+            request.ToProfile(),
+            request.AcceptsChallenges,
+            request.VenueAvailable);
 
         await _repository.AddAsync(team, cancellationToken);
 

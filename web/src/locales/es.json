@@ -174,8 +174,30 @@
       "loadFailed": "No se ha podido cargar este equipo.",
       "noVenue": "Este equipo todavía no ha indicado su campo.",
       "noProfile": "Este equipo todavía no ha añadido más datos de la ficha.",
-      "noContact": "Este equipo todavía no ha añadido datos de contacto."
-    }
+      "noContact": "Este equipo todavía no ha añadido datos de contacto.",
+      "squadTitle": "Directiva y plantilla",
+      "unassigned": "Sin asignar",
+      "playersTitle": "Jugadores ({n})",
+      "noPlayers": "Todavía no hay jugadores en este equipo.",
+      "membersFailed": "No se han podido cargar los miembros del equipo."
+    },
+    "challengeStatus": {
+      "button": "¡Desafíame!",
+      "badge": "Acepta cualquier desafío",
+      "enabled": "Tu equipo acepta desafíos: los demás lo verán en su ficha.",
+      "disabled": "Tu equipo ya no aparece como abierto a desafíos.",
+      "failed": "No se ha podido actualizar el equipo.",
+      "hint": "Tu equipo está abierto a aceptar cualquier desafío que le propongan."
+    },
+    "venueStatus": {
+      "button": "Campo disponible",
+      "badge": "Campo disponible",
+      "enabled": "Tu equipo tiene el campo disponible: los demás lo verán en su ficha.",
+      "disabled": "Tu equipo ya no aparece con el campo disponible.",
+      "failed": "No se ha podido actualizar el equipo.",
+      "hint": "(si te desafían o desafías, dispones de campo, regido por unos días y horas libres)"
+    },
+    "newTeam": "Nuevo equipo"
   },
   "standings": {
     "count": "{n} equipos",
@@ -206,15 +228,14 @@
     }
   },
   "validation": {
-    "userNameRequired": "El nombre de usuario es obligatorio.",
     "emailRequired": "El email es obligatorio.",
     "emailInvalid": "Introduce un email válido.",
     "passwordRequired": "La contraseña es obligatoria.",
     "passwordMinLength": "Debe tener al menos 8 caracteres.",
-    "passwordsMismatch": "Las contraseñas no coinciden."
+    "passwordsMismatch": "Las contraseñas no coinciden.",
+    "primaryRoleRequired": "Elige tu rol principal."
   },
   "login": {
-    "title": "Iniciar sesión",
     "subtitle": "Bienvenido de nuevo a FairPlay Sports",
     "heroEyebrow": "Fútbol · Partidos amistosos",
     "heroTitle": "Reta a otros equipos. Juega el partido.",
@@ -234,7 +255,6 @@
     "goRegister": "Regístrate"
   },
   "register": {
-    "title": "Crear cuenta",
     "subtitle": "Únete a FairPlay Sports",
     "userName": "Nombre de usuario",
     "userNamePlaceholder": "tu_usuario",
@@ -246,7 +266,15 @@
     "submitting": "Creando cuenta...",
     "failed": "No se ha podido completar el registro. Inténtalo de nuevo.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "goLogin": "Inicia sesión"
+    "goLogin": "Inicia sesión",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "primaryRole": "Tu rol principal",
+    "privacyPrefix": "He leído y acepto la",
+    "privacyLink": "política de privacidad",
+    "ageConfirm": "Confirmo que tengo 14 años o más.",
+    "aboutYou": "Sobre ti",
+    "yourAccount": "Tu cuenta"
   },
   "profile": {
     "logout": "Cerrar sesión",
@@ -257,7 +285,7 @@
       "viewProfile": "Ver perfil"
     },
     "activation": {
-      "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
+      "needsTeam": "Necesitas unirte a un equipo existente o crear uno nuevo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },
     "photo": {
       "change": "Cambiar foto",
@@ -267,7 +295,9 @@
     "account": {
       "title": "Información de la cuenta",
       "userName": "Nombre de usuario",
-      "email": "Email"
+      "email": "Email",
+      "fullName": "Nombre y apellidos",
+      "primaryRole": "Rol principal"
     },
     "status": {
       "active": "Cuenta activa",
@@ -427,12 +457,52 @@
         "back": "Atrás",
         "next": "Siguiente",
         "finish": "Crear equipo"
-      }
+      },
+      "yourName": "Tu nombre"
     }
   },
   "language": {
     "label": "Idioma",
     "es": "Español",
     "en": "Inglés"
+  },
+  "privacy": {
+    "title": "Política de privacidad",
+    "version": "Versión {version}",
+    "back": "Volver",
+    "sections": [
+      {
+        "h": "Responsable del tratamiento",
+        "p": "[NOMBRE O RAZÓN SOCIAL], NIF [NIF], con domicilio en [DIRECCIÓN]. Contacto para asuntos de privacidad: [EMAIL DE CONTACTO]."
+      },
+      {
+        "h": "Qué datos tratamos",
+        "p": "Nombre y apellidos, nombre de usuario, correo electrónico, contraseña (guardada cifrada, nunca en claro), rol principal (delegado, entrenador, presidente, cuerpo técnico o jugador), los equipos a los que perteneces, tu foto de perfil si decides subirla, y la fecha y versión de esta política que aceptaste."
+      },
+      {
+        "h": "Para qué los usamos y con qué base legal",
+        "p": "Crear y gestionar tu cuenta, permitirte formar parte de equipos y enviar o responder retos de partidos amistosos: es necesario para prestarte el servicio que solicitas (art. 6.1.b RGPD). Tu foto de perfil es opcional y se basa en tu consentimiento (art. 6.1.a), que otorgas al subirla y puedes retirar pidiendo su eliminación. Mantener la seguridad de la cuenta, prevenir abusos y conservar la prueba de que aceptaste esta política se basa en nuestro interés legítimo (art. 6.1.f)."
+      },
+      {
+        "h": "Edad mínima",
+        "p": "FairPlay Sports es solo para personas de 14 años o más. Al registrarte confirmas que cumples este requisito. Si detectamos que una cuenta pertenece a una persona menor de esa edad, la eliminaremos."
+      },
+      {
+        "h": "Quién puede ver tus datos",
+        "p": "Tu nombre, rol, equipos y foto pueden ser visibles para otros usuarios de la aplicación. Además, usamos proveedores que tratan datos por nuestra cuenta, con contrato de encargado del tratamiento: alojamiento en [PROVEEDOR Y PAÍS DE ALOJAMIENTO]. [INDICAR SI HAY TRANSFERENCIAS FUERA DEL EEE Y SUS GARANTÍAS, O ELIMINAR ESTA FRASE]. No vendemos tus datos ni los cedemos a terceros con fines comerciales."
+      },
+      {
+        "h": "Cuánto tiempo los conservamos",
+        "p": "Mientras tu cuenta esté activa. Cuando solicites la baja, eliminaremos tus datos, salvo los que debamos conservar bloqueados durante los plazos legales de prescripción de posibles responsabilidades."
+      },
+      {
+        "h": "Cookies",
+        "p": "Usamos una única cookie técnica imprescindible para mantener tu sesión iniciada. No requiere consentimiento y no usamos cookies de analítica ni de publicidad."
+      },
+      {
+        "h": "Tus derechos",
+        "p": "Puedes solicitar el acceso, la rectificación, la supresión, la oposición, la limitación del tratamiento y la portabilidad de tus datos, y retirar tu consentimiento en cualquier momento, escribiendo a [EMAIL DE CONTACTO]. Si consideras que no tratamos tus datos correctamente, puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es)."
+      }
+    ]
   }
 }

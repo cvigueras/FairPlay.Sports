@@ -10,7 +10,9 @@ public sealed record TeamFilter(
     FootballType? Type = null,
     Division? Division = null,
     AgeCategory? Category = null,
-    bool? Active = null) : IQueryFilter<Team>
+    bool? Active = null,
+    bool? AcceptsChallenges = null,
+    bool? VenueAvailable = null) : IQueryFilter<Team>
 {
     public IQueryable<Team> Apply(IQueryable<Team> source)
     {
@@ -33,7 +35,7 @@ public sealed record TeamFilter(
         if (!string.IsNullOrWhiteSpace(Coach))
         {
             var coach = SqlFunctions.Unaccent(Coach.Trim().ToLower());
-            query = query.Where(team => SqlFunctions.Unaccent(team.Coach.ToLower()).Contains(coach));
+            query = query.Where(team => team.Coach != null && SqlFunctions.Unaccent(team.Coach.ToLower()).Contains(coach));
         }
 
         if (Type is not null)
@@ -54,6 +56,16 @@ public sealed record TeamFilter(
         if (Active is not null)
         {
             query = query.Where(team => team.Active == Active);
+        }
+
+        if (AcceptsChallenges is not null)
+        {
+            query = query.Where(team => team.AcceptsChallenges == AcceptsChallenges);
+        }
+
+        if (VenueAvailable is not null)
+        {
+            query = query.Where(team => team.VenueAvailable == VenueAvailable);
         }
 
         return query;

@@ -116,6 +116,25 @@ public class CreateTeamHandlerTests
     }
 
     [Test]
+    public async Task Handle_WithTheChallengeAndVenueFlags_PersistsThemOnTheTeamAndDto()
+    {
+        _repository.ExistsByNameAsync(
+            Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division?>(), Arg.Any<AgeCategory>(),
+            Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);
+
+        var result = await _handler.Handle(
+            TeamMother.Command() with { AcceptsChallenges = true, VenueAvailable = true }, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Value!.AcceptsChallenges, Is.True);
+            Assert.That(result.Value!.VenueAvailable, Is.True);
+        });
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Team>(team => team.AcceptsChallenges && team.VenueAvailable), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
     public async Task Handle_ChecksNameUniquenessBeforePersisting()
     {
         _repository.ExistsByNameAsync(Arg.Any<string>(), Arg.Any<FootballType>(), Arg.Any<Division>(), Arg.Any<AgeCategory>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns(false);

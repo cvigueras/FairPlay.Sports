@@ -6,6 +6,7 @@ import { useDisplay } from 'vuetify'
 import { mdiCalendarMonthOutline, mdiSwordCross, mdiTranslate, mdiTrophyOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { useAuthStore } from '@/stores/auth'
+import { TEAM_MEMBER_ROLES, type TeamMemberRole } from '@/types/team'
 import { SUPPORTED_LOCALES, setLocale } from '@/plugins/i18n'
 import logoUrl from '@/assets/logo.webp'
 
@@ -43,9 +44,14 @@ function switchMode(next: 'login' | 'register') {
   loginErrors.email = ''
   loginErrors.password = ''
   registerErrors.userName = ''
+  registerErrors.firstName = ''
+  registerErrors.lastName = ''
+  registerErrors.primaryRole = ''
   registerErrors.email = ''
   registerErrors.password = ''
   registerErrors.confirmPassword = ''
+  registerErrors.privacy = ''
+  registerErrors.age = ''
 }
 
 const loginForm = reactive({
@@ -89,43 +95,80 @@ async function handleLoginSubmit() {
   await router.push('/')
 }
 
+const roleItems = computed(() =>
+  TEAM_MEMBER_ROLES.map((role) => ({ value: role, title: t(`profile.team.memberRoles.${role}`) })),
+)
+
 const registerForm = reactive({
+  primaryRole: null as TeamMemberRole | null,
+  firstName: '',
+  lastName: '',
   userName: '',
   email: '',
   password: '',
   confirmPassword: '',
+  acceptedPrivacy: false,
+  confirmedAge: false,
 })
 
 const registerErrors = reactive({
+  primaryRole: '',
+  firstName: '',
+  lastName: '',
   userName: '',
   email: '',
   password: '',
   confirmPassword: '',
+  privacy: '',
+  age: '',
 })
 
+// An empty required register field (and an unticked required check) is flagged
+// red without a message; only the role and format errors spell out what is wrong.
+const REQUIRED = 'required'
+
+function shown(error: string): string {
+  return error === REQUIRED ? '' : error
+}
+
 function validateRegister(): boolean {
-  registerErrors.userName = !registerForm.userName.trim() ? t('validation.userNameRequired') : ''
+  registerErrors.primaryRole = !registerForm.primaryRole ? t('validation.primaryRoleRequired') : ''
+  registerErrors.firstName = !registerForm.firstName.trim() ? REQUIRED : ''
+  registerErrors.lastName = !registerForm.lastName.trim() ? REQUIRED : ''
+  registerErrors.userName = !registerForm.userName.trim() ? REQUIRED : ''
 
   registerErrors.email = !registerForm.email
-    ? t('validation.emailRequired')
+    ? REQUIRED
     : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)
       ? t('validation.emailInvalid')
       : ''
 
   registerErrors.password = !registerForm.password
-    ? t('validation.passwordRequired')
+    ? REQUIRED
     : registerForm.password.length < 8
       ? t('validation.passwordMinLength')
       : ''
 
-  registerErrors.confirmPassword =
-    registerForm.confirmPassword !== registerForm.password ? t('validation.passwordsMismatch') : ''
+  registerErrors.confirmPassword = !registerForm.confirmPassword
+    ? REQUIRED
+    : registerForm.confirmPassword !== registerForm.password
+      ? t('validation.passwordsMismatch')
+      : ''
+
+  registerErrors.privacy = !registerForm.acceptedPrivacy ? REQUIRED : ''
+
+  registerErrors.age = !registerForm.confirmedAge ? REQUIRED : ''
 
   return (
+    !registerErrors.primaryRole &&
+    !registerErrors.firstName &&
+    !registerErrors.lastName &&
     !registerErrors.userName &&
     !registerErrors.email &&
     !registerErrors.password &&
-    !registerErrors.confirmPassword
+    !registerErrors.confirmPassword &&
+    !registerErrors.privacy &&
+    !registerErrors.age
   )
 }
 
@@ -137,8 +180,13 @@ async function handleRegisterSubmit() {
   try {
     await auth.register({
       userName: registerForm.userName.trim(),
+      firstName: registerForm.firstName.trim(),
+      lastName: registerForm.lastName.trim(),
       email: registerForm.email,
       password: registerForm.password,
+      primaryRole: registerForm.primaryRole!,
+      acceptedPrivacyPolicy: registerForm.acceptedPrivacy,
+      confirmedMinimumAge: registerForm.confirmedAge,
     })
   } catch (error) {
     submitError.value = error instanceof ApiError ? error.message : t('register.failed')
@@ -211,7 +259,7 @@ async function handleRegisterSubmit() {
         </ul>
       </section>
 
-      <section class="login-panel">
+      <section class="login-panel" :class="{ 'login-panel--register': mode === 'register' }">
         <v-theme-provider :theme="panelTheme">
         <v-menu v-if="!mobile">
           <template #activator="{ props }">
@@ -240,12 +288,8 @@ async function handleRegisterSubmit() {
 
         <div class="login-panel__form">
           <div class="login-panel__heading">
-            <h2 class="text-h5 font-weight-bold">
-              {{ mode === 'login' ? t('login.title') : t('register.title') }}
-            </h2>
-            <p class="text-body-2 text-medium-emphasis mt-1">
-              {{ mode === 'login' ? t('login.subtitle') : t('register.subtitle') }}
-            </p>
+            <h2>{{ mode === 'login' ? t('login.subtitle') : t('register.subtitle') }}</h2>
+            <hr class="login-panel__rule" />
           </div>
 
           <v-form v-if="mode === 'login'" novalidate @submit.prevent="handleLoginSubmit">
@@ -266,7 +310,9 @@ async function handleRegisterSubmit() {
               autocomplete="email"
               :placeholder="t('login.emailPlaceholder')"
               :error-messages="loginErrors.email"
-              class="mb-2"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
 
             <v-text-field
@@ -276,26 +322,81 @@ async function handleRegisterSubmit() {
               autocomplete="current-password"
               :placeholder="t('common.passwordPlaceholder')"
               :error-messages="loginErrors.password"
-              class="mb-2"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
 
             <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
               {{ submitError }}
             </v-alert>
 
-            <v-btn type="submit" block size="large" :loading="isSubmitting">
+            <v-btn type="submit" block size="large" class="login-panel__submit" :loading="isSubmitting">
               {{ isSubmitting ? t('login.submitting') : t('login.submit') }}
             </v-btn>
           </v-form>
 
           <v-form v-else novalidate @submit.prevent="handleRegisterSubmit">
+            <div class="login-panel__group">{{ t('register.aboutYou') }}</div>
+
+            <div class="login-panel__role">
+              <span id="register-role-label" class="login-panel__role-label">
+                {{ t('register.primaryRole') }}
+              </span>
+              <div role="group" aria-labelledby="register-role-label" class="login-panel__pills">
+                <button
+                  v-for="role in roleItems"
+                  :key="role.value"
+                  type="button"
+                  class="login-panel__pill"
+                  :class="{ 'login-panel__pill--selected': registerForm.primaryRole === role.value }"
+                  :aria-pressed="registerForm.primaryRole === role.value"
+                  @click="registerForm.primaryRole = role.value"
+                >
+                  {{ role.title }}
+                </button>
+              </div>
+              <span v-if="registerErrors.primaryRole" class="fp-error">
+                {{ registerErrors.primaryRole }}
+              </span>
+            </div>
+
+            <div class="login-panel__names">
+              <v-text-field
+                v-model="registerForm.firstName"
+                :label="t('register.firstName')"
+                autocomplete="given-name"
+                :error="!!registerErrors.firstName"
+              :error-messages="shown(registerErrors.firstName)"
+                density="compact"
+                hide-details="auto"
+                class="login-panel__field"
+              />
+
+              <v-text-field
+                v-model="registerForm.lastName"
+                :label="t('register.lastName')"
+                autocomplete="family-name"
+                :error="!!registerErrors.lastName"
+              :error-messages="shown(registerErrors.lastName)"
+                density="compact"
+                hide-details="auto"
+                class="login-panel__field"
+              />
+            </div>
+
+            <div class="login-panel__group">{{ t('register.yourAccount') }}</div>
+
             <v-text-field
               v-model="registerForm.userName"
               :label="t('register.userName')"
               autocomplete="username"
               :placeholder="t('register.userNamePlaceholder')"
-              :error-messages="registerErrors.userName"
-              class="mb-2"
+              :error="!!registerErrors.userName"
+              :error-messages="shown(registerErrors.userName)"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
 
             <v-text-field
@@ -304,8 +405,11 @@ async function handleRegisterSubmit() {
               type="email"
               autocomplete="email"
               :placeholder="t('register.emailPlaceholder')"
-              :error-messages="registerErrors.email"
-              class="mb-2"
+              :error="!!registerErrors.email"
+              :error-messages="shown(registerErrors.email)"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
 
             <v-text-field
@@ -314,8 +418,11 @@ async function handleRegisterSubmit() {
               type="password"
               autocomplete="new-password"
               :placeholder="t('common.passwordPlaceholder')"
-              :error-messages="registerErrors.password"
-              class="mb-2"
+              :error="!!registerErrors.password"
+              :error-messages="shown(registerErrors.password)"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
 
             <v-text-field
@@ -324,22 +431,56 @@ async function handleRegisterSubmit() {
               type="password"
               autocomplete="new-password"
               :placeholder="t('common.passwordPlaceholder')"
-              :error-messages="registerErrors.confirmPassword"
-              class="mb-2"
+              :error="!!registerErrors.confirmPassword"
+              :error-messages="shown(registerErrors.confirmPassword)"
+              density="compact"
+              hide-details="auto"
+              class="login-panel__field"
             />
+
+            <v-checkbox
+              v-model="registerForm.confirmedAge"
+              :label="t('register.ageConfirm')"
+              density="compact"
+              hide-details="auto"
+              :error="!!registerErrors.age"
+              class="login-panel__check"
+            />
+
+            <v-checkbox
+              v-model="registerForm.acceptedPrivacy"
+              density="compact"
+              hide-details="auto"
+              :error="!!registerErrors.privacy"
+              class="login-panel__check mb-2"
+            >
+              <template #label>
+                <span>
+                  {{ t('register.privacyPrefix') }}
+                  <router-link
+                    :to="{ name: 'privacy' }"
+                    target="_blank"
+                    class="text-primary"
+                    @click.stop
+                  >
+                    {{ t('register.privacyLink') }}
+                  </router-link>
+                </span>
+              </template>
+            </v-checkbox>
 
             <v-alert v-if="submitError" type="error" variant="tonal" density="compact" class="mb-4">
               {{ submitError }}
             </v-alert>
 
-            <v-btn type="submit" block size="large" :loading="isSubmitting">
+            <v-btn type="submit" block size="large" class="login-panel__submit" :loading="isSubmitting">
               {{ isSubmitting ? t('register.submitting') : t('register.submit') }}
             </v-btn>
           </v-form>
 
           <p class="login-panel__footer text-body-2 text-medium-emphasis">
             <template v-if="mode === 'login'">
-              {{ t('login.noAccount') }}
+              <strong>{{ t('login.noAccount') }}</strong> {{ ' ' }}
               <button
                 type="button"
                 class="login-panel__switch text-primary font-weight-medium"
@@ -349,7 +490,7 @@ async function handleRegisterSubmit() {
               </button>
             </template>
             <template v-else>
-              {{ t('register.haveAccount') }}
+              <strong>{{ t('register.haveAccount') }}</strong> {{ ' ' }}
               <button
                 type="button"
                 class="login-panel__switch text-primary font-weight-medium"
@@ -490,7 +631,7 @@ async function handleRegisterSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 48px 24px 96px;
   background: #f8fafc;
 }
 
@@ -508,9 +649,54 @@ async function handleRegisterSubmit() {
   gap: 28px;
 }
 
+/* Pinned to the panel's bottom so it sits at the same height in login and
+   register, whatever the height of the (vertically centred) form above it. */
 .login-panel__footer {
+  position: absolute;
+  right: 24px;
+  bottom: 40px;
+  left: 24px;
   margin: 0;
   text-align: center;
+}
+
+.login-panel__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 12px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.login-panel__group::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.login-panel__heading h2 {
+  margin: 0;
+  text-wrap: balance;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+/* Short accent rule under the heading, same indigo as the submit button. */
+.login-panel__rule {
+  width: 48px;
+  height: 3px;
+  margin: 14px 0 0;
+  border: 0;
+  border-radius: 2px;
+  opacity: 1;
+  background: rgb(var(--v-theme-primary));
 }
 
 .login-panel__switch {
@@ -520,6 +706,73 @@ async function handleRegisterSubmit() {
   font: inherit;
   cursor: pointer;
   text-decoration: none;
+}
+
+.login-panel__submit {
+  height: 52px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.login-panel__role {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.login-panel__role-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.login-panel__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.login-panel__pill {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-panel__pill--selected {
+  background: rgb(var(--v-theme-primary));
+  border-color: rgb(var(--v-theme-primary));
+  color: #ffffff;
+}
+
+.login-panel__names {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+}
+
+.login-panel__check :deep(.v-selection-control) {
+  min-height: 32px;
+  --v-selection-control-size: 32px;
+}
+
+.login-panel__form :deep(.v-checkbox .v-label) {
+  font-size: 0.84rem;
+  opacity: 1;
+}
+
+/* hide-details="auto" collapses the reserved message row until a field has an
+   error, so the (longer) register form stays compact; this restores the gap. */
+.login-panel__field {
+  --v-input-control-height: 48px;
+  margin-bottom: 12px;
 }
 
 /* Mobile: no separate panel at all - the photo fills the whole screen and
@@ -548,7 +801,7 @@ async function handleRegisterSubmit() {
     height: 100%;
     justify-content: flex-start;
     padding: 18px 22px 20px;
-    gap: 44px;
+    gap: 24px;
   }
 
   .login-hero__pitch {
@@ -557,6 +810,9 @@ async function handleRegisterSubmit() {
 
   .login-hero__features {
     gap: 12px;
+    /* The hero's own gap shrank by 20px to lift the eyebrow; keep the feature
+       list (login only) where it was. */
+    margin-top: 20px;
   }
 
   .login-hero__features li {
@@ -595,7 +851,7 @@ async function handleRegisterSubmit() {
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 22px 32px;
+    padding: 0 22px 56px;
     background: none;
     color: #ffffff;
     /* Confirmed both login and register fit with zero overflow (measured),
@@ -622,6 +878,22 @@ async function handleRegisterSubmit() {
 
   .login-panel > * {
     pointer-events: auto;
+  }
+
+  /* The register form can grow with its error messages: keep it below the
+     hero's brand row and let the panel scroll, instead of anchoring it to the
+     bottom and letting it climb over the logo. */
+  .login-panel--register {
+    justify-content: flex-start;
+    padding-top: 136px;
+  }
+
+  .login-panel--register .login-panel__form {
+    margin-top: auto;
+  }
+
+  .login-panel--register .login-panel__field {
+    margin-bottom: 12px;
   }
 
   .login-hero__brand {
@@ -660,6 +932,42 @@ async function handleRegisterSubmit() {
      fine for login's two fields, adds up across register's four. */
   .login-panel__form :deep(.mb-2) {
     margin-bottom: 4px;
+  }
+
+  /* Register is one field per row here (role, names, account, passwords), so
+     the group captions - a desktop nicety - go and the row gap tightens. */
+  .login-panel__footer {
+    position: static;
+  }
+
+  .login-panel__group {
+    display: none;
+  }
+
+  .login-panel__role {
+    margin-bottom: 14px;
+  }
+
+  .login-panel__role-label {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .login-panel__pill {
+    height: 40px;
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+  }
+
+  .login-panel__pill--selected {
+    background: #818cf8;
+    border-color: #818cf8;
+    color: #1e1b4b;
+    font-weight: 700;
+  }
+
+  .login-panel__field {
+    margin-bottom: 6px;
   }
 
   /* v-theme-provider (fairplayDark) already recolors every field's border,

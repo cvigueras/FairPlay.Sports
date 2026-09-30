@@ -9,11 +9,15 @@ import {
   mdiArrowUp,
   mdiCardAccountDetailsOutline,
   mdiChevronDown,
+  mdiHandshakeOutline,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
+  mdiPlusCircleOutline,
   mdiSoccer,
+  mdiSoccerField,
   mdiSortVariant,
+  mdiSwordCross,
   mdiTrophyOutline,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -21,7 +25,11 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useLeagueFilterStore } from '@/stores/leagueFilter'
+import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
+import { useChallengeTeam } from '@/composables/useChallengeTeam'
+import { useCreateTeam, type NewTeamInput } from '@/composables/useCreateTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
@@ -30,6 +38,30 @@ import type { PagedResult } from '@/types/pagination'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+
+// Challenge a team straight from the list: same flow as the button on its detail page.
+const {
+  wizardOpen: challengeWizardOpen,
+  rival: challengeRival,
+  sending: sendingChallenge,
+  canChallenge,
+  open: challengeTeam,
+  submit: handleSendChallenge,
+} = useChallengeTeam()
+// "New team": the same wizard and flow as My teams' create button.
+const { wizardOpen: newTeamOpen, creating: creatingTeam, create: createTeam } = useCreateTeam()
+async function handleCreateTeam(input: NewTeamInput) {
+  // The new team joins the list (and shows as mine) once it is reloaded.
+  if (await createTeam(input)) reload()
+}
+// Best-effort: the memberships decide whether each row shows the challenge button.
+auth.loadMyTeams().catch(() => {})
+
+/** Teams the signed-in user belongs to: their rows are tinted in the list. */
+const myTeamIds = computed(() => new Set(auth.myTeams.map((membership) => membership.teamId)))
+function isMine(team: Team): boolean {
+  return myTeamIds.value.has(team.id)
+}
 const { smAndDown, xs } = useDisplay()
 // xs (< 600px, Vuetify's default sm threshold) matches the CSS's own
 // max-width: 599px mobile breakpoint below - smAndDown (< 960px) doesn't,
@@ -53,6 +85,9 @@ const TEXT_FILTER_DEBOUNCE_MS = 300
 const nameText = ref<string | null>('')
 const coachText = ref<string | null>('')
 const cityText = ref<string | null>('')
+// "Only teams open to challenges": a plain on/off switch, not a text filter.
+const acceptsChallengesOnly = ref(false)
+const venueAvailableOnly = ref(false)
 
 const asTextFilter = (text: string | null) => {
   // The clearable "X" sets the model to null, not ''.
@@ -98,7 +133,9 @@ const hasActiveFilters = computed(
   () =>
     asTextFilter(nameText.value) !== undefined ||
     asTextFilter(coachText.value) !== undefined ||
-    asTextFilter(cityText.value) !== undefined,
+    asTextFilter(cityText.value) !== undefined ||
+    acceptsChallengesOnly.value ||
+    venueAvailableOnly.value,
 )
 
 // Desktop only (see .teams-more-btn, hidden on mobile): coach/city live
@@ -119,9 +156,13 @@ const hiddenFilterCount = computed(
 const mobileFiltersOpen = ref(false)
 const activeFilterCount = computed(
   () =>
-    [asTextFilter(nameText.value), asTextFilter(coachText.value), asTextFilter(cityText.value)].filter(
-      (value) => value !== undefined,
-    ).length,
+    [
+      asTextFilter(nameText.value),
+      asTextFilter(coachText.value),
+      asTextFilter(cityText.value),
+      acceptsChallengesOnly.value || undefined,
+      venueAvailableOnly.value || undefined,
+    ].filter((value) => value !== undefined).length,
 )
 
 const enumItems = <T extends string>(values: readonly T[]) =>
@@ -142,6 +183,8 @@ async function load() {
         name: asTextFilter(nameText.value),
         coach: asTextFilter(coachText.value),
         city: asTextFilter(cityText.value),
+        acceptsChallenges: acceptsChallengesOnly.value || undefined,
+        venueAvailable: venueAvailableOnly.value || undefined,
         type: type.value,
         division: division.value,
         category: category.value,
@@ -162,7 +205,7 @@ function reload() {
 }
 
 watch(page, load, { immediate: true })
-watch([type, division, category, sort], reload)
+watch([type, division, category, sort, acceptsChallengesOnly, venueAvailableOnly], reload)
 
 // Text filters are debounced so we query once the user pauses, not per keystroke.
 let textFilterTimer: ReturnType<typeof setTimeout> | undefined
@@ -175,6 +218,8 @@ function clearFilters() {
   nameText.value = ''
   coachText.value = ''
   cityText.value = ''
+  acceptsChallengesOnly.value = false
+  venueAvailableOnly.value = false
   clearTimeout(textFilterTimer)
   reload()
 }
@@ -191,8 +236,17 @@ function toggleTeamRow(id: string) {
   <v-main>
     <div class="teams-page">
       <div class="teams-toolbar">
-        <!-- The page title moved to the breadcrumb (see AppShell); this row
-             now only carries the mobile sort control. -->
+        <!-- The page title moved to the breadcrumb (see AppShell); this row carries the
+             screen-level "New team" button and, on mobile, the sort control. -->
+        <v-btn
+          color="primary"
+          variant="flat"
+          :prepend-icon="mdiPlusCircleOutline"
+          class="teams-new-btn"
+          @click="newTeamOpen = true"
+        >
+          {{ t('teams.newTeam') }}
+        </v-btn>
         <!-- Mobile only (see the max-width: 599px rules below): the table's
              sortable column headers don't exist here, so this dropdown
              (the app's original sort picker) drives the same state instead. -->
@@ -264,6 +318,30 @@ function toggleTeamRow(id: string) {
           hide-details
           class="teams-filter-select"
         />
+        <v-checkbox
+          v-model="acceptsChallengesOnly"
+          color="red"
+          density="comfortable"
+          hide-details
+          class="teams-open-filter"
+        >
+          <template #label>
+            {{ t('teams.challengeStatus.badge') }}
+            <v-icon :icon="mdiHandshakeOutline" size="18" color="red" class="ms-1" />
+          </template>
+        </v-checkbox>
+        <v-checkbox
+          v-model="venueAvailableOnly"
+          color="#2E7D32"
+          density="comfortable"
+          hide-details
+          class="teams-open-filter"
+        >
+          <template #label>
+            {{ t('teams.venueStatus.badge') }}
+            <v-icon :icon="mdiSoccerField" size="18" color="#2E7D32" class="ms-1" />
+          </template>
+        </v-checkbox>
         <!-- Mobile only: coach/city live behind "More filters" on desktop
              (see .teams-more-btn below), but that nested menu is one tap too
              many on top of the filter panel toggle, so on mobile they're
@@ -350,6 +428,28 @@ function toggleTeamRow(id: string) {
         <!-- On mobile the search box lives inside the collapsed filter panel
              (see .teams-filterbar below), so this chip is the only sign a
              name filter is active while the panel stays closed. -->
+        <v-chip
+          v-if="acceptsChallengesOnly"
+          size="small"
+          variant="tonal"
+          color="red"
+          closable
+          :prepend-icon="mdiHandshakeOutline"
+          @click:close="acceptsChallengesOnly = false"
+        >
+          {{ t('teams.challengeStatus.badge') }}
+        </v-chip>
+        <v-chip
+          v-if="venueAvailableOnly"
+          size="small"
+          variant="tonal"
+          color="#2E7D32"
+          closable
+          :prepend-icon="mdiSoccerField"
+          @click:close="venueAvailableOnly = false"
+        >
+          {{ t('teams.venueStatus.badge') }}
+        </v-chip>
         <v-chip
           v-if="asTextFilter(nameText) !== undefined"
           size="small"
@@ -498,11 +598,30 @@ function toggleTeamRow(id: string) {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="team in result.items" :key="team.id">
+                <tr v-for="team in result.items" :key="team.id" :class="{ 'teams-row--mine': isMine(team) }">
                   <td class="teams-col-club">
                     <div class="team-row-club">
                       <TeamCrest :team="team" :size="32" />
                       <span class="text-truncate">{{ team.name }}</span>
+                      <!-- Just the icon, to the right of the name: the full text is the tooltip. -->
+                      <v-icon
+                        v-if="team.acceptsChallenges"
+                        :icon="mdiHandshakeOutline"
+                        size="20"
+                        color="red"
+                        class="flex-shrink-0"
+                        :title="t('teams.challengeStatus.badge')"
+                        :aria-label="t('teams.challengeStatus.badge')"
+                      />
+                      <v-icon
+                        v-if="team.venueAvailable"
+                        :icon="mdiSoccerField"
+                        size="20"
+                        color="#2E7D32"
+                        class="flex-shrink-0"
+                        :title="t('teams.venueStatus.badge')"
+                        :aria-label="t('teams.venueStatus.badge')"
+                      />
                     </div>
                   </td>
                   <td class="teams-col-stat">
@@ -533,21 +652,33 @@ function toggleTeamRow(id: string) {
                     <span v-else class="text-body-2 text-medium-emphasis">—</span>
                   </td>
                   <td class="teams-col-city">
-                    <span class="team-row-city text-body-2 text-medium-emphasis">
-                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
-                      {{ team.city }}
+                    <span class="team-row-city text-body-2 text-medium-emphasis" :title="team.city">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" class="flex-shrink-0" />
+                      <span class="text-truncate">{{ team.city }}</span>
                     </span>
                   </td>
                   <td class="teams-col-actions">
-                    <v-btn
-                      :to="{ name: 'team-detail', params: { id: team.id } }"
-                      :prepend-icon="mdiCardAccountDetailsOutline"
-                      color="blue"
-                      variant="outlined"
-                      size="small"
-                    >
-                      {{ t('profile.team.viewDetails') }}
-                    </v-btn>
+                    <div class="teams-actions">
+                      <v-btn
+                        v-if="canChallenge(team)"
+                        color="red"
+                        variant="flat"
+                        size="small"
+                        :prepend-icon="mdiSwordCross"
+                        @click="challengeTeam(team)"
+                      >
+                        {{ t('profile.team.challenge') }}
+                      </v-btn>
+                      <v-btn
+                        :to="{ name: 'team-detail', params: { id: team.id } }"
+                        :prepend-icon="mdiCardAccountDetailsOutline"
+                        color="blue"
+                        variant="outlined"
+                        size="small"
+                      >
+                        {{ t('profile.team.viewDetails') }}
+                      </v-btn>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -563,11 +694,30 @@ function toggleTeamRow(id: string) {
                 <button
                   type="button"
                   class="teams-mobile-row"
+                  :class="{ 'teams-mobile-row--mine': isMine(team) }"
                   :aria-expanded="!!expandedTeamRows[team.id]"
                   @click="toggleTeamRow(team.id)"
                 >
                   <TeamCrest :team="team" :size="28" />
                   <span class="teams-mobile-name text-truncate">{{ team.name }}</span>
+                  <v-icon
+                    v-if="team.acceptsChallenges"
+                    :icon="mdiHandshakeOutline"
+                    size="18"
+                    color="red"
+                    class="flex-shrink-0"
+                    :title="t('teams.challengeStatus.badge')"
+                    :aria-label="t('teams.challengeStatus.badge')"
+                  />
+                  <v-icon
+                    v-if="team.venueAvailable"
+                    :icon="mdiSoccerField"
+                    size="18"
+                    color="#2E7D32"
+                    class="flex-shrink-0"
+                    :title="t('teams.venueStatus.badge')"
+                    :aria-label="t('teams.venueStatus.badge')"
+                  />
                   <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
                     {{ t(`profile.team.enums.${team.category}`) }}
                   </v-chip>
@@ -579,7 +729,31 @@ function toggleTeamRow(id: string) {
                   />
                 </button>
 
-                <div v-if="expandedTeamRows[team.id]" class="teams-mobile-details">
+                <div
+                  v-if="expandedTeamRows[team.id]"
+                  class="teams-mobile-details"
+                  :class="{ 'teams-mobile-details--mine': isMine(team) }"
+                >
+                  <v-chip
+                    v-if="team.acceptsChallenges"
+                    size="small"
+                    variant="flat"
+                    color="red"
+                    class="align-self-start"
+                    :prepend-icon="mdiHandshakeOutline"
+                  >
+                    {{ t('teams.challengeStatus.badge') }}
+                  </v-chip>
+                  <v-chip
+                    v-if="team.venueAvailable"
+                    size="small"
+                    variant="flat"
+                    color="#2E7D32"
+                    class="align-self-start"
+                    :prepend-icon="mdiSoccerField"
+                  >
+                    {{ t('teams.venueStatus.badge') }}
+                  </v-chip>
                   <div class="teams-mobile-detail-grid">
                     <div class="teams-mobile-detail-cell">
                       <span class="teams-mobile-detail-label">{{ t('teams.fields.type') }}</span>
@@ -608,15 +782,25 @@ function toggleTeamRow(id: string) {
                       {{ team.city }}
                     </span>
                   </div>
-                  <v-btn
-                    :to="{ name: 'team-detail', params: { id: team.id } }"
-                    :prepend-icon="mdiCardAccountDetailsOutline"
-                    color="blue"
-                    variant="outlined"
-                    block
-                  >
-                    {{ t('profile.team.viewDetails') }}
-                  </v-btn>
+                  <div class="teams-mobile-actions">
+                    <v-btn
+                      v-if="canChallenge(team)"
+                      color="red"
+                      variant="flat"
+                      :prepend-icon="mdiSwordCross"
+                      @click="challengeTeam(team)"
+                    >
+                      {{ t('profile.team.challenge') }}
+                    </v-btn>
+                    <v-btn
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      :prepend-icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                    >
+                      {{ t('profile.team.viewDetails') }}
+                    </v-btn>
+                  </div>
                 </div>
               </template>
             </div>
@@ -624,6 +808,16 @@ function toggleTeamRow(id: string) {
           </template>
         </template>
       </div>
+
+      <TeamWizard v-model="newTeamOpen" :loading="creatingTeam" @submit="handleCreateTeam" />
+
+      <ChallengeWizard
+        v-if="challengeRival"
+        v-model="challengeWizardOpen"
+        :rival-team="challengeRival"
+        :loading="sendingChallenge"
+        @submit="handleSendChallenge"
+      />
 
       <footer v-if="result" class="teams-footer">
         <div class="teams-footer-inner">
@@ -681,6 +875,19 @@ function toggleTeamRow(id: string) {
   padding-bottom: 0.75rem;
 }
 
+/* Screen-level action: pinned to the right of the toolbar, the same size and radius as the
+   "More filters" button below it (see .teams-more-btn), so their right edges line up. */
+.teams-new-btn {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+  order: 2;
+}
+
+.teams-new-btn,
+.teams-more-btn {
+  width: 10rem;
+}
+
 /* Desktop sorts via the table's column headers (see .teams-col-sortable
    below); this stays hidden until the max-width: 599px rules turn it on
    for the mobile list, which has no header row to click. */
@@ -704,9 +911,11 @@ function toggleTeamRow(id: string) {
   padding-bottom: 0.75rem;
 }
 
+/* Takes whatever width the other filters leave free, so "More filters" ends up at
+   the far right of the bar. */
 .teams-search {
-  flex: 1 1 240px;
-  min-width: 200px;
+  flex: 1 1 200px;
+  min-width: 160px;
 }
 
 .teams-filter-select {
@@ -716,6 +925,16 @@ function toggleTeamRow(id: string) {
 
 .teams-more-btn {
   flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+/* A compact checkbox next to the selects, not another full-size control. */
+.teams-open-filter {
+  flex: 0 0 auto;
+}
+
+.teams-open-filter :deep(.v-label) {
+  white-space: nowrap;
 }
 
 .teams-active-chips {
@@ -842,28 +1061,28 @@ function toggleTeamRow(id: string) {
 
 .teams-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 1240px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 25%;
+  width: 22%;
 }
 
 .teams-col-stat {
-  width: 14%;
+  width: 10.5%;
 }
 
 .teams-col-city {
-  width: 13%;
+  width: 18%;
 }
 
 /* Wide enough that the icon + label never get squeezed inside the button,
    even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 20%;
+  width: 28.5%;
 }
 
 .teams-table thead th {
@@ -930,6 +1149,47 @@ function toggleTeamRow(id: string) {
   text-align: right;
 }
 
+/* My teams: a soft primary tint plus a bar on the left edge, so they read as
+   "mine" at a glance without shouting over the rest of the list. */
+.teams-table tbody tr.teams-row--mine td {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 7%, rgb(var(--v-theme-surface)));
+}
+
+.teams-table tbody tr.teams-row--mine td:first-child {
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
+}
+
+/* "Desafiar" sits to the left of "Ver detalles". */
+.teams-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Every row action (Acepto desafios / Desafiar / Ver detalles) shares one
+   type size and one width, whichever of them a row shows. */
+.teams-actions .v-btn {
+  flex: 0 0 10.5rem;
+  width: 10.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.teams-mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.teams-mobile-actions .v-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* Age category, modality and division chips fill their (equal-width)
    column so the three read as same-sized labels, whatever their text. */
 .teams-table td.teams-col-stat :deep(.v-chip) {
@@ -949,10 +1209,12 @@ function toggleTeamRow(id: string) {
   min-width: 0;
 }
 
+/* One line: a very long town shortens with "..." (full name on hover) instead of wrapping. */
 .team-row-city {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 /* Mobile-only replacement for the desktop table (see the max-width: 599px
@@ -1005,6 +1267,16 @@ function toggleTeamRow(id: string) {
 
 .teams-mobile-chevron--open {
   transform: rotate(180deg);
+}
+
+.teams-mobile-row--mine {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 7%, rgb(var(--v-theme-surface)));
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
+}
+
+.teams-mobile-details.teams-mobile-details--mine {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 4%, rgb(var(--v-theme-background)));
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
 }
 
 .teams-mobile-details {
@@ -1080,6 +1352,10 @@ function toggleTeamRow(id: string) {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .teams-filterbar--open .teams-open-filter {
+    width: 100%;
   }
 
   .teams-filterbar--open .teams-search,

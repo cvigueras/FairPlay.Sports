@@ -15,7 +15,7 @@ public sealed class Team
 
     public Guid Id { get; }
     public string Name { get; private set; }
-    public string Coach { get; private set; }
+    public string? Coach { get; private set; }
     public string City { get; private set; }
 
     public TeamClassification Classification { get; private set; } = null!;
@@ -36,12 +36,16 @@ public sealed class Team
 
     public bool Active { get; private set; } = false;
 
+    public bool AcceptsChallenges { get; private set; } = false;
+
+    public bool VenueAvailable { get; private set; } = false;
+
     public bool HasCrest => Crest is { Length: > 0 };
 
     private Team(
         Guid id,
         string name,
-        string coach,
+        string? coach,
         string city)
     {
         Id = id;
@@ -53,11 +57,13 @@ public sealed class Team
     public static Team Create(
         Guid id,
         string name,
-        string coach,
+        string? coach,
         string city,
         TeamClassification classification,
         DateTime createdAtUtc,
-        TeamProfile? profile = null)
+        TeamProfile? profile = null,
+        bool acceptsChallenges = false,
+        bool venueAvailable = false)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Team id cannot be empty.", nameof(id));
@@ -71,15 +77,19 @@ public sealed class Team
         };
 
         team.ApplyProfile(profile ?? TeamProfile.Empty);
+        team.AcceptsChallenges = acceptsChallenges;
+        team.VenueAvailable = venueAvailable;
         return team;
     }
 
     public void Update(
         string name,
-        string coach,
+        string? coach,
         string city,
         TeamClassification classification,
-        TeamProfile profile)
+        TeamProfile profile,
+        bool? acceptsChallenges = null,
+        bool? venueAvailable = null)
     {
         ArgumentNullException.ThrowIfNull(classification);
         ArgumentNullException.ThrowIfNull(profile);
@@ -89,9 +99,19 @@ public sealed class Team
         City = ValidateCity(city);
         Classification = classification;
         ApplyProfile(profile);
+
+        // Left as they are unless the caller says otherwise.
+        if (acceptsChallenges is { } accepts)
+            AcceptsChallenges = accepts;
+        if (venueAvailable is { } available)
+            VenueAvailable = available;
     }
 
     public void Activate() => Active = true;
+
+    public void SetAcceptsChallenges(bool accepts) => AcceptsChallenges = accepts;
+
+    public void SetVenueAvailable(bool available) => VenueAvailable = available;
 
     public void SetCrest(byte[] image, string contentType)
     {
@@ -125,13 +145,8 @@ public sealed class Team
         return name.Trim();
     }
 
-    private static string ValidateCoach(string coach)
-    {
-        if (string.IsNullOrWhiteSpace(coach))
-            throw new ArgumentException("Team coach is required.", nameof(coach));
-
-        return coach.Trim();
-    }
+    private static string? ValidateCoach(string? coach) =>
+        string.IsNullOrWhiteSpace(coach) ? null : coach.Trim();
 
     private static string ValidateCity(string city)
     {

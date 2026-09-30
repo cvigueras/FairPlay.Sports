@@ -10,6 +10,8 @@ using FairPlay.Sports.Application.Teams.GetMembers;
 using FairPlay.Sports.Application.Teams.GetPage;
 using FairPlay.Sports.Application.Teams.JoinTeam;
 using FairPlay.Sports.Application.Teams.LeaveTeam;
+using FairPlay.Sports.Application.Teams.SetAcceptsChallenges;
+using FairPlay.Sports.Application.Teams.SetVenueAvailable;
 using FairPlay.Sports.Application.Teams.Update;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
@@ -43,7 +45,9 @@ public sealed class TeamsController(ISender sender) : ControllerBase
                 request.Type,
                 request.Division,
                 request.Category,
-                request.Active));
+                request.Active,
+                request.AcceptsChallenges,
+                request.VenueAvailable));
 
         var result = await _sender.Send(query, cancellationToken);
         return result.ToActionResult(this);
@@ -86,7 +90,9 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.AlternateColorSecondary,
             request.AlternateKitPattern,
             request.ShortsColor,
-            request.AlternateShortsColor);
+            request.AlternateShortsColor,
+            request.AcceptsChallenges,
+            request.VenueAvailable);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
@@ -130,7 +136,9 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.AlternateColorSecondary,
             request.AlternateKitPattern,
             request.ShortsColor,
-            request.AlternateShortsColor);
+            request.AlternateShortsColor,
+            request.AcceptsChallenges,
+            request.VenueAvailable);
 
         var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);
@@ -142,6 +150,32 @@ public sealed class TeamsController(ISender sender) : ControllerBase
     public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new ActivateTeamCommand(id), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Sets whether the team is open to any challenge. Only its non-player members can.</summary>
+    [HttpPut("{id:guid}/accepts-challenges")]
+    [ProducesResponseType(typeof(TeamDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TeamDto>> SetAcceptsChallenges(
+        Guid id, SetAcceptsChallengesRequest request, CancellationToken cancellationToken)
+    {
+        var command = new SetAcceptsChallengesCommand(id, request.Accepts, User.GetUserId());
+        var result = await _sender.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Sets whether the team has a venue available for friendly matches. Only its non-player members can.</summary>
+    [HttpPut("{id:guid}/venue-available")]
+    [ProducesResponseType(typeof(TeamDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TeamDto>> SetVenueAvailable(
+        Guid id, SetVenueAvailableRequest request, CancellationToken cancellationToken)
+    {
+        var command = new SetVenueAvailableCommand(id, request.Available, User.GetUserId());
+        var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
 

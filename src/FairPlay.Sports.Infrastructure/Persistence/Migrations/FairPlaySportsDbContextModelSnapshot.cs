@@ -155,6 +155,9 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("AcceptsChallenges")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
@@ -164,7 +167,6 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Coach")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -197,6 +199,9 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.Property<string>("ShortName")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("VenueAvailable")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Website")
                         .HasMaxLength(2048)
@@ -283,6 +288,16 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -294,6 +309,18 @@ namespace FairPlay.Sports.Infrastructure.Persistence.Migrations
                     b.Property<string>("PhotoContentType")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PrimaryRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("PrivacyAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PrivacyPolicyVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Role")
                         .IsRequired()

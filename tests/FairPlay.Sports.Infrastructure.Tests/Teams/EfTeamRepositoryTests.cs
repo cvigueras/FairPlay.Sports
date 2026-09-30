@@ -19,6 +19,24 @@ public class EfTeamRepositoryTests : RepositoryTestBase
     }
 
     [Test]
+    public async Task AddAsync_withoutCoach_persistsANullCoach()
+    {
+        var team = Team.Create(
+            Guid.NewGuid(), "No Coach FC", null, "Sevilla",
+            new TeamClassification(FootballType.Futsal, Division.First, AgeCategory.Juveniles), DateTime.UtcNow);
+
+        await using (var arrange = NewContext())
+        {
+            await new EfTeamRepository(arrange).AddAsync(team);
+            await new UnitOfWork(arrange).SaveChangesAsync();
+        }
+
+        await using var assert = NewContext();
+        var persisted = await assert.Teams.AsNoTracking().SingleAsync(t => t.Id == team.Id);
+        Assert.That(persisted.Coach, Is.Null);
+    }
+
+    [Test]
     public async Task AddAsync_thenCommit_persistsEveryColumn()
     {
         var team = TeamMother.DomainTeam(

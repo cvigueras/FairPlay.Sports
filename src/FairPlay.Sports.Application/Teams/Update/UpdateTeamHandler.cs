@@ -25,7 +25,9 @@ public sealed class UpdateTeamHandler(ITeamRepository repository) : IRequestHand
             request.Coach,
             request.City,
             request.ToClassification(),
-            request.ToProfile());
+            request.ToProfile(),
+            request.AcceptsChallenges,
+            request.VenueAvailable);
 
         return Result<TeamDto>.Success(TeamDto.FromDomain(team));
     }

@@ -15,7 +15,7 @@ public class TeamTests
 
     private static Team Create(
         string name = "FairPlay FC",
-        string coach = "Marta Rios",
+        string? coach = "Marta Rios",
         string city = "Sevilla",
         FootballType type = FootballType.Futsal,
         Division division = Division.First,
@@ -188,6 +188,96 @@ public class TeamTests
         Assert.That(
             () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(Website: "club.example")),
             Throws.ArgumentException);
+
+    [Test]
+    public void Create_StartsWithoutAcceptingChallenges()
+    {
+        Assert.That(Create().AcceptsChallenges, Is.False);
+    }
+
+    [Test]
+    public void Create_StartsWithoutAVenueAvailable()
+    {
+        Assert.That(Create().VenueAvailable, Is.False);
+    }
+
+    [Test]
+    public void Create_CanStartWithTheFlagsOn()
+    {
+        var team = Team.Create(
+            Guid.NewGuid(), "FairPlay FC", "Marta Rios", "Sevilla", Classification(), Now,
+            acceptsChallenges: true, venueAvailable: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.True);
+            Assert.That(team.VenueAvailable, Is.True);
+        });
+    }
+
+    [Test]
+    public void Update_LeavesTheFlagsAloneWhenNotGiven_AndSetsThemWhenGiven()
+    {
+        var team = Create();
+        team.SetAcceptsChallenges(true);
+
+        team.Update(team.Name, team.Coach, team.City, Classification(), FullProfile());
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.True);
+            Assert.That(team.VenueAvailable, Is.False);
+        });
+
+        team.Update(team.Name, team.Coach, team.City, Classification(), FullProfile(),
+            acceptsChallenges: false, venueAvailable: true);
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.False);
+            Assert.That(team.VenueAvailable, Is.True);
+        });
+    }
+
+    [Test]
+    public void SetVenueAvailable_TurnsTheFlagOnAndOff()
+    {
+        var team = Create();
+
+        team.SetVenueAvailable(true);
+        Assert.That(team.VenueAvailable, Is.True);
+
+        team.SetVenueAvailable(false);
+        Assert.That(team.VenueAvailable, Is.False);
+    }
+
+    [Test]
+    public void SetAcceptsChallenges_TurnsTheFlagOnAndOff()
+    {
+        var team = Create();
+
+        team.SetAcceptsChallenges(true);
+        Assert.That(team.AcceptsChallenges, Is.True);
+
+        team.SetAcceptsChallenges(false);
+        Assert.That(team.AcceptsChallenges, Is.False);
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void Create_WithABlankCoach_LeavesItUnset(string? coach)
+    {
+        Assert.That(Create(coach: coach).Coach, Is.Null);
+    }
+
+    [Test]
+    public void Update_WithABlankCoach_ClearsIt()
+    {
+        var team = Create();
+
+        team.Update(team.Name, "  ", team.City, Classification(), FullProfile());
+
+        Assert.That(team.Coach, Is.Null);
+    }
 
     [Test]
     public void Update_ReplacesCoreFieldsAndProfile()

@@ -2,12 +2,18 @@
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import AppShell from '@/components/AppShell.vue'
+import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 
 // Guest-only screens (login, register) keep their own full-screen layout with
-// no app chrome; every other route renders inside the nav shell.
+// no app chrome; so do public pages (privacy policy) while nobody is signed in,
+// since the nav shell only makes sense for an authenticated user. Every other
+// route renders inside the nav shell.
 const route = useRoute()
-const chromeless = computed(() => route.meta.guestOnly === true)
+const auth = useAuthStore()
+const chromeless = computed(
+  () => route.meta.guestOnly === true || (route.meta.public === true && !auth.isAuthenticated),
+)
 
 const ui = useUiStore()
 </script>

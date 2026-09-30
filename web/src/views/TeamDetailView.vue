@@ -2,10 +2,13 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
+  mdiAccountGroupOutline,
   mdiAccountOutline,
   mdiCalendarOutline,
   mdiEmailOutline,
   mdiGrass,
+  mdiHandshakeOutline,
+  mdiPencilOutline,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
@@ -19,18 +22,21 @@ import {
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
-import { CHALLENGE_ACTOR_ROLES, challengesApi } from '@/lib/challenges'
+import { useChallengeTeam } from '@/composables/useChallengeTeam'
+import { useEditTeam } from '@/composables/useEditTeam'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import TeamFlagSwitch from '@/components/TeamFlagSwitch.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
+import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { SURFACE_COLOR } from '@/lib/pitchSurface'
-import type { SendChallengePayload } from '@/types/challenge'
-import type { Team } from '@/types/team'
+import type { CreateTeamPayload, Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
 
@@ -43,6 +49,23 @@ const loading = ref(false)
 const notFound = ref(false)
 const error = ref('')
 
+/** The team's members, from which the leadership and the squad are derived. */
+const members = ref<TeamMembership[]>([])
+const membersLoaded = ref(false)
+const membersFailed = ref(false)
+
+async function loadMembers(id: string) {
+  membersLoaded.value = false
+  membersFailed.value = false
+  members.value = []
+  try {
+    members.value = await teamsApi.members.list(id, auth.accessToken)
+    membersLoaded.value = true
+  } catch {
+    membersFailed.value = true
+  }
+}
+
 async function load(id: string) {
   loading.value = true
   notFound.value = false
@@ -51,6 +74,8 @@ async function load(id: string) {
   try {
     team.value = await teamsApi.byId(id, auth.accessToken)
     ui.breadcrumbLabel = team.value.name
+    // Best-effort and not awaited: the rest of the page must not wait on the squad.
+    void loadMembers(id)
     // Best-effort: only used to decide whether to show the challenge button.
     auth.loadMyTeams().catch(() => {})
   } catch (err) {
@@ -79,6 +104,25 @@ const mapsHref = computed(() => {
     .join(', ')
   return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null
 })
+
+/** One slot per single-holder role; the team has at most one member in each. */
+const STAFF_ROLES: TeamMemberRole[] = ['President', 'Delegate', 'Coach', 'TechnicalStaff']
+
+const staff = computed(() =>
+  STAFF_ROLES.map((role) => ({ role, member: members.value.find((member) => member.role === role) ?? null })),
+)
+
+/** The hero shows the coach who is actually a member of the team; the free-text
+ *  `team.coach` is only the fallback while members load or nobody holds the role. */
+const coachName = computed(
+  () => members.value.find((member) => member.role === 'Coach')?.displayName ?? team.value?.coach ?? '',
+)
+
+const players = computed(() =>
+  members.value
+    .filter((member) => member.role === 'Player')
+    .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+)
 
 const hasVenue = computed(
   () => !!team.value && (team.value.venueName || team.value.venueAddress || team.value.venueSurface),
@@ -109,34 +153,32 @@ const hasContact = computed(
   () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
 )
 
-/** Never your own team (any role), and only for users who can actually act for
- *  some team (a pure Player, with no Delegate/Coach/President/TechnicalStaff
- *  membership anywhere, has no team to send a challenge from). */
-const canChallenge = computed(() => {
-  if (!team.value) return false
-  const teamId = team.value.id
-  if (auth.myTeams.some((membership) => membership.teamId === teamId)) return false
-  return auth.myTeams.some((membership) => CHALLENGE_ACTOR_ROLES.includes(membership.role))
-})
+const {
+  wizardOpen: challengeWizardOpen,
+  sending: sendingChallenge,
+  canChallenge,
+  open: challengeTeam,
+  submit: handleSendChallenge,
+  canSetAccepts,
+  toggleAccepts,
+  toggleVenueAvailable,
+  togglingTeamId,
+} = useChallengeTeam()
 
-const challengeWizardOpen = ref(false)
-const sendingChallenge = ref(false)
+// Edit: the same wizard and save flow as My teams, for members with a non-player role.
+const {
+  editing: editingTeam,
+  saving: savingEdit,
+  open: openEdit,
+  close: closeEdit,
+  update: updateTeam,
+} = useEditTeam()
 
-function challengeTeam() {
-  challengeWizardOpen.value = true
-}
-
-async function handleSendChallenge(payload: SendChallengePayload) {
-  sendingChallenge.value = true
-  try {
-    await challengesApi.send(payload, auth.accessToken)
-    challengeWizardOpen.value = false
-    ui.notify(t('challenges.wizard.sentSuccess', { team: team.value?.name }))
-  } catch (err) {
-    ui.notify(err instanceof ApiError ? err.message : t('challenges.wizard.sendFailed'), 'error')
-  } finally {
-    sendingChallenge.value = false
-  }
+async function handleUpdate(input: { payload: CreateTeamPayload; crest: File | null }) {
+  const updated = await updateTeam(input)
+  if (!updated) return
+  team.value = updated
+  ui.breadcrumbLabel = updated.name
 }
 </script>
 
@@ -172,6 +214,24 @@ async function handleSendChallenge(payload: SendChallengePayload) {
               </h1>
 
               <div class="team-hero-chips">
+                <v-chip
+                  v-if="team.acceptsChallenges"
+                  size="small"
+                  variant="flat"
+                  color="red"
+                  :prepend-icon="mdiHandshakeOutline"
+                >
+                  {{ t('teams.challengeStatus.badge') }}
+                </v-chip>
+                <v-chip
+                  v-if="team.venueAvailable"
+                  size="small"
+                  variant="flat"
+                  color="#2E7D32"
+                  :prepend-icon="mdiSoccerField"
+                >
+                  {{ t('teams.venueStatus.badge') }}
+                </v-chip>
                 <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]" :prepend-icon="mdiTagOutline">
                   {{ t(`profile.team.enums.${team.category}`) }}
                 </v-chip>
@@ -191,24 +251,60 @@ async function handleSendChallenge(payload: SendChallengePayload) {
 
               <div class="team-hero-facts text-body-2 text-medium-emphasis">
                 <span><v-icon size="16" :icon="mdiMapMarkerOutline" />{{ team.city }}</span>
-                <span><v-icon size="16" :icon="mdiAccountOutline" color="#5D4037" />{{ team.coach }}</span>
+                <span v-if="coachName">
+                  <v-icon size="16" :icon="mdiAccountOutline" color="#5D4037" />{{ coachName }}
+                </span>
                 <span v-if="team.foundedYear">
                   <v-icon size="16" :icon="mdiCalendarOutline" />{{ t('profile.team.foundedYear') }} {{ team.foundedYear }}
                 </span>
               </div>
             </div>
 
-            <v-btn
-              v-if="canChallenge"
-              color="red"
-              variant="flat"
-              size="large"
-              :prepend-icon="mdiSwordCross"
-              class="team-hero-challenge"
-              @click="challengeTeam"
-            >
-              {{ t('profile.team.challenge') }}
-            </v-btn>
+            <!-- Your own team (a non-player role): mark it open to any challenge. Never
+                 shown together with "Desafiar", which is for other teams. -->
+            <div v-if="canSetAccepts(team)" class="team-hero-accept">
+              <TeamFlagSwitch
+                plain
+                large
+                :label="t('common.edit')"
+                :icon="mdiPencilOutline"
+                color="#F59E0B"
+                text-color="#B45309"
+                @toggle="openEdit(team)"
+              />
+              <TeamFlagSwitch
+                :model-value="team.acceptsChallenges"
+                :label="t('teams.challengeStatus.button')"
+                :icon="mdiHandshakeOutline"
+                color="#F44336"
+                text-color="#B71C1C"
+                :busy="togglingTeamId === team.id"
+                large
+                @toggle="toggleAccepts(team)"
+              />
+              <TeamFlagSwitch
+                :model-value="team.venueAvailable"
+                :label="t('teams.venueStatus.button')"
+                :icon="mdiSoccerField"
+                color="#2E7D32"
+                text-color="#1B5E20"
+                :busy="togglingTeamId === team.id"
+                large
+                @toggle="toggleVenueAvailable(team)"
+              />
+            </div>
+
+            <div v-if="canChallenge(team)" class="team-hero-accept">
+              <TeamFlagSwitch
+                plain
+                large
+                :label="t('profile.team.challenge')"
+                :icon="mdiSwordCross"
+                color="#F44336"
+                text-color="#B71C1C"
+                @toggle="challengeTeam(team)"
+              />
+            </div>
           </div>
         </v-card>
 
@@ -330,6 +426,55 @@ async function handleSendChallenge(payload: SendChallengePayload) {
           </v-card>
         </div>
 
+        <!-- Directiva y plantilla: derived from the team's members (one per staff
+             role, any number of players), so it never drifts from who is really in. -->
+        <v-card
+          v-if="membersLoaded || membersFailed"
+          border
+          flat
+          rounded="xl"
+          class="pa-5 pa-md-6 mb-5"
+        >
+          <h2 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center ga-2">
+            <v-icon :icon="mdiAccountGroupOutline" />
+            {{ t('teams.detail.squadTitle') }}
+          </h2>
+
+          <p v-if="membersFailed" class="text-body-2 text-medium-emphasis mb-0">
+            {{ t('teams.detail.membersFailed') }}
+          </p>
+
+          <template v-else>
+            <div class="team-staff-grid">
+              <div v-for="slot in staff" :key="slot.role" class="team-staff-row">
+                <v-chip size="small" variant="tonal" :color="MEMBER_ROLE_COLOR[slot.role]">
+                  {{ t(`profile.team.memberRoles.${slot.role}`) }}
+                </v-chip>
+                <span v-if="slot.member" class="team-staff-name">{{ slot.member.displayName }}</span>
+                <span v-else class="team-staff-name team-staff-name--empty">
+                  {{ t('teams.detail.unassigned') }}
+                </span>
+              </div>
+            </div>
+
+            <h3 class="text-body-2 font-weight-bold mt-5 mb-2">
+              {{ t('teams.detail.playersTitle', { n: players.length }) }}
+            </h3>
+            <div v-if="players.length" class="team-players">
+              <v-chip
+                v-for="player in players"
+                :key="player.id"
+                size="small"
+                variant="tonal"
+                :color="MEMBER_ROLE_COLOR.Player"
+              >
+                {{ player.displayName }}
+              </v-chip>
+            </div>
+            <p v-else class="text-body-2 text-medium-emphasis mb-0">{{ t('teams.detail.noPlayers') }}</p>
+          </template>
+        </v-card>
+
         <!-- Campo (home venue): full width, fields laid out in a row. -->
         <v-card border flat rounded="xl" class="pa-6 pa-md-8">
           <div class="team-sheet-head mb-4">
@@ -376,8 +521,17 @@ async function handleSendChallenge(payload: SendChallengePayload) {
           </div>
         </v-card>
 
+        <!-- Edit the team: the wizard pre-filled from it, same as in My teams. -->
+        <TeamWizard
+          :model-value="!!editingTeam"
+          :initial="editingTeam"
+          :loading="savingEdit"
+          @update:model-value="(open) => { if (!open) closeEdit() }"
+          @update="handleUpdate"
+        />
+
         <ChallengeWizard
-          v-if="canChallenge"
+          v-if="canChallenge(team)"
           v-model="challengeWizardOpen"
           :rival-team="team"
           :loading="sendingChallenge"
@@ -435,16 +589,36 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   gap: 0.4rem;
 }
 
-.team-hero-challenge {
+.team-hero-accept {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   flex-shrink: 0;
   min-width: 12.5rem;
+  width: auto;
   margin-inline-start: auto;
+}
+
+/* Desktop: a more compact action than the mobile full-width button.
+   Every action here (Editar, Desafiame, Campo disponible and Desafiar) shares one fixed width,
+   height and type size. 13.75rem is what the widest one (Campo disponible + its switch) needs, so
+   the flag buttons keep their natural width and Desafiar is stretched to match them. */
+@media (min-width: 600px) {
+  .team-hero-accept {
+    width: 13.75rem;
+    min-width: 13.75rem;
+  }
+
+  .team-hero-accept :deep(.flag-switch) {
+    height: 36px;
+    font-size: 0.875rem;
+  }
 }
 
 /* Not enough room for crest, name and button on one line - stack the
    button below instead of squeezing the club name. */
 @media (max-width: 599px) {
-  .team-hero-challenge {
+  .team-hero-accept {
     width: 100%;
     margin-inline-start: 0;
   }
@@ -454,6 +628,9 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  /* Auto margins above and below centre the list in the card, so it lines up
+     horizontally with the Equipacion content beside it instead of hugging the top. */
+  margin-block: auto;
 }
 
 .team-contact-row {
@@ -531,6 +708,51 @@ async function handleSendChallenge(payload: SendChallengePayload) {
   .team-row-2col {
     grid-template-columns: 1fr;
   }
+}
+
+/* Directiva: one row per staff role, two columns on desktop. */
+.team-staff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1.5rem;
+}
+
+@media (max-width: 599px) {
+  .team-staff-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.team-staff-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.team-staff-row .v-chip {
+  flex: 0 0 7.5rem;
+  justify-content: center;
+}
+
+.team-staff-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.team-staff-name--empty {
+  font-weight: 400;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.team-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .team-panel {

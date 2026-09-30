@@ -70,7 +70,8 @@ export interface TeamProfileFields {
 export interface Team extends TeamProfileFields {
   id: string
   name: string
-  coach: string
+  /** Free-text coach name; optional - the coach can also be a member of the team. */
+  coach: string | null
   city: string
   type: FootballType
   /** Null for Aficionados, the only category that doesn't compete in divisions. */
@@ -79,11 +80,19 @@ export interface Team extends TeamProfileFields {
   hasCrest: boolean
   createdAt: string
   active: boolean
+  /** The team has said it is open to any challenge; shown as a badge on its detail. */
+  acceptsChallenges: boolean
+  /** The team has a venue available for friendly matches; shown as a badge. */
+  venueAvailable: boolean
 }
 
 interface TeamCorePayload {
   name: string
-  coach: string
+  coach?: string
+  /** The team says it is open to any challenge. */
+  acceptsChallenges?: boolean
+  /** The team has a venue available for friendly matches. */
+  venueAvailable?: boolean
   city: string
   type: FootballType
   division: Division | null

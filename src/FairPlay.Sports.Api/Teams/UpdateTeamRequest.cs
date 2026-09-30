@@ -4,7 +4,7 @@ namespace FairPlay.Sports.Api.Teams;
 
 public sealed record UpdateTeamRequest(
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type = default,
     Division? Division = null,
@@ -25,4 +25,6 @@ public sealed record UpdateTeamRequest(
     string? AlternateColorSecondary = null,
     KitPattern? AlternateKitPattern = null,
     string? ShortsColor = null,
-    string? AlternateShortsColor = null);
+    string? AlternateShortsColor = null,
+    bool? AcceptsChallenges = null,
+    bool? VenueAvailable = null);
