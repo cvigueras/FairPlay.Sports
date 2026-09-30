@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiCheckCircle, mdiCloseCircle, mdiLockOutline } from '@mdi/js'
+import { mdiAccountTieOutline, mdiCheckCircle, mdiCloseCircle, mdiLockOutline } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import ProfileAvatar from '@/components/ProfileAvatar.vue'
+import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
+import { fullName } from '@/lib/userName'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -15,6 +17,27 @@ const formatLongDate = (iso: string) =>
   new Date(iso).toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' })
 
 const memberSince = computed(() => (user.value ? formatLongDate(user.value.createdAt) : ''))
+
+/** "First Last" when the account has them (older accounts fall back to the username). */
+const displayName = computed(() => fullName(user.value))
+
+/** The role picked at sign-up, in the active language. */
+const primaryRoleLabel = computed(() =>
+  user.value ? t(`profile.team.memberRoles.${user.value.primaryRole}`) : '',
+)
+
+/** Read-only account data, one row each. `—` where an older account has no value. */
+const accountRows = computed(() => {
+  if (!user.value) return []
+  const u = user.value
+  const names = [u.firstName, u.lastName].filter(Boolean).join(' ')
+  return [
+    { label: t('profile.account.fullName'), value: names || '—', breakAll: false },
+    { label: t('profile.account.primaryRole'), value: primaryRoleLabel.value, breakAll: false },
+    { label: t('profile.account.userName'), value: u.userName, breakAll: false },
+    { label: t('profile.account.email'), value: u.email, breakAll: true },
+  ]
+})
 
 /* ---- Security (change password) ----------------------------------------------- */
 
@@ -66,11 +89,19 @@ async function changePassword() {
 
           <div class="flex-grow-1 d-flex flex-column ga-2" style="min-width: 0">
             <div class="d-flex flex-column flex-sm-row align-center align-sm-baseline ga-sm-3">
-              <h1 class="text-h5 font-weight-bold">{{ user.userName }}</h1>
+              <h1 class="text-h5 font-weight-bold">{{ displayName }}</h1>
               <span class="text-body-2 text-medium-emphasis">{{ user.email }}</span>
             </div>
 
             <div class="d-flex align-center justify-center justify-sm-start ga-3 flex-wrap">
+              <v-chip
+                :color="MEMBER_ROLE_COLOR[user.primaryRole]"
+                size="small"
+                variant="tonal"
+                :prepend-icon="mdiAccountTieOutline"
+              >
+                {{ primaryRoleLabel }}
+              </v-chip>
               <v-chip :color="user.role === 'Admin' ? 'amber-darken-2' : 'primary'" size="small" variant="tonal">
                 {{ user.role }}
               </v-chip>
@@ -92,27 +123,18 @@ async function changePassword() {
           <v-card border flat rounded="xl" class="pa-6 pa-md-8 mb-5 h-100">
             <h2 class="text-subtitle-1 font-weight-bold mb-5">{{ t('profile.account.title') }}</h2>
 
-            <div class="d-flex flex-column ga-1 mb-5">
-              <div class="d-flex align-center ga-2">
-                <span class="text-caption font-weight-medium text-medium-emphasis">
-                  {{ t('profile.account.userName') }}
+            <template v-for="(row, index) in accountRows" :key="row.label">
+              <v-divider v-if="index > 0" class="my-5" />
+              <div class="d-flex flex-column ga-1">
+                <div class="d-flex align-center ga-2">
+                  <span class="text-caption font-weight-medium text-medium-emphasis">{{ row.label }}</span>
+                  <v-icon :icon="mdiLockOutline" size="14" color="medium-emphasis" />
+                </div>
+                <span class="text-body-1" :style="row.breakAll ? 'word-break: break-all' : undefined">
+                  {{ row.value }}
                 </span>
-                <v-icon :icon="mdiLockOutline" size="14" color="medium-emphasis" />
               </div>
-              <span class="text-body-1">{{ user.userName }}</span>
-            </div>
-
-            <v-divider class="mb-5" />
-
-            <div class="d-flex flex-column ga-1">
-              <div class="d-flex align-center ga-2">
-                <span class="text-caption font-weight-medium text-medium-emphasis">
-                  {{ t('profile.account.email') }}
-                </span>
-                <v-icon :icon="mdiLockOutline" size="14" color="medium-emphasis" />
-              </div>
-              <span class="text-body-1" style="word-break: break-all">{{ user.email }}</span>
-            </div>
+            </template>
           </v-card>
         </v-col>
 

@@ -293,7 +293,9 @@
     "account": {
       "title": "Account information",
       "userName": "Username",
-      "email": "Email"
+      "email": "Email",
+      "fullName": "First and last name",
+      "primaryRole": "Main role"
     },
     "status": {
       "active": "Active account",
