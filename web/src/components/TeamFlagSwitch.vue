@@ -11,21 +11,19 @@ const props = withDefaults(
     modelValue: boolean
     label: string
     icon: string
-    /** Which theme colour lights up when it is on. */
-    tone?: 'success' | 'warning'
+    /** Accent colour: the icon, the label and (when on) the border and the track. */
+    color?: string
+    /** Darker shade of the accent, for the label on the tinted "on" background. */
+    textColor?: string
     busy?: boolean
     large?: boolean
   }>(),
-  { tone: 'success', busy: false, large: false },
+  { color: 'rgb(var(--v-theme-success))', textColor: '#166534', busy: false, large: false },
 )
 
 defineEmits<{ (e: 'toggle'): void }>()
 
-const toneStyle = computed(() =>
-  props.tone === 'warning'
-    ? { '--flag-color': 'rgb(var(--v-theme-warning))', '--flag-text': '#92400e' }
-    : { '--flag-color': 'rgb(var(--v-theme-success))', '--flag-text': '#166534' },
-)
+const toneStyle = computed(() => ({ '--flag-color': props.color, '--flag-text': props.textColor }))
 </script>
 
 <template>
@@ -63,7 +61,7 @@ const toneStyle = computed(() =>
   /* Same corner radius as the other buttons; only the inner track stays fully round. */
   border-radius: 4px;
   background: rgb(var(--v-theme-surface));
-  color: #475569;
+  color: var(--flag-color);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 500;

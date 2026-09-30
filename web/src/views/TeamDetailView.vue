@@ -248,6 +248,8 @@ const {
                 :model-value="team.acceptsChallenges"
                 :label="t('teams.challengeStatus.button')"
                 :icon="mdiHandshakeOutline"
+                color="#F44336"
+                text-color="#B71C1C"
                 :busy="togglingTeamId === team.id"
                 large
                 @toggle="toggleAccepts(team)"
@@ -256,7 +258,8 @@ const {
                 :model-value="team.venueAvailable"
                 :label="t('teams.venueStatus.button')"
                 :icon="mdiSoccerField"
-                tone="warning"
+                color="#2E7D32"
+                text-color="#1B5E20"
                 :busy="togglingTeamId === team.id"
                 large
                 @toggle="toggleVenueAvailable(team)"
