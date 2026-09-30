@@ -174,7 +174,12 @@
       "loadFailed": "No se ha podido cargar este equipo.",
       "noVenue": "Este equipo todavía no ha indicado su campo.",
       "noProfile": "Este equipo todavía no ha añadido más datos de la ficha.",
-      "noContact": "Este equipo todavía no ha añadido datos de contacto."
+      "noContact": "Este equipo todavía no ha añadido datos de contacto.",
+      "squadTitle": "Directiva y plantilla",
+      "unassigned": "Sin asignar",
+      "playersTitle": "Jugadores ({n})",
+      "noPlayers": "Todavía no hay jugadores en este equipo.",
+      "membersFailed": "No se han podido cargar los miembros del equipo."
     }
   },
   "standings": {
@@ -263,7 +268,7 @@
       "viewProfile": "Ver perfil"
     },
     "activation": {
-      "needsTeam": "Necesitas unirte a un equipo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
+      "needsTeam": "Necesitas unirte a un equipo existente o crear uno nuevo para activar tu cuenta. Mientras tanto puedes consultar tu perfil."
     },
     "photo": {
       "change": "Cambiar foto",
@@ -433,7 +438,8 @@
         "back": "Atrás",
         "next": "Siguiente",
         "finish": "Crear equipo"
-      }
+      },
+      "yourName": "Tu nombre"
     }
   },
   "language": {

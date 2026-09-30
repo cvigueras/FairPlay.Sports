@@ -250,7 +250,7 @@ async function confirmLeave() {
   <v-main>
     <v-container v-if="user" class="my-teams-container">
       <!-- The page title moved to the breadcrumb (see AppShell). -->
-      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning mb-5">
+      <div v-if="myTeams.length === 0" class="fp-alert fp-alert-warning justify-center text-center mb-5">
         {{ t('profile.activation.needsTeam') }}
       </div>
 

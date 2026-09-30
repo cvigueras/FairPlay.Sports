@@ -15,7 +15,7 @@ public sealed class Team
 
     public Guid Id { get; }
     public string Name { get; private set; }
-    public string Coach { get; private set; }
+    public string? Coach { get; private set; }
     public string City { get; private set; }
 
     public TeamClassification Classification { get; private set; } = null!;
@@ -41,7 +41,7 @@ public sealed class Team
     private Team(
         Guid id,
         string name,
-        string coach,
+        string? coach,
         string city)
     {
         Id = id;
@@ -53,7 +53,7 @@ public sealed class Team
     public static Team Create(
         Guid id,
         string name,
-        string coach,
+        string? coach,
         string city,
         TeamClassification classification,
         DateTime createdAtUtc,
@@ -76,7 +76,7 @@ public sealed class Team
 
     public void Update(
         string name,
-        string coach,
+        string? coach,
         string city,
         TeamClassification classification,
         TeamProfile profile)
@@ -125,13 +125,8 @@ public sealed class Team
         return name.Trim();
     }
 
-    private static string ValidateCoach(string coach)
-    {
-        if (string.IsNullOrWhiteSpace(coach))
-            throw new ArgumentException("Team coach is required.", nameof(coach));
-
-        return coach.Trim();
-    }
+    private static string? ValidateCoach(string? coach) =>
+        string.IsNullOrWhiteSpace(coach) ? null : coach.Trim();
 
     private static string ValidateCity(string city)
     {

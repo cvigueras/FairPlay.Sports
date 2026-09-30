@@ -33,7 +33,7 @@ public sealed record TeamFilter(
         if (!string.IsNullOrWhiteSpace(Coach))
         {
             var coach = SqlFunctions.Unaccent(Coach.Trim().ToLower());
-            query = query.Where(team => SqlFunctions.Unaccent(team.Coach.ToLower()).Contains(coach));
+            query = query.Where(team => team.Coach != null && SqlFunctions.Unaccent(team.Coach.ToLower()).Contains(coach));
         }
 
         if (Type is not null)

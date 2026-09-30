@@ -174,7 +174,12 @@
       "loadFailed": "Could not load this team.",
       "noVenue": "This team hasn't set up its home ground yet.",
       "noProfile": "This team hasn't added any club details yet.",
-      "noContact": "This team hasn't added any contact details yet."
+      "noContact": "This team hasn't added any contact details yet.",
+      "squadTitle": "Leadership and squad",
+      "unassigned": "Unassigned",
+      "playersTitle": "Players ({n})",
+      "noPlayers": "This team has no players yet.",
+      "membersFailed": "Could not load the team members."
     }
   },
   "standings": {
@@ -263,7 +268,7 @@
       "viewProfile": "View profile"
     },
     "activation": {
-      "needsTeam": "You need to join a team to activate your account. You can still browse your profile in the meantime."
+      "needsTeam": "You need to join an existing team or create a new one to activate your account. You can still browse your profile in the meantime."
     },
     "photo": {
       "change": "Change photo",
@@ -433,7 +438,8 @@
         "back": "Back",
         "next": "Next",
         "finish": "Create team"
-      }
+      },
+      "yourName": "Your name"
     }
   },
   "language": {

@@ -6,7 +6,7 @@ namespace FairPlay.Sports.Application.Teams.Create;
 
 public sealed record CreateTeamCommand(
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type,
     Division? Division,

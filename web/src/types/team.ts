@@ -70,7 +70,8 @@ export interface TeamProfileFields {
 export interface Team extends TeamProfileFields {
   id: string
   name: string
-  coach: string
+  /** Free-text coach name; optional - the coach can also be a member of the team. */
+  coach: string | null
   city: string
   type: FootballType
   /** Null for Aficionados, the only category that doesn't compete in divisions. */
@@ -83,7 +84,7 @@ export interface Team extends TeamProfileFields {
 
 interface TeamCorePayload {
   name: string
-  coach: string
+  coach?: string
   city: string
   type: FootballType
   division: Division | null

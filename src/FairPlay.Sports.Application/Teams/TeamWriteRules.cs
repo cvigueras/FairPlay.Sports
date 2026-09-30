@@ -14,7 +14,7 @@ internal static class TeamWriteRules
         where T : ITeamWriteFields
     {
         validator.RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        validator.RuleFor(x => x.Coach).NotEmpty().MaximumLength(100);
+        validator.RuleFor(x => x.Coach).MaximumLength(100);
         validator.RuleFor(x => x.City).NotEmpty().MaximumLength(100);
         validator.RuleFor(x => x.Type).IsInEnum();
         validator.RuleFor(x => x.Category).IsInEnum();

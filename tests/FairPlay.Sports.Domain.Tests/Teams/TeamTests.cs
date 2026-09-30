@@ -15,7 +15,7 @@ public class TeamTests
 
     private static Team Create(
         string name = "FairPlay FC",
-        string coach = "Marta Rios",
+        string? coach = "Marta Rios",
         string city = "Sevilla",
         FootballType type = FootballType.Futsal,
         Division division = Division.First,
@@ -188,6 +188,24 @@ public class TeamTests
         Assert.That(
             () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(Website: "club.example")),
             Throws.ArgumentException);
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void Create_WithABlankCoach_LeavesItUnset(string? coach)
+    {
+        Assert.That(Create(coach: coach).Coach, Is.Null);
+    }
+
+    [Test]
+    public void Update_WithABlankCoach_ClearsIt()
+    {
+        var team = Create();
+
+        team.Update(team.Name, "  ", team.City, Classification(), FullProfile());
+
+        Assert.That(team.Coach, Is.Null);
+    }
 
     [Test]
     public void Update_ReplacesCoreFieldsAndProfile()

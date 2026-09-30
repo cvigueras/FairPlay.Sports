@@ -8,7 +8,7 @@ namespace FairPlay.Sports.Application.Teams.Update;
 public sealed record UpdateTeamCommand(
     Guid Id,
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type,
     Division? Division,

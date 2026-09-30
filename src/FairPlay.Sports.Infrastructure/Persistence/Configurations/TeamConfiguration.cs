@@ -13,7 +13,7 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.HasKey(team => team.Id);
         builder.Property(team => team.Id).ValueGeneratedNever();
         builder.Property(team => team.Name).IsRequired().HasMaxLength(100);
-        builder.Property(team => team.Coach).IsRequired().HasMaxLength(100);
+        builder.Property(team => team.Coach).HasMaxLength(100);
         builder.Property(team => team.City).IsRequired().HasMaxLength(100);
 
         // Value object flattened onto the same columns (Type / Division / Category)

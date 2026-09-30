@@ -5,7 +5,7 @@ namespace FairPlay.Sports.Application.Teams;
 public sealed record TeamDto(
     Guid Id,
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type,
     Division? Division,

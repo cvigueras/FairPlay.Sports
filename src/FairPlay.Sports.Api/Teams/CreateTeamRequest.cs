@@ -4,7 +4,7 @@ namespace FairPlay.Sports.Api.Teams;
 
 public sealed record CreateTeamRequest(
     string Name,
-    string Coach,
+    string? Coach,
     string City,
     FootballType Type = default,
     Division? Division = null,
