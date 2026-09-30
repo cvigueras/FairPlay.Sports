@@ -576,6 +576,9 @@ const {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  /* Auto margins above and below centre the list in the card, so it lines up
+     horizontally with the Equipacion content beside it instead of hugging the top. */
+  margin-block: auto;
 }
 
 .team-contact-row {
