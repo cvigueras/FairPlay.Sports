@@ -96,6 +96,25 @@ public class TeamFilterTests
     }
 
     [Test]
+    public void VenueAvailable_matchesExactly()
+    {
+        var withVenue = TeamMother.DomainTeam(name: "Venue FC");
+        withVenue.SetVenueAvailable(true);
+        var teams = new[] { withVenue, TeamMother.DomainTeam(name: "NoVenue FC") }.AsQueryable();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                new TeamFilter(VenueAvailable: true).Apply(teams).Select(t => t.Name),
+                Is.EquivalentTo(new[] { "Venue FC" }));
+            Assert.That(
+                new TeamFilter(VenueAvailable: false).Apply(teams).Select(t => t.Name),
+                Is.EquivalentTo(new[] { "NoVenue FC" }));
+            Assert.That(new TeamFilter().Apply(teams).Count(), Is.EqualTo(2));
+        });
+    }
+
+    [Test]
     public void Predicates_areCombinedWithAnd()
     {
         var result = new TeamFilter(City: "Sevilla", Type: FootballType.Football11).Apply(Teams());

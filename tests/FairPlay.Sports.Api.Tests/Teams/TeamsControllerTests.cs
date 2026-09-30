@@ -15,6 +15,7 @@ using FairPlay.Sports.Application.Teams.GetMembers;
 using FairPlay.Sports.Application.Teams.JoinTeam;
 using FairPlay.Sports.Application.Teams.LeaveTeam;
 using FairPlay.Sports.Application.Teams.SetAcceptsChallenges;
+using FairPlay.Sports.Application.Teams.SetVenueAvailable;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -71,7 +72,8 @@ public class TeamsControllerTests
             Coach = "rios",
             Type = FootballType.Futsal,
             Active = true,
-            AcceptsChallenges = true
+            AcceptsChallenges = true,
+            VenueAvailable = true
         };
 
         var response = await _controller.GetPage(request, cancellationTokenSource.Token);
@@ -88,7 +90,8 @@ public class TeamsControllerTests
                 query.Filter.Coach == "rios" &&
                 query.Filter.Type == FootballType.Futsal &&
                 query.Filter.Active == true &&
-                query.Filter.AcceptsChallenges == true),
+                query.Filter.AcceptsChallenges == true &&
+                query.Filter.VenueAvailable == true),
             cancellationTokenSource.Token);
     }
 
@@ -271,6 +274,37 @@ public class TeamsControllerTests
         await _sender.Received(1).Send(
             Arg.Is<SetAcceptsChallengesCommand>(command =>
                 command.TeamId == id && command.Accepts && command.ActingUserId == currentUserId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task SetVenueAvailable_DispatchesTheCommandWithRouteIdBodyAndCurrentUser()
+    {
+        var id = Guid.NewGuid();
+        var currentUserId = Guid.NewGuid();
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new System.Security.Claims.ClaimsPrincipal(
+                    new System.Security.Claims.ClaimsIdentity([new System.Security.Claims.Claim("sub", currentUserId.ToString())]))
+            }
+        };
+        var dto = TeamMother.Dto(id) with { VenueAvailable = true };
+        _sender.Send(Arg.Any<SetVenueAvailableCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamDto>.Success(dto));
+
+        var response = await _controller.SetVenueAvailable(
+            id, new SetVenueAvailableRequest(true), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Is.InstanceOf<OkObjectResult>());
+            Assert.That(((OkObjectResult)response.Result!).Value, Is.SameAs(dto));
+        });
+        await _sender.Received(1).Send(
+            Arg.Is<SetVenueAvailableCommand>(command =>
+                command.TeamId == id && command.Available && command.ActingUserId == currentUserId),
             Arg.Any<CancellationToken>());
     }
 

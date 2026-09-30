@@ -196,6 +196,24 @@ public class TeamTests
     }
 
     [Test]
+    public void Create_StartsWithoutAVenueAvailable()
+    {
+        Assert.That(Create().VenueAvailable, Is.False);
+    }
+
+    [Test]
+    public void SetVenueAvailable_TurnsTheFlagOnAndOff()
+    {
+        var team = Create();
+
+        team.SetVenueAvailable(true);
+        Assert.That(team.VenueAvailable, Is.True);
+
+        team.SetVenueAvailable(false);
+        Assert.That(team.VenueAvailable, Is.False);
+    }
+
+    [Test]
     public void SetAcceptsChallenges_TurnsTheFlagOnAndOff()
     {
         var team = Create();

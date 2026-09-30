@@ -30,7 +30,8 @@ public sealed record TeamDto(
     string? AlternateColorSecondary,
     string? AlternateShortsColor,
     KitPattern? AlternateKitPattern,
-    bool AcceptsChallenges = false)
+    bool AcceptsChallenges = false,
+    bool VenueAvailable = false)
 {
     public static TeamDto FromDomain(Team team) =>
         new(
@@ -61,5 +62,6 @@ public sealed record TeamDto(
             team.AlternateColors?.Secondary,
             team.AlternateColors?.ShortsColor,
             team.AlternateColors?.Pattern,
-            team.AcceptsChallenges);
+            team.AcceptsChallenges,
+            team.VenueAvailable);
 }

@@ -38,6 +38,8 @@ public sealed class Team
 
     public bool AcceptsChallenges { get; private set; } = false;
 
+    public bool VenueAvailable { get; private set; } = false;
+
     public bool HasCrest => Crest is { Length: > 0 };
 
     private Team(
@@ -96,6 +98,8 @@ public sealed class Team
     public void Activate() => Active = true;
 
     public void SetAcceptsChallenges(bool accepts) => AcceptsChallenges = accepts;
+
+    public void SetVenueAvailable(bool available) => VenueAvailable = available;
 
     public void SetCrest(byte[] image, string contentType)
     {

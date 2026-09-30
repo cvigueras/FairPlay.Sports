@@ -82,6 +82,8 @@ export interface Team extends TeamProfileFields {
   active: boolean
   /** The team has said it is open to any challenge; shown as a badge on its detail. */
   acceptsChallenges: boolean
+  /** The team has a venue available for friendly matches; shown as a badge. */
+  venueAvailable: boolean
 }
 
 interface TeamCorePayload {

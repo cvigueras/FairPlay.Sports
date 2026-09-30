@@ -187,6 +187,13 @@
       "enabled": "Tu equipo acepta desafíos: los demás lo verán en su ficha.",
       "disabled": "Tu equipo ya no aparece como abierto a desafíos.",
       "failed": "No se ha podido actualizar el equipo."
+    },
+    "venueStatus": {
+      "button": "Campo disponible",
+      "badge": "Campo disponible",
+      "enabled": "Tu equipo tiene el campo disponible: los demás lo verán en su ficha.",
+      "disabled": "Tu equipo ya no aparece con el campo disponible.",
+      "failed": "No se ha podido actualizar el equipo."
     }
   },
   "standings": {

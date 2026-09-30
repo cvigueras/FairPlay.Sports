@@ -187,6 +187,13 @@
       "enabled": "Your team accepts challenges: others will see it on its page.",
       "disabled": "Your team no longer shows as open to challenges.",
       "failed": "Could not update the team."
+    },
+    "venueStatus": {
+      "button": "Venue available",
+      "badge": "Venue available",
+      "enabled": "Your team has its venue available: others will see it on its page.",
+      "disabled": "Your team no longer shows its venue as available.",
+      "failed": "Could not update the team."
     }
   },
   "standings": {

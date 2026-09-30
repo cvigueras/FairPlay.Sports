@@ -1,16 +1,31 @@
 <script setup lang="ts">
-import { mdiHandshakeOutline } from '@mdi/js'
-import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 
 /**
- * "Desafiame!" as one pill: icon, a label that never changes, and a small
- * on/off track on the right. Sized to sit next to the row's buttons; the parent
- * decides the width.
+ * A team on/off flag ("Desafiame!", "Campo disponible") as one button: icon, a
+ * label that never changes, and a small on/off track on the right. Sized to sit
+ * next to the row's buttons; the parent decides the width.
  */
-defineProps<{ modelValue: boolean; busy?: boolean; large?: boolean }>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean
+    label: string
+    icon: string
+    /** Which theme colour lights up when it is on. */
+    tone?: 'success' | 'warning'
+    busy?: boolean
+    large?: boolean
+  }>(),
+  { tone: 'success', busy: false, large: false },
+)
+
 defineEmits<{ (e: 'toggle'): void }>()
 
-const { t } = useI18n()
+const toneStyle = computed(() =>
+  props.tone === 'warning'
+    ? { '--flag-color': 'rgb(var(--v-theme-warning))', '--flag-text': '#92400e' }
+    : { '--flag-color': 'rgb(var(--v-theme-success))', '--flag-text': '#166534' },
+)
 </script>
 
 <template>
@@ -19,20 +34,21 @@ const { t } = useI18n()
     role="switch"
     :aria-checked="modelValue"
     :disabled="busy"
-    class="accept-switch"
-    :class="{ 'accept-switch--on': modelValue, 'accept-switch--large': large }"
+    class="flag-switch"
+    :class="{ 'flag-switch--on': modelValue, 'flag-switch--large': large }"
+    :style="toneStyle"
     @click="$emit('toggle')"
   >
-    <v-icon :icon="mdiHandshakeOutline" :size="large ? 20 : 16" />
-    <span class="accept-switch__label">{{ t('teams.challengeStatus.button') }}</span>
-    <span class="accept-switch__track" aria-hidden="true">
-      <span class="accept-switch__thumb" />
+    <v-icon :icon="icon" :size="large ? 20 : 16" />
+    <span class="flag-switch__label">{{ label }}</span>
+    <span class="flag-switch__track" aria-hidden="true">
+      <span class="flag-switch__thumb" />
     </span>
   </button>
 </template>
 
 <style scoped>
-.accept-switch {
+.flag-switch {
   --track-w: 26px;
   --track-h: 14px;
   --thumb: 10px;
@@ -59,7 +75,7 @@ const { t } = useI18n()
     color 0.18s ease;
 }
 
-.accept-switch--large {
+.flag-switch--large {
   --track-w: 34px;
   --track-h: 18px;
   --thumb: 14px;
@@ -70,12 +86,12 @@ const { t } = useI18n()
   gap: 0.6rem;
 }
 
-.accept-switch__label {
+.flag-switch__label {
   flex: 1 1 auto;
   text-align: left;
 }
 
-.accept-switch__track {
+.flag-switch__track {
   position: relative;
   flex: 0 0 auto;
   width: var(--track-w);
@@ -85,7 +101,7 @@ const { t } = useI18n()
   transition: background-color 0.18s ease;
 }
 
-.accept-switch__thumb {
+.flag-switch__thumb {
   position: absolute;
   top: calc((var(--track-h) - var(--thumb)) / 2);
   left: calc((var(--track-h) - var(--thumb)) / 2);
@@ -97,26 +113,26 @@ const { t } = useI18n()
   transition: transform 0.18s ease;
 }
 
-.accept-switch--on {
-  border-color: rgb(var(--v-theme-success));
-  background: color-mix(in srgb, rgb(var(--v-theme-success)) 10%, rgb(var(--v-theme-surface)));
-  color: #166534;
+.flag-switch--on {
+  border-color: var(--flag-color);
+  background: color-mix(in srgb, var(--flag-color) 10%, rgb(var(--v-theme-surface)));
+  color: var(--flag-text);
 }
 
-.accept-switch--on .accept-switch__track {
-  background: rgb(var(--v-theme-success));
+.flag-switch--on .flag-switch__track {
+  background: var(--flag-color);
 }
 
-.accept-switch--on .accept-switch__thumb {
+.flag-switch--on .flag-switch__thumb {
   transform: translateX(calc(var(--track-w) - var(--track-h)));
 }
 
-.accept-switch:focus-visible {
+.flag-switch:focus-visible {
   outline: 2px solid rgb(var(--v-theme-primary));
   outline-offset: 2px;
 }
 
-.accept-switch:disabled {
+.flag-switch:disabled {
   opacity: 0.6;
   cursor: default;
 }

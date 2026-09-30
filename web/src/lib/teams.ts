@@ -17,6 +17,8 @@ export interface TeamFilters {
   city?: string
   /** Only teams that have said they are open to any challenge. */
   acceptsChallenges?: boolean
+  /** Only teams with a venue available for friendlies. */
+  venueAvailable?: boolean
   type?: FootballType
   division?: Division
   category?: AgeCategory
@@ -61,6 +63,10 @@ export const teamsApi = {
   /** Sets whether the team is open to any challenge (its non-player members only). */
   setAcceptsChallenges: (teamId: string, accepts: boolean, token?: string | null) =>
     http.put<Team>(`/api/Teams/${teamId}/accepts-challenges`, { accepts }, { token }),
+
+  /** Sets whether the team has a venue available for friendlies (its non-player members only). */
+  setVenueAvailable: (teamId: string, available: boolean, token?: string | null) =>
+    http.put<Team>(`/api/Teams/${teamId}/venue-available`, { available }, { token }),
 
   members: {
     /** All members of a team, with their role and in-team display name. */

@@ -53,6 +53,20 @@ export function useChallengeTeam() {
     }
   }
 
+  /** Same as toggleAccepts, for "venue available for friendly matches". */
+  async function toggleVenueAvailable(team: Team) {
+    togglingTeamId.value = team.id
+    try {
+      const updated = await teamsApi.setVenueAvailable(team.id, !team.venueAvailable, auth.accessToken)
+      team.venueAvailable = updated.venueAvailable
+      ui.notify(t(updated.venueAvailable ? 'teams.venueStatus.enabled' : 'teams.venueStatus.disabled'))
+    } catch (err) {
+      ui.notify(err instanceof ApiError ? err.message : t('teams.venueStatus.failed'), 'error')
+    } finally {
+      togglingTeamId.value = null
+    }
+  }
+
   function open(team: Team) {
     rival.value = team
     wizardOpen.value = true
@@ -71,5 +85,5 @@ export function useChallengeTeam() {
     }
   }
 
-  return { wizardOpen, rival, sending, canChallenge, open, submit, canSetAccepts, toggleAccepts, togglingTeamId }
+  return { wizardOpen, rival, sending, canChallenge, open, submit, canSetAccepts, toggleAccepts, toggleVenueAvailable, togglingTeamId }
 }

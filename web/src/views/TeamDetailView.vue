@@ -24,10 +24,10 @@ import { teamsApi } from '@/lib/teams'
 import { useChallengeTeam } from '@/composables/useChallengeTeam'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
-import AcceptChallengesSwitch from '@/components/AcceptChallengesSwitch.vue'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import TeamFlagSwitch from '@/components/TeamFlagSwitch.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
@@ -158,6 +158,7 @@ const {
   submit: handleSendChallenge,
   canSetAccepts,
   toggleAccepts,
+  toggleVenueAvailable,
   togglingTeamId,
 } = useChallengeTeam()
 </script>
@@ -203,6 +204,15 @@ const {
                 >
                   {{ t('teams.challengeStatus.badge') }}
                 </v-chip>
+                <v-chip
+                  v-if="team.venueAvailable"
+                  size="small"
+                  variant="flat"
+                  color="warning"
+                  :prepend-icon="mdiSoccerField"
+                >
+                  {{ t('teams.venueStatus.badge') }}
+                </v-chip>
                 <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]" :prepend-icon="mdiTagOutline">
                   {{ t(`profile.team.enums.${team.category}`) }}
                 </v-chip>
@@ -233,14 +243,25 @@ const {
 
             <!-- Your own team (a non-player role): mark it open to any challenge. Never
                  shown together with "Desafiar", which is for other teams. -->
-            <AcceptChallengesSwitch
-                  v-if="canSetAccepts(team)"
-                  :model-value="team.acceptsChallenges"
-                  :busy="togglingTeamId === team.id"
-                  large
-                  class="team-hero-accept"
-                  @toggle="toggleAccepts(team)"
-                />
+            <div v-if="canSetAccepts(team)" class="team-hero-accept">
+              <TeamFlagSwitch
+                :model-value="team.acceptsChallenges"
+                :label="t('teams.challengeStatus.button')"
+                :icon="mdiHandshakeOutline"
+                :busy="togglingTeamId === team.id"
+                large
+                @toggle="toggleAccepts(team)"
+              />
+              <TeamFlagSwitch
+                :model-value="team.venueAvailable"
+                :label="t('teams.venueStatus.button')"
+                :icon="mdiSoccerField"
+                tone="warning"
+                :busy="togglingTeamId === team.id"
+                large
+                @toggle="toggleVenueAvailable(team)"
+              />
+            </div>
 
             <v-btn
               v-if="canChallenge(team)"
@@ -529,6 +550,9 @@ const {
 }
 
 .team-hero-accept {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   flex-shrink: 0;
   min-width: 12.5rem;
   width: auto;
@@ -553,6 +577,9 @@ const {
 
   .team-hero-accept {
     min-width: 11rem;
+  }
+
+  .team-hero-accept :deep(.flag-switch) {
     height: 36px;
     font-size: 0.875rem;
   }
