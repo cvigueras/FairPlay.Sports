@@ -8,6 +8,7 @@ import {
   mdiEmailOutline,
   mdiGrass,
   mdiHandshakeOutline,
+  mdiPencilOutline,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
@@ -22,18 +23,20 @@ import {
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useChallengeTeam } from '@/composables/useChallengeTeam'
+import { useEditTeam } from '@/composables/useEditTeam'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import TeamFlagSwitch from '@/components/TeamFlagSwitch.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { SURFACE_COLOR } from '@/lib/pitchSurface'
-import type { Team, TeamMemberRole, TeamMembership } from '@/types/team'
+import type { CreateTeamPayload, Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
 
@@ -161,6 +164,22 @@ const {
   toggleVenueAvailable,
   togglingTeamId,
 } = useChallengeTeam()
+
+// Edit: the same wizard and save flow as My teams, for members with a non-player role.
+const {
+  editing: editingTeam,
+  saving: savingEdit,
+  open: openEdit,
+  close: closeEdit,
+  update: updateTeam,
+} = useEditTeam()
+
+async function handleUpdate(input: { payload: CreateTeamPayload; crest: File | null }) {
+  const updated = await updateTeam(input)
+  if (!updated) return
+  team.value = updated
+  ui.breadcrumbLabel = updated.name
+}
 </script>
 
 <template>
@@ -244,6 +263,15 @@ const {
             <!-- Your own team (a non-player role): mark it open to any challenge. Never
                  shown together with "Desafiar", which is for other teams. -->
             <div v-if="canSetAccepts(team)" class="team-hero-accept">
+              <TeamFlagSwitch
+                plain
+                large
+                :label="t('common.edit')"
+                :icon="mdiPencilOutline"
+                color="#F59E0B"
+                text-color="#B45309"
+                @toggle="openEdit(team)"
+              />
               <TeamFlagSwitch
                 :model-value="team.acceptsChallenges"
                 :label="t('teams.challengeStatus.button')"
@@ -492,6 +520,15 @@ const {
             <p class="text-body-2 mb-0">{{ t('teams.detail.noVenue') }}</p>
           </div>
         </v-card>
+
+        <!-- Edit the team: the wizard pre-filled from it, same as in My teams. -->
+        <TeamWizard
+          :model-value="!!editingTeam"
+          :initial="editingTeam"
+          :loading="savingEdit"
+          @update:model-value="(open) => { if (!open) closeEdit() }"
+          @update="handleUpdate"
+        />
 
         <ChallengeWizard
           v-if="canChallenge(team)"

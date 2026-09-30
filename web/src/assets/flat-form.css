@@ -180,6 +180,15 @@
   color: rgb(var(--v-theme-error));
   border-color: #fecaca;
 }
+/* Edit: an amber accent, so it reads apart from view (neutral) and leave (red). */
+.fp-icon-btn--edit {
+  color: #b45309;
+  border-color: #fcd34d;
+}
+.fp-icon-btn--edit:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
 
 .fp-section-title {
   font-weight: 700;

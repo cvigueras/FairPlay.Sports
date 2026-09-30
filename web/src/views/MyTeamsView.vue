@@ -20,6 +20,7 @@ import RolePills from '@/components/RolePills.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
 import { useCreateTeam, type NewTeamInput } from '@/composables/useCreateTeam'
+import { useEditTeam } from '@/composables/useEditTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
@@ -176,31 +177,22 @@ async function handleCreate(input: NewTeamInput) {
 
 /* ---- Edit a team ------------------------------------------------------------ */
 
-const editingTeamId = ref<string | null>(null)
-const editingTeam = computed(() =>
-  editingTeamId.value ? (teamDetails.value[editingTeamId.value] ?? null) : null,
-)
-const savingEdit = ref(false)
+const {
+  editing: editingTeam,
+  saving: savingEdit,
+  open: openEditTeam,
+  close: closeEdit,
+  update: updateTeam,
+} = useEditTeam()
 
 function openEdit(teamId: string) {
-  editingTeamId.value = teamId
+  const team = teamDetails.value[teamId]
+  if (team) openEditTeam(team)
 }
 
-async function handleUpdate({ payload, crest }: { payload: CreateTeamPayload; crest: File | null }) {
-  if (!editingTeam.value) return
-  savingEdit.value = true
-  try {
-    const updated = await teamsApi.update(editingTeam.value.id, payload, auth.accessToken)
-    if (crest) await teamsApi.uploadCrest(updated.id, crest, auth.accessToken)
-
-    const withCrest = crest ? { ...updated, hasCrest: true } : updated
-    teamDetails.value = { ...teamDetails.value, [withCrest.id]: withCrest }
-    editingTeamId.value = null
-  } catch (error) {
-    ui.notify(error instanceof ApiError ? error.message : t('profile.team.updateFailed'), 'error')
-  } finally {
-    savingEdit.value = false
-  }
+async function handleUpdate(input: { payload: CreateTeamPayload; crest: File | null }) {
+  const updated = await updateTeam(input)
+  if (updated) teamDetails.value = { ...teamDetails.value, [updated.id]: updated }
 }
 
 /* ---- Leave a team ------------------------------------------------------------ */
@@ -481,7 +473,7 @@ async function confirmLeave() {
                     <button
                       type="button"
                       v-bind="tooltipProps"
-                      class="fp-icon-btn"
+                      class="fp-icon-btn fp-icon-btn--edit"
                       :aria-label="t('profile.team.editTitle')"
                       @click="openEdit(team.id)"
                     >
@@ -586,7 +578,7 @@ async function confirmLeave() {
                       <v-icon :icon="mdiCardAccountDetailsOutline" size="18" />
                       {{ t('profile.team.viewDetails') }}
                     </router-link>
-                    <button type="button" class="fp-accordion-action" @click="openEdit(team.id)">
+                    <button type="button" class="fp-accordion-action fp-accordion-action--edit" @click="openEdit(team.id)">
                       <v-icon :icon="mdiPencilOutline" size="18" />
                       {{ t('profile.team.editTitle') }}
                     </button>
@@ -616,7 +608,7 @@ async function confirmLeave() {
       :model-value="!!editingTeam"
       :initial="editingTeam"
       :loading="savingEdit"
-      @update:model-value="(open) => { if (!open) editingTeamId = null }"
+      @update:model-value="(open) => { if (!open) closeEdit() }"
       @update="handleUpdate"
     />
 
@@ -839,6 +831,11 @@ async function confirmLeave() {
 .fp-accordion-action--danger {
   color: rgb(var(--v-theme-error));
   border-color: #fecaca;
+}
+
+.fp-accordion-action--edit {
+  color: #b45309;
+  border-color: #fcd34d;
 }
 
 /* Mobile only (below Vuetify's `md` breakpoint, where the two columns stack
