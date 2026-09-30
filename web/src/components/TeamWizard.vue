@@ -105,10 +105,11 @@ function resetForm() {
   isEdit.value = false
   kitColorSlot.value = 'primary'
   alternateKitColorSlot.value = 'primary'
+  const primaryRole = auth.currentUser?.primaryRole ?? null
   Object.assign(model, {
     name: '',
-    role: null,
-    coach: '',
+    role: primaryRole,
+    coach: primaryRole === 'Coach' ? (auth.currentUser?.userName ?? '') : '',
     city: '',
     type: null,
     division: null,

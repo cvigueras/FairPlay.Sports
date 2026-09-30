@@ -206,15 +206,14 @@
     }
   },
   "validation": {
-    "userNameRequired": "Username is required.",
     "emailRequired": "Email is required.",
     "emailInvalid": "Enter a valid email.",
     "passwordRequired": "Password is required.",
     "passwordMinLength": "Must be at least 8 characters.",
-    "passwordsMismatch": "Passwords do not match."
+    "passwordsMismatch": "Passwords do not match.",
+    "primaryRoleRequired": "Pick your main role."
   },
   "login": {
-    "title": "Sign in",
     "subtitle": "Welcome back to FairPlay Sports",
     "heroEyebrow": "Football · Friendly matches",
     "heroTitle": "Challenge other teams. Play the match.",
@@ -234,7 +233,6 @@
     "goRegister": "Sign up"
   },
   "register": {
-    "title": "Create account",
     "subtitle": "Join FairPlay Sports",
     "userName": "Username",
     "userNamePlaceholder": "your_username",
@@ -246,7 +244,15 @@
     "submitting": "Creating account...",
     "failed": "Could not complete the registration. Please try again.",
     "haveAccount": "Already have an account?",
-    "goLogin": "Sign in"
+    "goLogin": "Sign in",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "primaryRole": "Your main role",
+    "privacyPrefix": "I have read and accept the",
+    "privacyLink": "privacy policy",
+    "ageConfirm": "I confirm that I am 14 years old or older.",
+    "aboutYou": "About you",
+    "yourAccount": "Your account"
   },
   "profile": {
     "logout": "Log out",
@@ -434,5 +440,44 @@
     "label": "Language",
     "es": "Spanish",
     "en": "English"
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "version": "Version {version}",
+    "back": "Back",
+    "sections": [
+      {
+        "h": "Data controller",
+        "p": "[NAME OR COMPANY NAME], tax ID [TAX ID], registered at [ADDRESS]. Privacy contact: [CONTACT EMAIL]."
+      },
+      {
+        "h": "What data we process",
+        "p": "First and last name, username, email address, password (stored hashed, never in clear text), main role (delegate, coach, president, technical staff or player), the teams you belong to, your profile photo if you choose to upload one, and the date and version of this policy you accepted."
+      },
+      {
+        "h": "What we use it for and the legal basis",
+        "p": "Creating and managing your account, letting you join teams and send or answer friendly-match challenges: this is necessary to provide the service you request (art. 6.1.b GDPR). Your profile photo is optional and based on your consent (art. 6.1.a), given when you upload it and withdrawable by asking for its removal. Keeping your account secure, preventing abuse and keeping proof that you accepted this policy is based on our legitimate interest (art. 6.1.f)."
+      },
+      {
+        "h": "Minimum age",
+        "p": "FairPlay Sports is only for people aged 14 or older. By signing up you confirm you meet this requirement. If we find an account belongs to someone under that age, we will delete it."
+      },
+      {
+        "h": "Who can see your data",
+        "p": "Your name, role, teams and photo may be visible to other users of the app. We also use providers that process data on our behalf under a data processing agreement: hosting at [HOSTING PROVIDER AND COUNTRY]. [STATE WHETHER THERE ARE TRANSFERS OUTSIDE THE EEA AND THEIR SAFEGUARDS, OR REMOVE THIS SENTENCE]. We do not sell your data or hand it to third parties for commercial purposes."
+      },
+      {
+        "h": "How long we keep it",
+        "p": "For as long as your account is active. When you ask to close it, we erase your data, except what we must keep blocked during the legal limitation periods for possible liabilities."
+      },
+      {
+        "h": "Cookies",
+        "p": "We use a single strictly necessary technical cookie to keep you signed in. It requires no consent, and we use no analytics or advertising cookies."
+      },
+      {
+        "h": "Your rights",
+        "p": "You can request access, rectification, erasure, objection, restriction of processing and portability of your data, and withdraw your consent at any time, by writing to [CONTACT EMAIL]. If you think we are not handling your data properly, you can complain to your data protection authority (in Spain, the AEPD: www.aepd.es)."
+      }
+    ]
   }
 }

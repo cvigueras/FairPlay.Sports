@@ -51,7 +51,15 @@ public sealed class UsersController(ISender sender) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> Register(RegisterUserRequest request, CancellationToken cancellationToken)
     {
-        var command = new RegisterUserCommand(request.UserName, request.Email, request.Password);
+        var command = new RegisterUserCommand(
+            request.UserName,
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.Password,
+            request.PrimaryRole,
+            request.AcceptedPrivacyPolicy,
+            request.ConfirmedMinimumAge);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)

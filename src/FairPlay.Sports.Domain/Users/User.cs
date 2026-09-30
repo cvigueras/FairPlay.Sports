@@ -1,3 +1,5 @@
+using FairPlay.Sports.Domain.Teams;
+
 namespace FairPlay.Sports.Domain.Users;
 
 public sealed class User
@@ -9,9 +11,15 @@ public sealed class User
 
     public Guid Id { get; }
     public string UserName { get; private set; }
+    public string FirstName { get; private set; }
+    public string LastName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
     public UserRole Role { get; private set; }
+    public TeamMemberRole PrimaryRole { get; private set; }
+
+    public string? PrivacyPolicyVersion { get; }
+    public DateTime? PrivacyAcceptedAt { get; }
 
     public byte[]? Photo { get; private set; }
     public string? PhotoContentType { get; private set; }
@@ -24,16 +32,25 @@ public sealed class User
     private User(
         Guid id,
         string userName,
+        string firstName,
+        string lastName,
         string email,
         string passwordHash,
         UserRole role,
+        TeamMemberRole primaryRole,
+        string privacyPolicyVersion,
         DateTime createdAt)
     {
         Id = id;
         UserName = userName;
+        FirstName = firstName;
+        LastName = lastName;
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
+        PrimaryRole = primaryRole;
+        PrivacyPolicyVersion = privacyPolicyVersion;
+        PrivacyAcceptedAt = createdAt;
         CreatedAt = createdAt;
     }
 
@@ -43,11 +60,25 @@ public sealed class User
         string email,
         string passwordHash,
         DateTime createdAtUtc,
+        string firstName,
+        string lastName,
+        TeamMemberRole primaryRole,
+        string privacyPolicyVersion,
         UserRole role = UserRole.Member)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("User id cannot be empty.", nameof(id));
-        return new(id, ValidateUserName(userName), ValidateEmail(email), ValidatePasswordHash(passwordHash), role, createdAtUtc);
+        return new(
+            id,
+            ValidateUserName(userName),
+            ValidateName(firstName, nameof(firstName), "First name"),
+            ValidateName(lastName, nameof(lastName), "Last name"),
+            ValidateEmail(email),
+            ValidatePasswordHash(passwordHash),
+            role,
+            ValidatePrimaryRole(primaryRole),
+            ValidatePrivacyPolicyVersion(privacyPolicyVersion),
+            createdAtUtc);
     }
 
     public void Activate() => Active = true;
@@ -78,6 +109,30 @@ public sealed class User
             throw new ArgumentException("User name is required.", nameof(userName));
 
         return userName.Trim();
+    }
+
+    private static string ValidateName(string value, string paramName, string label)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException($"{label} is required.", paramName);
+
+        return value.Trim();
+    }
+
+    private static TeamMemberRole ValidatePrimaryRole(TeamMemberRole primaryRole)
+    {
+        if (!Enum.IsDefined(primaryRole))
+            throw new ArgumentException("Primary role is not valid.", nameof(primaryRole));
+
+        return primaryRole;
+    }
+
+    private static string ValidatePrivacyPolicyVersion(string version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+            throw new ArgumentException("Privacy policy version is required.", nameof(version));
+
+        return version.Trim();
     }
 
     private static string ValidateEmail(string email)

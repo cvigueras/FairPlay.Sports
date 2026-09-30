@@ -43,7 +43,7 @@ const teamDetails = ref<Record<string, Team>>({})
 const loadingMyTeams = ref(false)
 const selectedTeamId = ref<string | null>(null)
 const selectedTeam = ref<Team | null>(null)
-const joinRole = ref<TeamMemberRole | null>(null)
+const joinRole = ref<TeamMemberRole | null>(auth.currentUser?.primaryRole ?? null)
 /** Fixed to the account's username - joining a team always uses it, not a
  *  per-team nickname (that's what the create wizard's own name field is for). */
 const joinDisplayName = ref(auth.currentUser?.userName ?? '')
@@ -154,7 +154,7 @@ async function saveTeam() {
     ui.notify(t('profile.team.saved'), 'success')
     selectedTeamId.value = null
     selectedTeam.value = null
-    joinRole.value = null
+    joinRole.value = auth.currentUser?.primaryRole ?? null
     teamSearch.value = ''
     joinPanelOpen.value = false
   } catch (error) {

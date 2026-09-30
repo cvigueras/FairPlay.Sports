@@ -92,6 +92,9 @@ public class RegisterUserHandlerTests
         Assert.Multiple(() =>
         {
             Assert.That(result.Value!.UserName, Is.EqualTo(UserMother.UserName));
+            Assert.That(result.Value!.FirstName, Is.EqualTo(UserMother.FirstName));
+            Assert.That(result.Value!.LastName, Is.EqualTo(UserMother.LastName));
+            Assert.That(result.Value!.PrimaryRole, Is.EqualTo(UserMother.PrimaryRole));
             Assert.That(result.Value!.Email, Is.EqualTo(UserMother.Email));
             Assert.That(result.Value!.Active, Is.False);
             Assert.That(result.Value!.CreatedAt, Is.EqualTo(Now));
@@ -103,6 +106,11 @@ public class RegisterUserHandlerTests
                 user.PasswordHash == "HASHED" &&
                 user.UserName == UserMother.UserName &&
                 user.Email == UserMother.Email &&
+                user.FirstName == UserMother.FirstName &&
+                user.LastName == UserMother.LastName &&
+                user.PrimaryRole == UserMother.PrimaryRole &&
+                user.PrivacyPolicyVersion == PrivacyPolicy.CurrentVersion &&
+                user.PrivacyAcceptedAt == Now &&
                 !user.Active &&
                 user.Id != Guid.Empty &&
                 user.CreatedAt == Now),

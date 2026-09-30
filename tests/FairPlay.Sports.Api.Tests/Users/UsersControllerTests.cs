@@ -98,8 +98,13 @@ public class UsersControllerTests
         await _sender.Received(1).Send(
             Arg.Is<RegisterUserCommand>(command =>
                 command.UserName == request.UserName &&
+                command.FirstName == request.FirstName &&
+                command.LastName == request.LastName &&
                 command.Email == request.Email &&
-                command.Password == request.Password),
+                command.Password == request.Password &&
+                command.PrimaryRole == request.PrimaryRole &&
+                command.AcceptedPrivacyPolicy == request.AcceptedPrivacyPolicy &&
+                command.ConfirmedMinimumAge == request.ConfirmedMinimumAge),
             Arg.Any<CancellationToken>());
     }
 

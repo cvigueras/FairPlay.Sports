@@ -1,4 +1,5 @@
 using FairPlay.Sports.Application.Users;
+using FairPlay.Sports.Domain.Teams;
 using FairPlay.Sports.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using IdentityPasswordHasher = Microsoft.AspNetCore.Identity.PasswordHasher<FairPlay.Sports.Domain.Users.User>;
@@ -12,7 +13,8 @@ namespace FairPlay.Sports.Infrastructure.Security;
 internal sealed class PasswordHasher : IPasswordHasher
 {
     private static readonly User HashingContext = User.Create(
-        Guid.NewGuid(), "hashing-context", "hashing@context.local", "placeholder", DateTime.UnixEpoch);
+        Guid.NewGuid(), "hashing-context", "hashing@context.local", "placeholder", DateTime.UnixEpoch,
+        "hashing", "context", TeamMemberRole.Player, "n/a");
 
     private readonly IdentityPasswordHasher _inner = new();
 

@@ -26,7 +26,11 @@ public sealed class RegisterUserHandler(
             request.UserName,
             request.Email,
             _passwordHasher.Hash(request.Password),
-            _clock.UtcNow);
+            _clock.UtcNow,
+            request.FirstName,
+            request.LastName,
+            request.PrimaryRole,
+            PrivacyPolicy.CurrentVersion);
 
         await _repository.AddAsync(user, cancellationToken);
 
