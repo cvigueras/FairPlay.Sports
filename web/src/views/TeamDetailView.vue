@@ -599,10 +599,14 @@ async function handleUpdate(input: { payload: CreateTeamPayload; crest: File | n
   margin-inline-start: auto;
 }
 
-/* Desktop: a more compact action than the mobile full-width button. */
+/* Desktop: a more compact action than the mobile full-width button.
+   Every action here (Editar, Desafiame, Campo disponible and Desafiar) shares one fixed width,
+   height and type size. 13.75rem is what the widest one (Campo disponible + its switch) needs, so
+   the flag buttons keep their natural width and Desafiar is stretched to match them. */
 @media (min-width: 600px) {
   .team-hero-accept {
-    min-width: 11rem;
+    width: 13.75rem;
+    min-width: 13.75rem;
   }
 
   .team-hero-accept :deep(.flag-switch) {
