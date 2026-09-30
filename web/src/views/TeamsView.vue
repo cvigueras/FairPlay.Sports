@@ -14,6 +14,7 @@ import {
   mdiMapMarkerOutline,
   mdiSoccer,
   mdiSortVariant,
+  mdiSwordCross,
   mdiTrophyOutline,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -21,7 +22,9 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useLeagueFilterStore } from '@/stores/leagueFilter'
+import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import { useChallengeTeam } from '@/composables/useChallengeTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
@@ -30,6 +33,24 @@ import type { PagedResult } from '@/types/pagination'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+
+// Challenge a team straight from the list: same flow as the button on its detail page.
+const {
+  wizardOpen: challengeWizardOpen,
+  rival: challengeRival,
+  sending: sendingChallenge,
+  canChallenge,
+  open: challengeTeam,
+  submit: handleSendChallenge,
+} = useChallengeTeam()
+// Best-effort: the memberships decide whether each row shows the challenge button.
+auth.loadMyTeams().catch(() => {})
+
+/** Teams the signed-in user belongs to: their rows are tinted in the list. */
+const myTeamIds = computed(() => new Set(auth.myTeams.map((membership) => membership.teamId)))
+function isMine(team: Team): boolean {
+  return myTeamIds.value.has(team.id)
+}
 const { smAndDown, xs } = useDisplay()
 // xs (< 600px, Vuetify's default sm threshold) matches the CSS's own
 // max-width: 599px mobile breakpoint below - smAndDown (< 960px) doesn't,
@@ -498,7 +519,7 @@ function toggleTeamRow(id: string) {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="team in result.items" :key="team.id">
+                <tr v-for="team in result.items" :key="team.id" :class="{ 'teams-row--mine': isMine(team) }">
                   <td class="teams-col-club">
                     <div class="team-row-club">
                       <TeamCrest :team="team" :size="32" />
@@ -539,15 +560,27 @@ function toggleTeamRow(id: string) {
                     </span>
                   </td>
                   <td class="teams-col-actions">
-                    <v-btn
-                      :to="{ name: 'team-detail', params: { id: team.id } }"
-                      :prepend-icon="mdiCardAccountDetailsOutline"
-                      color="blue"
-                      variant="outlined"
-                      size="small"
-                    >
-                      {{ t('profile.team.viewDetails') }}
-                    </v-btn>
+                    <div class="teams-actions">
+                      <v-btn
+                        v-if="canChallenge(team)"
+                        color="red"
+                        variant="flat"
+                        size="small"
+                        :prepend-icon="mdiSwordCross"
+                        @click="challengeTeam(team)"
+                      >
+                        {{ t('profile.team.challenge') }}
+                      </v-btn>
+                      <v-btn
+                        :to="{ name: 'team-detail', params: { id: team.id } }"
+                        :prepend-icon="mdiCardAccountDetailsOutline"
+                        color="blue"
+                        variant="outlined"
+                        size="small"
+                      >
+                        {{ t('profile.team.viewDetails') }}
+                      </v-btn>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -563,6 +596,7 @@ function toggleTeamRow(id: string) {
                 <button
                   type="button"
                   class="teams-mobile-row"
+                  :class="{ 'teams-mobile-row--mine': isMine(team) }"
                   :aria-expanded="!!expandedTeamRows[team.id]"
                   @click="toggleTeamRow(team.id)"
                 >
@@ -579,7 +613,11 @@ function toggleTeamRow(id: string) {
                   />
                 </button>
 
-                <div v-if="expandedTeamRows[team.id]" class="teams-mobile-details">
+                <div
+                  v-if="expandedTeamRows[team.id]"
+                  class="teams-mobile-details"
+                  :class="{ 'teams-mobile-details--mine': isMine(team) }"
+                >
                   <div class="teams-mobile-detail-grid">
                     <div class="teams-mobile-detail-cell">
                       <span class="teams-mobile-detail-label">{{ t('teams.fields.type') }}</span>
@@ -608,15 +646,25 @@ function toggleTeamRow(id: string) {
                       {{ team.city }}
                     </span>
                   </div>
-                  <v-btn
-                    :to="{ name: 'team-detail', params: { id: team.id } }"
-                    :prepend-icon="mdiCardAccountDetailsOutline"
-                    color="blue"
-                    variant="outlined"
-                    block
-                  >
-                    {{ t('profile.team.viewDetails') }}
-                  </v-btn>
+                  <div class="teams-mobile-actions">
+                    <v-btn
+                      v-if="canChallenge(team)"
+                      color="red"
+                      variant="flat"
+                      :prepend-icon="mdiSwordCross"
+                      @click="challengeTeam(team)"
+                    >
+                      {{ t('profile.team.challenge') }}
+                    </v-btn>
+                    <v-btn
+                      :to="{ name: 'team-detail', params: { id: team.id } }"
+                      :prepend-icon="mdiCardAccountDetailsOutline"
+                      color="blue"
+                      variant="outlined"
+                    >
+                      {{ t('profile.team.viewDetails') }}
+                    </v-btn>
+                  </div>
                 </div>
               </template>
             </div>
@@ -624,6 +672,14 @@ function toggleTeamRow(id: string) {
           </template>
         </template>
       </div>
+
+      <ChallengeWizard
+        v-if="challengeRival"
+        v-model="challengeWizardOpen"
+        :rival-team="challengeRival"
+        :loading="sendingChallenge"
+        @submit="handleSendChallenge"
+      />
 
       <footer v-if="result" class="teams-footer">
         <div class="teams-footer-inner">
@@ -863,7 +919,7 @@ function toggleTeamRow(id: string) {
 /* Wide enough that the icon + label never get squeezed inside the button,
    even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 20%;
+  width: 28%;
 }
 
 .teams-table thead th {
@@ -928,6 +984,33 @@ function toggleTeamRow(id: string) {
 
 .teams-table td.teams-col-actions {
   text-align: right;
+}
+
+/* My teams: a soft primary tint plus a bar on the left edge, so they read as
+   "mine" at a glance without shouting over the rest of the list. */
+.teams-table tbody tr.teams-row--mine td {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 7%, rgb(var(--v-theme-surface)));
+}
+
+.teams-table tbody tr.teams-row--mine td:first-child {
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
+}
+
+/* "Desafiar" sits to the left of "Ver detalles". */
+.teams-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.teams-mobile-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.teams-mobile-actions .v-btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Age category, modality and division chips fill their (equal-width)
@@ -1005,6 +1088,16 @@ function toggleTeamRow(id: string) {
 
 .teams-mobile-chevron--open {
   transform: rotate(180deg);
+}
+
+.teams-mobile-row--mine {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 7%, rgb(var(--v-theme-surface)));
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
+}
+
+.teams-mobile-details.teams-mobile-details--mine {
+  background: color-mix(in srgb, rgb(var(--v-theme-primary)) 4%, rgb(var(--v-theme-background)));
+  box-shadow: inset 4px 0 0 rgb(var(--v-theme-primary));
 }
 
 .teams-mobile-details {

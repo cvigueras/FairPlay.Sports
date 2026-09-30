@@ -20,7 +20,7 @@ import {
 } from '@mdi/js'
 import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
-import { CHALLENGE_ACTOR_ROLES, challengesApi } from '@/lib/challenges'
+import { useChallengeTeam } from '@/composables/useChallengeTeam'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
@@ -31,7 +31,6 @@ import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
 import { MODALITY_COLOR } from '@/lib/modality'
 import { SURFACE_COLOR } from '@/lib/pitchSurface'
-import type { SendChallengePayload } from '@/types/challenge'
 import type { Team, TeamMemberRole, TeamMembership } from '@/types/team'
 
 const props = defineProps<{ id: string }>()
@@ -149,35 +148,13 @@ const hasContact = computed(
   () => !!team.value && !!(team.value.contactEmail || team.value.contactPhone || team.value.website),
 )
 
-/** Never your own team (any role), and only for users who can actually act for
- *  some team (a pure Player, with no Delegate/Coach/President/TechnicalStaff
- *  membership anywhere, has no team to send a challenge from). */
-const canChallenge = computed(() => {
-  if (!team.value) return false
-  const teamId = team.value.id
-  if (auth.myTeams.some((membership) => membership.teamId === teamId)) return false
-  return auth.myTeams.some((membership) => CHALLENGE_ACTOR_ROLES.includes(membership.role))
-})
-
-const challengeWizardOpen = ref(false)
-const sendingChallenge = ref(false)
-
-function challengeTeam() {
-  challengeWizardOpen.value = true
-}
-
-async function handleSendChallenge(payload: SendChallengePayload) {
-  sendingChallenge.value = true
-  try {
-    await challengesApi.send(payload, auth.accessToken)
-    challengeWizardOpen.value = false
-    ui.notify(t('challenges.wizard.sentSuccess', { team: team.value?.name }))
-  } catch (err) {
-    ui.notify(err instanceof ApiError ? err.message : t('challenges.wizard.sendFailed'), 'error')
-  } finally {
-    sendingChallenge.value = false
-  }
-}
+const {
+  wizardOpen: challengeWizardOpen,
+  sending: sendingChallenge,
+  canChallenge,
+  open: challengeTeam,
+  submit: handleSendChallenge,
+} = useChallengeTeam()
 </script>
 
 <template>
@@ -241,13 +218,13 @@ async function handleSendChallenge(payload: SendChallengePayload) {
             </div>
 
             <v-btn
-              v-if="canChallenge"
+              v-if="canChallenge(team)"
               color="red"
               variant="flat"
               size="large"
               :prepend-icon="mdiSwordCross"
               class="team-hero-challenge"
-              @click="challengeTeam"
+              @click="challengeTeam(team)"
             >
               {{ t('profile.team.challenge') }}
             </v-btn>
@@ -468,7 +445,7 @@ async function handleSendChallenge(payload: SendChallengePayload) {
         </v-card>
 
         <ChallengeWizard
-          v-if="canChallenge"
+          v-if="canChallenge(team)"
           v-model="challengeWizardOpen"
           :rival-team="team"
           :loading="sendingChallenge"
