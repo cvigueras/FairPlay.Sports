@@ -90,7 +90,9 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.AlternateColorSecondary,
             request.AlternateKitPattern,
             request.ShortsColor,
-            request.AlternateShortsColor);
+            request.AlternateShortsColor,
+            request.AcceptsChallenges,
+            request.VenueAvailable);
         var result = await _sender.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
@@ -134,7 +136,9 @@ public sealed class TeamsController(ISender sender) : ControllerBase
             request.AlternateColorSecondary,
             request.AlternateKitPattern,
             request.ShortsColor,
-            request.AlternateShortsColor);
+            request.AlternateShortsColor,
+            request.AcceptsChallenges,
+            request.VenueAvailable);
 
         var result = await _sender.Send(command, cancellationToken);
         return result.ToActionResult(this);

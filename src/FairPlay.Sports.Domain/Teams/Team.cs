@@ -61,7 +61,9 @@ public sealed class Team
         string city,
         TeamClassification classification,
         DateTime createdAtUtc,
-        TeamProfile? profile = null)
+        TeamProfile? profile = null,
+        bool acceptsChallenges = false,
+        bool venueAvailable = false)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Team id cannot be empty.", nameof(id));
@@ -75,6 +77,8 @@ public sealed class Team
         };
 
         team.ApplyProfile(profile ?? TeamProfile.Empty);
+        team.AcceptsChallenges = acceptsChallenges;
+        team.VenueAvailable = venueAvailable;
         return team;
     }
 
@@ -83,7 +87,9 @@ public sealed class Team
         string? coach,
         string city,
         TeamClassification classification,
-        TeamProfile profile)
+        TeamProfile profile,
+        bool? acceptsChallenges = null,
+        bool? venueAvailable = null)
     {
         ArgumentNullException.ThrowIfNull(classification);
         ArgumentNullException.ThrowIfNull(profile);
@@ -93,6 +99,12 @@ public sealed class Team
         City = ValidateCity(city);
         Classification = classification;
         ApplyProfile(profile);
+
+        // Left as they are unless the caller says otherwise.
+        if (acceptsChallenges is { } accepts)
+            AcceptsChallenges = accepts;
+        if (venueAvailable is { } available)
+            VenueAvailable = available;
     }
 
     public void Activate() => Active = true;

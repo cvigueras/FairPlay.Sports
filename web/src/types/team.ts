@@ -89,6 +89,10 @@ export interface Team extends TeamProfileFields {
 interface TeamCorePayload {
   name: string
   coach?: string
+  /** The team says it is open to any challenge. */
+  acceptsChallenges?: boolean
+  /** The team has a venue available for friendly matches. */
+  venueAvailable?: boolean
   city: string
   type: FootballType
   division: Division | null

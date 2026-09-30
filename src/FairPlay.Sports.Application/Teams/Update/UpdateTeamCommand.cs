@@ -29,4 +29,6 @@ public sealed record UpdateTeamCommand(
     string? AlternateColorSecondary = null,
     KitPattern? AlternateKitPattern = null,
     string? ShortsColor = null,
-    string? AlternateShortsColor = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;
+    string? AlternateShortsColor = null,
+    bool? AcceptsChallenges = null,
+    bool? VenueAvailable = null) : IRequest<Result<TeamDto>>, ITeamWriteFields;

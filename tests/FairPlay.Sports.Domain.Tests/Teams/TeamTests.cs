@@ -202,6 +202,42 @@ public class TeamTests
     }
 
     [Test]
+    public void Create_CanStartWithTheFlagsOn()
+    {
+        var team = Team.Create(
+            Guid.NewGuid(), "FairPlay FC", "Marta Rios", "Sevilla", Classification(), Now,
+            acceptsChallenges: true, venueAvailable: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.True);
+            Assert.That(team.VenueAvailable, Is.True);
+        });
+    }
+
+    [Test]
+    public void Update_LeavesTheFlagsAloneWhenNotGiven_AndSetsThemWhenGiven()
+    {
+        var team = Create();
+        team.SetAcceptsChallenges(true);
+
+        team.Update(team.Name, team.Coach, team.City, Classification(), FullProfile());
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.True);
+            Assert.That(team.VenueAvailable, Is.False);
+        });
+
+        team.Update(team.Name, team.Coach, team.City, Classification(), FullProfile(),
+            acceptsChallenges: false, venueAvailable: true);
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.False);
+            Assert.That(team.VenueAvailable, Is.True);
+        });
+    }
+
+    [Test]
     public void SetVenueAvailable_TurnsTheFlagOnAndOff()
     {
         var team = Create();

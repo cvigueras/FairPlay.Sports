@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { mdiCheck, mdiChevronLeft, mdiChevronRight, mdiClose, mdiImageOutline } from '@mdi/js'
+import {
+  mdiCheck,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiClose,
+  mdiHandshakeOutline,
+  mdiImageOutline,
+  mdiSoccerField,
+} from '@mdi/js'
 import FlatField from '@/components/FlatField.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
@@ -81,6 +89,8 @@ const model = reactive({
   alternateShortsColor: '#1e293b',
   alternateKitPattern: 'Plain' as KitPattern,
   noSecondKit: false,
+  acceptsChallenges: false,
+  venueAvailable: false,
   contactEmail: '',
   contactPhone: '',
   website: '',
@@ -133,6 +143,8 @@ function resetForm() {
     alternateShortsColor: '#1e293b',
     alternateKitPattern: 'Plain',
     noSecondKit: false,
+    acceptsChallenges: false,
+    venueAvailable: false,
     contactEmail: '',
     contactPhone: '',
     website: '',
@@ -171,6 +183,8 @@ function applyInitial(team: Team) {
     alternateShortsColor: team.alternateShortsColor || '#1e293b',
     alternateKitPattern: team.alternateKitPattern ?? 'Plain',
     noSecondKit: !team.alternateColorPrimary && !team.alternateColorSecondary,
+    acceptsChallenges: team.acceptsChallenges,
+    venueAvailable: team.venueAvailable,
     contactEmail: team.contactEmail ?? '',
     contactPhone: team.contactPhone ?? '',
     website: team.website ?? '',
@@ -334,6 +348,8 @@ function submit() {
     name,
     // Creating: the creator's name is the coach only if they are the coach. Editing: as typed.
     coach: isEdit.value ? trimmedOrUndefined(model.coach) : model.role === 'Coach' ? myName.value : undefined,
+    acceptsChallenges: model.acceptsChallenges,
+    venueAvailable: model.venueAvailable,
     city: model.city.trim(),
     type: model.type!,
     division: model.category === 'Aficionados' ? null : model.division,
@@ -474,6 +490,19 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <v-checkbox
+            v-model="model.acceptsChallenges"
+            color="red"
+            density="compact"
+            hide-details
+            class="mt-2"
+          >
+            <template #label>
+              {{ t('teams.challengeStatus.badge') }}
+              <v-icon :icon="mdiHandshakeOutline" size="18" color="red" class="ms-1" />
+            </template>
+          </v-checkbox>
         </template>
 
         <!-- Step 2: Campo, con la ficha del club debajo -->
@@ -518,6 +547,19 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <v-checkbox
+            v-model="model.venueAvailable"
+            color="#2E7D32"
+            density="compact"
+            hide-details
+            class="mt-2"
+          >
+            <template #label>
+              {{ t('teams.venueStatus.badge') }}
+              <v-icon :icon="mdiSoccerField" size="18" color="#2E7D32" class="ms-1" />
+            </template>
+          </v-checkbox>
 
           <h3 class="fp-wizard-title mt-4 mb-3">{{ t('profile.team.wizard.stepClub') }}</h3>
           <v-row dense>

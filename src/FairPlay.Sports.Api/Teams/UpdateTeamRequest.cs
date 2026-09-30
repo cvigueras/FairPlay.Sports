@@ -25,4 +25,6 @@ public sealed record UpdateTeamRequest(
     string? AlternateColorSecondary = null,
     KitPattern? AlternateKitPattern = null,
     string? ShortsColor = null,
-    string? AlternateShortsColor = null);
+    string? AlternateShortsColor = null,
+    bool? AcceptsChallenges = null,
+    bool? VenueAvailable = null);

@@ -63,6 +63,26 @@ public class UpdateTeamHandlerTests
     }
 
     [Test]
+    public async Task Handle_KeepsTheFlagsWhenTheCommandDoesNotSendThem_AndUpdatesThemWhenItDoes()
+    {
+        var team = TeamMother.DomainTeam();
+        team.SetAcceptsChallenges(true);
+        _repository.GetByIdForUpdateAsync(team.Id, Arg.Any<CancellationToken>()).Returns(team);
+
+        await _handler.Handle(TeamMother.UpdateCommand(team.Id), CancellationToken.None);
+        Assert.That(team.AcceptsChallenges, Is.True);
+
+        await _handler.Handle(
+            TeamMother.UpdateCommand(team.Id) with { AcceptsChallenges = false, VenueAvailable = true },
+            CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(team.AcceptsChallenges, Is.False);
+            Assert.That(team.VenueAvailable, Is.True);
+        });
+    }
+
+    [Test]
     public async Task Handle_WhenRenamingToAnExistingName_ReturnsFailure()
     {
         var team = TeamMother.DomainTeam();
