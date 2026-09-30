@@ -180,6 +180,15 @@
   color: rgb(var(--v-theme-error));
   border-color: #fecaca;
 }
+/* View details: the blue of the "Ver detalles" button on the team list (Vuetify `blue`). */
+.fp-icon-btn--view {
+  color: #2196f3;
+  border-color: #2196f3;
+}
+.fp-icon-btn--view:hover {
+  border-color: #1976d2;
+  background: rgba(33, 150, 243, 0.08);
+}
 /* Edit: an amber accent, so it reads apart from view (neutral) and leave (red). */
 .fp-icon-btn--edit {
   color: #b45309;

@@ -460,7 +460,7 @@ async function confirmLeave() {
                     <router-link
                       v-bind="tooltipProps"
                       :to="{ name: 'team-detail', params: { id: team.id } }"
-                      class="fp-icon-btn"
+                      class="fp-icon-btn fp-icon-btn--view"
                       :aria-label="t('profile.team.viewDetails')"
                       @click.stop
                     >
@@ -571,7 +571,7 @@ async function confirmLeave() {
                   <div class="fp-accordion-actions">
                     <router-link
                       :to="{ name: 'team-detail', params: { id: team.id } }"
-                      class="fp-accordion-action"
+                      class="fp-accordion-action fp-accordion-action--view"
                       :aria-label="t('profile.team.viewDetails')"
                       @click.stop
                     >
@@ -831,6 +831,12 @@ async function confirmLeave() {
 .fp-accordion-action--danger {
   color: rgb(var(--v-theme-error));
   border-color: #fecaca;
+}
+
+/* View details: the same blue as the "Ver detalles" button of the team list. */
+.fp-accordion-action--view {
+  color: #2196f3;
+  border-color: #2196f3;
 }
 
 .fp-accordion-action--edit {
