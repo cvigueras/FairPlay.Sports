@@ -186,7 +186,8 @@
       "badge": "Open to any challenge",
       "enabled": "Your team accepts challenges: others will see it on its page.",
       "disabled": "Your team no longer shows as open to challenges.",
-      "failed": "Could not update the team."
+      "failed": "Could not update the team.",
+      "hint": "Your team is open to accepting any challenge proposed to it."
     },
     "venueStatus": {
       "button": "Venue available",

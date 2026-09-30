@@ -13,6 +13,7 @@ import {
 import FlatField from '@/components/FlatField.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import KitSwatch from '@/components/KitSwatch.vue'
+import OptionCard from '@/components/OptionCard.vue'
 import RolePills from '@/components/RolePills.vue'
 import { KIT_COLOR_PALETTE } from '@/lib/kitColors'
 import { teamsApi } from '@/lib/teams'
@@ -491,18 +492,14 @@ function goNext() {
             </v-col>
           </v-row>
 
-          <v-checkbox
+          <OptionCard
             v-model="model.acceptsChallenges"
-            color="red"
-            density="compact"
-            hide-details
-            class="mt-2"
-          >
-            <template #label>
-              {{ t('teams.challengeStatus.badge') }}
-              <v-icon :icon="mdiHandshakeOutline" size="18" color="red" class="ms-1" />
-            </template>
-          </v-checkbox>
+            class="mt-4"
+            :title="t('teams.challengeStatus.badge')"
+            :description="t('teams.challengeStatus.hint')"
+            :icon="mdiHandshakeOutline"
+            color="#F44336"
+          />
         </template>
 
         <!-- Step 2: Campo, con la ficha del club debajo -->
@@ -548,20 +545,6 @@ function goNext() {
             </v-col>
           </v-row>
 
-          <v-checkbox
-            v-model="model.venueAvailable"
-            color="#2E7D32"
-            density="compact"
-            hide-details
-            class="mt-2"
-          >
-            <template #label>
-              {{ t('teams.venueStatus.badge') }}
-              <v-icon :icon="mdiSoccerField" size="18" color="#2E7D32" class="ms-1" />
-              <span class="text-body-2 text-medium-emphasis ms-1">{{ t('teams.venueStatus.hint') }}</span>
-            </template>
-          </v-checkbox>
-
           <h3 class="fp-wizard-title mt-4 mb-3">{{ t('profile.team.wizard.stepClub') }}</h3>
           <v-row dense>
             <v-col cols="12" sm="6">
@@ -580,6 +563,15 @@ function goNext() {
               </FlatField>
             </v-col>
           </v-row>
+
+          <OptionCard
+            v-model="model.venueAvailable"
+            class="mt-4"
+            :title="t('teams.venueStatus.badge')"
+            :description="t('teams.venueStatus.hint')"
+            :icon="mdiSoccerField"
+            color="#2E7D32"
+          />
         </template>
 
         <!-- Step 3: 1ª equipación -->
