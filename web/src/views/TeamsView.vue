@@ -302,26 +302,26 @@ function toggleTeamRow(id: string) {
         />
         <v-checkbox
           v-model="acceptsChallengesOnly"
-          color="success"
+          color="red"
           density="comfortable"
           hide-details
           class="teams-open-filter"
         >
           <template #label>
             {{ t('teams.challengeStatus.badge') }}
-            <v-icon :icon="mdiHandshakeOutline" size="18" color="success" class="ms-1" />
+            <v-icon :icon="mdiHandshakeOutline" size="18" color="red" class="ms-1" />
           </template>
         </v-checkbox>
         <v-checkbox
           v-model="venueAvailableOnly"
-          color="warning"
+          color="#2E7D32"
           density="comfortable"
           hide-details
           class="teams-open-filter"
         >
           <template #label>
             {{ t('teams.venueStatus.badge') }}
-            <v-icon :icon="mdiSoccerField" size="18" color="warning" class="ms-1" />
+            <v-icon :icon="mdiSoccerField" size="18" color="#2E7D32" class="ms-1" />
           </template>
         </v-checkbox>
         <!-- Mobile only: coach/city live behind "More filters" on desktop
@@ -414,7 +414,7 @@ function toggleTeamRow(id: string) {
           v-if="acceptsChallengesOnly"
           size="small"
           variant="tonal"
-          color="success"
+          color="red"
           closable
           :prepend-icon="mdiHandshakeOutline"
           @click:close="acceptsChallengesOnly = false"
@@ -425,7 +425,7 @@ function toggleTeamRow(id: string) {
           v-if="venueAvailableOnly"
           size="small"
           variant="tonal"
-          color="warning"
+          color="#2E7D32"
           closable
           :prepend-icon="mdiSoccerField"
           @click:close="venueAvailableOnly = false"
@@ -590,7 +590,7 @@ function toggleTeamRow(id: string) {
                         v-if="team.acceptsChallenges"
                         :icon="mdiHandshakeOutline"
                         size="20"
-                        color="success"
+                        color="red"
                         class="flex-shrink-0"
                         :title="t('teams.challengeStatus.badge')"
                         :aria-label="t('teams.challengeStatus.badge')"
@@ -599,7 +599,7 @@ function toggleTeamRow(id: string) {
                         v-if="team.venueAvailable"
                         :icon="mdiSoccerField"
                         size="20"
-                        color="warning"
+                        color="#2E7D32"
                         class="flex-shrink-0"
                         :title="t('teams.venueStatus.badge')"
                         :aria-label="t('teams.venueStatus.badge')"
@@ -686,7 +686,7 @@ function toggleTeamRow(id: string) {
                     v-if="team.acceptsChallenges"
                     :icon="mdiHandshakeOutline"
                     size="18"
-                    color="success"
+                    color="red"
                     class="flex-shrink-0"
                     :title="t('teams.challengeStatus.badge')"
                     :aria-label="t('teams.challengeStatus.badge')"
@@ -695,7 +695,7 @@ function toggleTeamRow(id: string) {
                     v-if="team.venueAvailable"
                     :icon="mdiSoccerField"
                     size="18"
-                    color="warning"
+                    color="#2E7D32"
                     class="flex-shrink-0"
                     :title="t('teams.venueStatus.badge')"
                     :aria-label="t('teams.venueStatus.badge')"
@@ -720,7 +720,7 @@ function toggleTeamRow(id: string) {
                     v-if="team.acceptsChallenges"
                     size="small"
                     variant="flat"
-                    color="success"
+                    color="red"
                     class="align-self-start"
                     :prepend-icon="mdiHandshakeOutline"
                   >
@@ -730,7 +730,7 @@ function toggleTeamRow(id: string) {
                     v-if="team.venueAvailable"
                     size="small"
                     variant="flat"
-                    color="warning"
+                    color="#2E7D32"
                     class="align-self-start"
                     :prepend-icon="mdiSoccerField"
                   >
