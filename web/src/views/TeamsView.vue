@@ -839,9 +839,10 @@ function toggleTeamRow(id: string) {
   padding-bottom: 0.75rem;
 }
 
-/* Fixed-ish, not growing: it leaves room for the "accepts any challenge" checkbox. */
+/* Takes whatever width the other filters leave free, so "More filters" ends up at
+   the far right of the bar. */
 .teams-search {
-  flex: 0 1 200px;
+  flex: 1 1 200px;
   min-width: 160px;
 }
 
@@ -852,6 +853,7 @@ function toggleTeamRow(id: string) {
 
 .teams-more-btn {
   flex: 0 0 auto;
+  margin-inline-start: auto;
 }
 
 /* A compact checkbox next to the selects, not another full-size control. */
