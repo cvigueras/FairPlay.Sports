@@ -13,6 +13,7 @@ import {
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
+  mdiPlusCircleOutline,
   mdiSoccer,
   mdiSoccerField,
   mdiSortVariant,
@@ -26,7 +27,9 @@ import { useAuthStore } from '@/stores/auth'
 import { useLeagueFilterStore } from '@/stores/leagueFilter'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
+import TeamWizard from '@/components/TeamWizard.vue'
 import { useChallengeTeam } from '@/composables/useChallengeTeam'
+import { useCreateTeam, type NewTeamInput } from '@/composables/useCreateTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MODALITY_COLOR } from '@/lib/modality'
@@ -45,6 +48,12 @@ const {
   open: challengeTeam,
   submit: handleSendChallenge,
 } = useChallengeTeam()
+// "New team": the same wizard and flow as My teams' create button.
+const { wizardOpen: newTeamOpen, creating: creatingTeam, create: createTeam } = useCreateTeam()
+async function handleCreateTeam(input: NewTeamInput) {
+  // The new team joins the list (and shows as mine) once it is reloaded.
+  if (await createTeam(input)) reload()
+}
 // Best-effort: the memberships decide whether each row shows the challenge button.
 auth.loadMyTeams().catch(() => {})
 
@@ -227,8 +236,17 @@ function toggleTeamRow(id: string) {
   <v-main>
     <div class="teams-page">
       <div class="teams-toolbar">
-        <!-- The page title moved to the breadcrumb (see AppShell); this row
-             now only carries the mobile sort control. -->
+        <!-- The page title moved to the breadcrumb (see AppShell); this row carries the
+             screen-level "New team" button and, on mobile, the sort control. -->
+        <v-btn
+          color="primary"
+          variant="flat"
+          :prepend-icon="mdiPlusCircleOutline"
+          class="teams-new-btn"
+          @click="newTeamOpen = true"
+        >
+          {{ t('teams.newTeam') }}
+        </v-btn>
         <!-- Mobile only (see the max-width: 599px rules below): the table's
              sortable column headers don't exist here, so this dropdown
              (the app's original sort picker) drives the same state instead. -->
@@ -791,6 +809,8 @@ function toggleTeamRow(id: string) {
         </template>
       </div>
 
+      <TeamWizard v-model="newTeamOpen" :loading="creatingTeam" @submit="handleCreateTeam" />
+
       <ChallengeWizard
         v-if="challengeRival"
         v-model="challengeWizardOpen"
@@ -853,6 +873,19 @@ function toggleTeamRow(id: string) {
   gap: 1rem;
   flex-wrap: wrap;
   padding-bottom: 0.75rem;
+}
+
+/* Screen-level action: pinned to the right of the toolbar, the same size and radius as the
+   "More filters" button below it (see .teams-more-btn), so their right edges line up. */
+.teams-new-btn {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+  order: 2;
+}
+
+.teams-new-btn,
+.teams-more-btn {
+  width: 10rem;
 }
 
 /* Desktop sorts via the table's column headers (see .teams-col-sortable

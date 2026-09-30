@@ -194,7 +194,8 @@
       "enabled": "Tu equipo tiene el campo disponible: los demás lo verán en su ficha.",
       "disabled": "Tu equipo ya no aparece con el campo disponible.",
       "failed": "No se ha podido actualizar el equipo."
-    }
+    },
+    "newTeam": "Nuevo equipo"
   },
   "standings": {
     "count": "{n} equipos",

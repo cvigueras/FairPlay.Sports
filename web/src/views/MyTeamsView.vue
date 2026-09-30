@@ -19,6 +19,7 @@ import FlatField from '@/components/FlatField.vue'
 import RolePills from '@/components/RolePills.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import TeamWizard from '@/components/TeamWizard.vue'
+import { useCreateTeam, type NewTeamInput } from '@/composables/useCreateTeam'
 import { AGE_CATEGORY_COLOR } from '@/lib/ageCategory'
 import { DIVISION_COLOR } from '@/lib/division'
 import { MEMBER_ROLE_COLOR } from '@/lib/memberRole'
@@ -166,34 +167,11 @@ async function saveTeam() {
 
 /* ---- Create a new team (wizard) --------------------------------------- */
 
-const wizardOpen = ref(false)
-const creatingTeam = ref(false)
+const { wizardOpen, creating: creatingTeam, create: createTeam } = useCreateTeam()
 
-async function handleCreate({
-  payload,
-  role,
-  displayName,
-  crest,
-}: {
-  payload: CreateTeamPayload
-  role: TeamMemberRole
-  displayName: string
-  crest: File | null
-}) {
-  creatingTeam.value = true
-  try {
-    const created = await teamsApi.create(payload, auth.accessToken)
-    if (crest) await teamsApi.uploadCrest(created.id, crest, auth.accessToken)
-
-    const withCrest = { ...created, hasCrest: !!crest }
-    await auth.joinTeam(created.id, role, displayName)
-    teamDetails.value = { ...teamDetails.value, [created.id]: withCrest }
-    wizardOpen.value = false
-  } catch (error) {
-    ui.notify(error instanceof ApiError ? error.message : t('profile.team.createFailed'), 'error')
-  } finally {
-    creatingTeam.value = false
-  }
+async function handleCreate(input: NewTeamInput) {
+  const created = await createTeam(input)
+  if (created) teamDetails.value = { ...teamDetails.value, [created.id]: created }
 }
 
 /* ---- Edit a team ------------------------------------------------------------ */

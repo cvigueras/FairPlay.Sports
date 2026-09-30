@@ -194,7 +194,8 @@
       "enabled": "Your team has its venue available: others will see it on its page.",
       "disabled": "Your team no longer shows its venue as available.",
       "failed": "Could not update the team."
-    }
+    },
+    "newTeam": "New team"
   },
   "standings": {
     "count": "{n} teams",
