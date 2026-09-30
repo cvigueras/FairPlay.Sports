@@ -186,9 +186,7 @@
       "badge": "Acepta cualquier desafío",
       "enabled": "Tu equipo acepta desafíos: los demás lo verán en su ficha.",
       "disabled": "Tu equipo ya no aparece como abierto a desafíos.",
-      "failed": "No se ha podido actualizar el equipo.",
-      "listBadge": "Acepta desafíos",
-      "filter": "Acepta desafíos"
+      "failed": "No se ha podido actualizar el equipo."
     }
   },
   "standings": {

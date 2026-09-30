@@ -541,6 +541,23 @@ const {
   margin-inline-start: auto;
 }
 
+/* Desktop: a more compact action than the mobile full-width button. */
+@media (min-width: 600px) {
+  .team-hero-challenge {
+    --v-btn-height: 36px;
+    --v-btn-size: 0.875rem;
+
+    min-width: 9.5rem;
+    padding: 0 16px;
+  }
+
+  .team-hero-accept {
+    min-width: 11rem;
+    height: 36px;
+    font-size: 0.875rem;
+  }
+}
+
 /* Not enough room for crest, name and button on one line - stack the
    button below instead of squeezing the club name. */
 @media (max-width: 599px) {

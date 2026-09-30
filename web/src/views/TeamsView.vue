@@ -300,12 +300,16 @@ function toggleTeamRow(id: string) {
         />
         <v-checkbox
           v-model="acceptsChallengesOnly"
-          :label="t('teams.challengeStatus.filter')"
           color="success"
           density="comfortable"
           hide-details
           class="teams-open-filter"
-        />
+        >
+          <template #label>
+            {{ t('teams.challengeStatus.badge') }}
+            <v-icon :icon="mdiHandshakeOutline" size="18" color="success" class="ms-1" />
+          </template>
+        </v-checkbox>
         <!-- Mobile only: coach/city live behind "More filters" on desktop
              (see .teams-more-btn below), but that nested menu is one tap too
              many on top of the filter panel toggle, so on mobile they're
@@ -401,7 +405,7 @@ function toggleTeamRow(id: string) {
           :prepend-icon="mdiHandshakeOutline"
           @click:close="acceptsChallengesOnly = false"
         >
-          {{ t('teams.challengeStatus.listBadge') }}
+          {{ t('teams.challengeStatus.badge') }}
         </v-chip>
         <v-chip
           v-if="asTextFilter(nameText) !== undefined"
@@ -556,16 +560,16 @@ function toggleTeamRow(id: string) {
                     <div class="team-row-club">
                       <TeamCrest :team="team" :size="32" />
                       <span class="text-truncate">{{ team.name }}</span>
-                      <v-chip
+                      <!-- Just the icon, to the right of the name: the full text is the tooltip. -->
+                      <v-icon
                         v-if="team.acceptsChallenges"
-                        size="x-small"
-                        variant="tonal"
+                        :icon="mdiHandshakeOutline"
+                        size="20"
                         color="success"
-                        class="team-row-open flex-shrink-0"
-                        :prepend-icon="mdiHandshakeOutline"
-                      >
-                        {{ t('teams.challengeStatus.listBadge') }}
-                      </v-chip>
+                        class="flex-shrink-0"
+                        :title="t('teams.challengeStatus.badge')"
+                        :aria-label="t('teams.challengeStatus.badge')"
+                      />
                     </div>
                   </td>
                   <td class="teams-col-stat">
@@ -596,9 +600,9 @@ function toggleTeamRow(id: string) {
                     <span v-else class="text-body-2 text-medium-emphasis">—</span>
                   </td>
                   <td class="teams-col-city">
-                    <span class="team-row-city text-body-2 text-medium-emphasis">
-                      <v-icon size="14" :icon="mdiMapMarkerOutline" />
-                      {{ team.city }}
+                    <span class="team-row-city text-body-2 text-medium-emphasis" :title="team.city">
+                      <v-icon size="14" :icon="mdiMapMarkerOutline" class="flex-shrink-0" />
+                      <span class="text-truncate">{{ team.city }}</span>
                     </span>
                   </td>
                   <td class="teams-col-actions">
@@ -835,9 +839,10 @@ function toggleTeamRow(id: string) {
   padding-bottom: 0.75rem;
 }
 
+/* Fixed-ish, not growing: it leaves room for the "accepts any challenge" checkbox. */
 .teams-search {
-  flex: 1 1 240px;
-  min-width: 200px;
+  flex: 0 1 200px;
+  min-width: 160px;
 }
 
 .teams-filter-select {
@@ -852,6 +857,10 @@ function toggleTeamRow(id: string) {
 /* A compact checkbox next to the selects, not another full-size control. */
 .teams-open-filter {
   flex: 0 0 auto;
+}
+
+.teams-open-filter :deep(.v-label) {
+  white-space: nowrap;
 }
 
 .teams-active-chips {
@@ -978,28 +987,28 @@ function toggleTeamRow(id: string) {
 
 .teams-table {
   width: 100%;
-  min-width: 1100px;
+  min-width: 1240px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 21%;
+  width: 22%;
 }
 
 .teams-col-stat {
-  width: 11%;
+  width: 10.5%;
 }
 
 .teams-col-city {
-  width: 11%;
+  width: 18%;
 }
 
 /* Wide enough that the icon + label never get squeezed inside the button,
    even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 35%;
+  width: 28.5%;
 }
 
 .teams-table thead th {
@@ -1137,10 +1146,12 @@ function toggleTeamRow(id: string) {
   min-width: 0;
 }
 
+/* One line: a very long town shortens with "..." (full name on hover) instead of wrapping. */
 .team-row-city {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 /* Mobile-only replacement for the desktop table (see the max-width: 599px
