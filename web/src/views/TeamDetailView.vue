@@ -199,7 +199,7 @@ const {
                   v-if="team.acceptsChallenges"
                   size="small"
                   variant="flat"
-                  color="success"
+                  color="red"
                   :prepend-icon="mdiHandshakeOutline"
                 >
                   {{ t('teams.challengeStatus.badge') }}
@@ -208,7 +208,7 @@ const {
                   v-if="team.venueAvailable"
                   size="small"
                   variant="flat"
-                  color="warning"
+                  color="#2E7D32"
                   :prepend-icon="mdiSoccerField"
                 >
                   {{ t('teams.venueStatus.badge') }}
