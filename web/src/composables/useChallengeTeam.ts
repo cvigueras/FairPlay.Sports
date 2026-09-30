@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/lib/http'
 import { CHALLENGE_ACTOR_ROLES, challengesApi } from '@/lib/challenges'
+import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import type { SendChallengePayload } from '@/types/challenge'
@@ -29,6 +30,29 @@ export function useChallengeTeam() {
     return auth.myTeams.some((membership) => CHALLENGE_ACTOR_ROLES.includes(membership.role))
   }
 
+  /** Members who can act for a team (not a plain Player) can mark it as open to challenges. */
+  function canSetAccepts(team: Team): boolean {
+    return auth.myTeams.some(
+      (membership) => membership.teamId === team.id && CHALLENGE_ACTOR_ROLES.includes(membership.role),
+    )
+  }
+
+  const togglingTeamId = ref<string | null>(null)
+
+  /** Flips the team's "accepts challenges" flag and updates `team` in place. */
+  async function toggleAccepts(team: Team) {
+    togglingTeamId.value = team.id
+    try {
+      const updated = await teamsApi.setAcceptsChallenges(team.id, !team.acceptsChallenges, auth.accessToken)
+      team.acceptsChallenges = updated.acceptsChallenges
+      ui.notify(t(updated.acceptsChallenges ? 'teams.challengeStatus.enabled' : 'teams.challengeStatus.disabled'))
+    } catch (err) {
+      ui.notify(err instanceof ApiError ? err.message : t('teams.challengeStatus.failed'), 'error')
+    } finally {
+      togglingTeamId.value = null
+    }
+  }
+
   function open(team: Team) {
     rival.value = team
     wizardOpen.value = true
@@ -47,5 +71,5 @@ export function useChallengeTeam() {
     }
   }
 
-  return { wizardOpen, rival, sending, canChallenge, open, submit }
+  return { wizardOpen, rival, sending, canChallenge, open, submit, canSetAccepts, toggleAccepts, togglingTeamId }
 }

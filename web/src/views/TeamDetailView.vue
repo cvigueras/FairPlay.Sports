@@ -7,6 +7,7 @@ import {
   mdiCalendarOutline,
   mdiEmailOutline,
   mdiGrass,
+  mdiHandshakeOutline,
   mdiMapMarkerOutline,
   mdiPaletteOutline,
   mdiPhoneOutline,
@@ -23,6 +24,7 @@ import { teamsApi } from '@/lib/teams'
 import { useChallengeTeam } from '@/composables/useChallengeTeam'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import AcceptChallengesSwitch from '@/components/AcceptChallengesSwitch.vue'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import KitPreview from '@/components/KitPreview.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
@@ -154,6 +156,9 @@ const {
   canChallenge,
   open: challengeTeam,
   submit: handleSendChallenge,
+  canSetAccepts,
+  toggleAccepts,
+  togglingTeamId,
 } = useChallengeTeam()
 </script>
 
@@ -189,6 +194,15 @@ const {
               </h1>
 
               <div class="team-hero-chips">
+                <v-chip
+                  v-if="team.acceptsChallenges"
+                  size="small"
+                  variant="flat"
+                  color="success"
+                  :prepend-icon="mdiHandshakeOutline"
+                >
+                  {{ t('teams.challengeStatus.badge') }}
+                </v-chip>
                 <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]" :prepend-icon="mdiTagOutline">
                   {{ t(`profile.team.enums.${team.category}`) }}
                 </v-chip>
@@ -216,6 +230,17 @@ const {
                 </span>
               </div>
             </div>
+
+            <!-- Your own team (a non-player role): mark it open to any challenge. Never
+                 shown together with "Desafiar", which is for other teams. -->
+            <AcceptChallengesSwitch
+                  v-if="canSetAccepts(team)"
+                  :model-value="team.acceptsChallenges"
+                  :busy="togglingTeamId === team.id"
+                  large
+                  class="team-hero-accept"
+                  @toggle="toggleAccepts(team)"
+                />
 
             <v-btn
               v-if="canChallenge(team)"
@@ -503,6 +528,13 @@ const {
   gap: 0.4rem;
 }
 
+.team-hero-accept {
+  flex-shrink: 0;
+  min-width: 12.5rem;
+  width: auto;
+  margin-inline-start: auto;
+}
+
 .team-hero-challenge {
   flex-shrink: 0;
   min-width: 12.5rem;
@@ -513,6 +545,11 @@ const {
    button below instead of squeezing the club name. */
 @media (max-width: 599px) {
   .team-hero-challenge {
+    width: 100%;
+    margin-inline-start: 0;
+  }
+
+  .team-hero-accept {
     width: 100%;
     margin-inline-start: 0;
   }

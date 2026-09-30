@@ -77,6 +77,25 @@ public class TeamFilterTests
     }
 
     [Test]
+    public void AcceptsChallenges_matchesExactly()
+    {
+        var open = TeamMother.DomainTeam(name: "Open FC");
+        open.SetAcceptsChallenges(true);
+        var teams = new[] { open, TeamMother.DomainTeam(name: "Closed FC") }.AsQueryable();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                new TeamFilter(AcceptsChallenges: true).Apply(teams).Select(t => t.Name),
+                Is.EquivalentTo(new[] { "Open FC" }));
+            Assert.That(
+                new TeamFilter(AcceptsChallenges: false).Apply(teams).Select(t => t.Name),
+                Is.EquivalentTo(new[] { "Closed FC" }));
+            Assert.That(new TeamFilter().Apply(teams).Count(), Is.EqualTo(2));
+        });
+    }
+
+    [Test]
     public void Predicates_areCombinedWithAnd()
     {
         var result = new TeamFilter(City: "Sevilla", Type: FootballType.Football11).Apply(Teams());

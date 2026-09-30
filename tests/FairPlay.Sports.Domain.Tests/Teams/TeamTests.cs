@@ -189,6 +189,24 @@ public class TeamTests
             () => Team.Create(Guid.NewGuid(), "n", "c", "city", Classification(), Now, new TeamProfile(Website: "club.example")),
             Throws.ArgumentException);
 
+    [Test]
+    public void Create_StartsWithoutAcceptingChallenges()
+    {
+        Assert.That(Create().AcceptsChallenges, Is.False);
+    }
+
+    [Test]
+    public void SetAcceptsChallenges_TurnsTheFlagOnAndOff()
+    {
+        var team = Create();
+
+        team.SetAcceptsChallenges(true);
+        Assert.That(team.AcceptsChallenges, Is.True);
+
+        team.SetAcceptsChallenges(false);
+        Assert.That(team.AcceptsChallenges, Is.False);
+    }
+
     [TestCase(null)]
     [TestCase("")]
     [TestCase("   ")]

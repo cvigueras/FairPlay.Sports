@@ -14,6 +14,7 @@ using FairPlay.Sports.Application.Teams.GetCrest;
 using FairPlay.Sports.Application.Teams.GetMembers;
 using FairPlay.Sports.Application.Teams.JoinTeam;
 using FairPlay.Sports.Application.Teams.LeaveTeam;
+using FairPlay.Sports.Application.Teams.SetAcceptsChallenges;
 using FairPlay.Sports.Application.Teams.UploadCrest;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -69,7 +70,8 @@ public class TeamsControllerTests
             Name = "sev",
             Coach = "rios",
             Type = FootballType.Futsal,
-            Active = true
+            Active = true,
+            AcceptsChallenges = true
         };
 
         var response = await _controller.GetPage(request, cancellationTokenSource.Token);
@@ -85,7 +87,8 @@ public class TeamsControllerTests
                 query.Filter.Name == "sev" &&
                 query.Filter.Coach == "rios" &&
                 query.Filter.Type == FootballType.Futsal &&
-                query.Filter.Active == true),
+                query.Filter.Active == true &&
+                query.Filter.AcceptsChallenges == true),
             cancellationTokenSource.Token);
     }
 
@@ -238,6 +241,37 @@ public class TeamsControllerTests
         var response = await _controller.Update(id, TeamRequestMother.UpdateRequest(), CancellationToken.None);
 
         Assert.That(response.Result, Is.InstanceOf<NotFoundObjectResult>());
+    }
+
+    [Test]
+    public async Task SetAcceptsChallenges_DispatchesTheCommandWithRouteIdBodyAndCurrentUser()
+    {
+        var id = Guid.NewGuid();
+        var currentUserId = Guid.NewGuid();
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new System.Security.Claims.ClaimsPrincipal(
+                    new System.Security.Claims.ClaimsIdentity([new System.Security.Claims.Claim("sub", currentUserId.ToString())]))
+            }
+        };
+        var dto = TeamMother.Dto(id) with { AcceptsChallenges = true };
+        _sender.Send(Arg.Any<SetAcceptsChallengesCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TeamDto>.Success(dto));
+
+        var response = await _controller.SetAcceptsChallenges(
+            id, new SetAcceptsChallengesRequest(true), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Is.InstanceOf<OkObjectResult>());
+            Assert.That(((OkObjectResult)response.Result!).Value, Is.SameAs(dto));
+        });
+        await _sender.Received(1).Send(
+            Arg.Is<SetAcceptsChallengesCommand>(command =>
+                command.TeamId == id && command.Accepts && command.ActingUserId == currentUserId),
+            Arg.Any<CancellationToken>());
     }
 
     [Test]

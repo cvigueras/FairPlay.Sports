@@ -15,6 +15,7 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(team => team.Name).IsRequired().HasMaxLength(100);
         builder.Property(team => team.Coach).HasMaxLength(100);
         builder.Property(team => team.City).IsRequired().HasMaxLength(100);
+        builder.Property(team => team.AcceptsChallenges).IsRequired();
 
         // Value object flattened onto the same columns (Type / Division / Category)
         // so the schema is unchanged.

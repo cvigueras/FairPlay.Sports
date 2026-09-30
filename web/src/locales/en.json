@@ -180,6 +180,15 @@
       "playersTitle": "Players ({n})",
       "noPlayers": "This team has no players yet.",
       "membersFailed": "Could not load the team members."
+    },
+    "challengeStatus": {
+      "button": "Challenge me!",
+      "badge": "Open to any challenge",
+      "enabled": "Your team accepts challenges: others will see it on its page.",
+      "disabled": "Your team no longer shows as open to challenges.",
+      "failed": "Could not update the team.",
+      "listBadge": "Open to challenges",
+      "filter": "Open to challenges"
     }
   },
   "standings": {

@@ -80,6 +80,8 @@ export interface Team extends TeamProfileFields {
   hasCrest: boolean
   createdAt: string
   active: boolean
+  /** The team has said it is open to any challenge; shown as a badge on its detail. */
+  acceptsChallenges: boolean
 }
 
 interface TeamCorePayload {

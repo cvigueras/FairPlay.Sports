@@ -9,6 +9,7 @@ import {
   mdiArrowUp,
   mdiCardAccountDetailsOutline,
   mdiChevronDown,
+  mdiHandshakeOutline,
   mdiMagnify,
   mdiMagnifyRemoveOutline,
   mdiMapMarkerOutline,
@@ -22,6 +23,7 @@ import { ApiError } from '@/lib/http'
 import { teamsApi } from '@/lib/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useLeagueFilterStore } from '@/stores/leagueFilter'
+import AcceptChallengesSwitch from '@/components/AcceptChallengesSwitch.vue'
 import ChallengeWizard from '@/components/ChallengeWizard.vue'
 import TeamCrest from '@/components/TeamCrest.vue'
 import { useChallengeTeam } from '@/composables/useChallengeTeam'
@@ -42,6 +44,9 @@ const {
   canChallenge,
   open: challengeTeam,
   submit: handleSendChallenge,
+  canSetAccepts,
+  toggleAccepts,
+  togglingTeamId,
 } = useChallengeTeam()
 // Best-effort: the memberships decide whether each row shows the challenge button.
 auth.loadMyTeams().catch(() => {})
@@ -74,6 +79,8 @@ const TEXT_FILTER_DEBOUNCE_MS = 300
 const nameText = ref<string | null>('')
 const coachText = ref<string | null>('')
 const cityText = ref<string | null>('')
+// "Only teams open to challenges": a plain on/off switch, not a text filter.
+const acceptsChallengesOnly = ref(false)
 
 const asTextFilter = (text: string | null) => {
   // The clearable "X" sets the model to null, not ''.
@@ -119,7 +126,8 @@ const hasActiveFilters = computed(
   () =>
     asTextFilter(nameText.value) !== undefined ||
     asTextFilter(coachText.value) !== undefined ||
-    asTextFilter(cityText.value) !== undefined,
+    asTextFilter(cityText.value) !== undefined ||
+    acceptsChallengesOnly.value,
 )
 
 // Desktop only (see .teams-more-btn, hidden on mobile): coach/city live
@@ -140,9 +148,12 @@ const hiddenFilterCount = computed(
 const mobileFiltersOpen = ref(false)
 const activeFilterCount = computed(
   () =>
-    [asTextFilter(nameText.value), asTextFilter(coachText.value), asTextFilter(cityText.value)].filter(
-      (value) => value !== undefined,
-    ).length,
+    [
+      asTextFilter(nameText.value),
+      asTextFilter(coachText.value),
+      asTextFilter(cityText.value),
+      acceptsChallengesOnly.value || undefined,
+    ].filter((value) => value !== undefined).length,
 )
 
 const enumItems = <T extends string>(values: readonly T[]) =>
@@ -163,6 +174,7 @@ async function load() {
         name: asTextFilter(nameText.value),
         coach: asTextFilter(coachText.value),
         city: asTextFilter(cityText.value),
+        acceptsChallenges: acceptsChallengesOnly.value || undefined,
         type: type.value,
         division: division.value,
         category: category.value,
@@ -183,7 +195,7 @@ function reload() {
 }
 
 watch(page, load, { immediate: true })
-watch([type, division, category, sort], reload)
+watch([type, division, category, sort, acceptsChallengesOnly], reload)
 
 // Text filters are debounced so we query once the user pauses, not per keystroke.
 let textFilterTimer: ReturnType<typeof setTimeout> | undefined
@@ -196,6 +208,7 @@ function clearFilters() {
   nameText.value = ''
   coachText.value = ''
   cityText.value = ''
+  acceptsChallengesOnly.value = false
   clearTimeout(textFilterTimer)
   reload()
 }
@@ -285,6 +298,14 @@ function toggleTeamRow(id: string) {
           hide-details
           class="teams-filter-select"
         />
+        <v-checkbox
+          v-model="acceptsChallengesOnly"
+          :label="t('teams.challengeStatus.filter')"
+          color="success"
+          density="comfortable"
+          hide-details
+          class="teams-open-filter"
+        />
         <!-- Mobile only: coach/city live behind "More filters" on desktop
              (see .teams-more-btn below), but that nested menu is one tap too
              many on top of the filter panel toggle, so on mobile they're
@@ -371,6 +392,17 @@ function toggleTeamRow(id: string) {
         <!-- On mobile the search box lives inside the collapsed filter panel
              (see .teams-filterbar below), so this chip is the only sign a
              name filter is active while the panel stays closed. -->
+        <v-chip
+          v-if="acceptsChallengesOnly"
+          size="small"
+          variant="tonal"
+          color="success"
+          closable
+          :prepend-icon="mdiHandshakeOutline"
+          @click:close="acceptsChallengesOnly = false"
+        >
+          {{ t('teams.challengeStatus.listBadge') }}
+        </v-chip>
         <v-chip
           v-if="asTextFilter(nameText) !== undefined"
           size="small"
@@ -524,6 +556,16 @@ function toggleTeamRow(id: string) {
                     <div class="team-row-club">
                       <TeamCrest :team="team" :size="32" />
                       <span class="text-truncate">{{ team.name }}</span>
+                      <v-chip
+                        v-if="team.acceptsChallenges"
+                        size="x-small"
+                        variant="tonal"
+                        color="success"
+                        class="team-row-open flex-shrink-0"
+                        :prepend-icon="mdiHandshakeOutline"
+                      >
+                        {{ t('teams.challengeStatus.listBadge') }}
+                      </v-chip>
                     </div>
                   </td>
                   <td class="teams-col-stat">
@@ -561,6 +603,13 @@ function toggleTeamRow(id: string) {
                   </td>
                   <td class="teams-col-actions">
                     <div class="teams-actions">
+                      <AcceptChallengesSwitch
+                            v-if="canSetAccepts(team)"
+                            :model-value="team.acceptsChallenges"
+                            :busy="togglingTeamId === team.id"
+                            class="teams-accept-switch"
+                            @toggle="toggleAccepts(team)"
+                          />
                       <v-btn
                         v-if="canChallenge(team)"
                         color="red"
@@ -602,6 +651,15 @@ function toggleTeamRow(id: string) {
                 >
                   <TeamCrest :team="team" :size="28" />
                   <span class="teams-mobile-name text-truncate">{{ team.name }}</span>
+                  <v-icon
+                    v-if="team.acceptsChallenges"
+                    :icon="mdiHandshakeOutline"
+                    size="18"
+                    color="success"
+                    class="flex-shrink-0"
+                    :title="t('teams.challengeStatus.badge')"
+                    :aria-label="t('teams.challengeStatus.badge')"
+                  />
                   <v-chip size="small" variant="tonal" :color="AGE_CATEGORY_COLOR[team.category]">
                     {{ t(`profile.team.enums.${team.category}`) }}
                   </v-chip>
@@ -618,6 +676,16 @@ function toggleTeamRow(id: string) {
                   class="teams-mobile-details"
                   :class="{ 'teams-mobile-details--mine': isMine(team) }"
                 >
+                  <v-chip
+                    v-if="team.acceptsChallenges"
+                    size="small"
+                    variant="flat"
+                    color="success"
+                    class="align-self-start"
+                    :prepend-icon="mdiHandshakeOutline"
+                  >
+                    {{ t('teams.challengeStatus.badge') }}
+                  </v-chip>
                   <div class="teams-mobile-detail-grid">
                     <div class="teams-mobile-detail-cell">
                       <span class="teams-mobile-detail-label">{{ t('teams.fields.type') }}</span>
@@ -647,6 +715,13 @@ function toggleTeamRow(id: string) {
                     </span>
                   </div>
                   <div class="teams-mobile-actions">
+                    <AcceptChallengesSwitch
+                          v-if="canSetAccepts(team)"
+                          :model-value="team.acceptsChallenges"
+                          :busy="togglingTeamId === team.id"
+                          class="teams-accept-switch"
+                          @toggle="toggleAccepts(team)"
+                        />
                     <v-btn
                       v-if="canChallenge(team)"
                       color="red"
@@ -774,6 +849,11 @@ function toggleTeamRow(id: string) {
   flex: 0 0 auto;
 }
 
+/* A compact checkbox next to the selects, not another full-size control. */
+.teams-open-filter {
+  flex: 0 0 auto;
+}
+
 .teams-active-chips {
   flex: 0 0 auto;
   display: flex;
@@ -898,28 +978,28 @@ function toggleTeamRow(id: string) {
 
 .teams-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 1100px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.875rem;
 }
 
 .teams-col-club {
-  width: 25%;
+  width: 21%;
 }
 
 .teams-col-stat {
-  width: 14%;
+  width: 11%;
 }
 
 .teams-col-city {
-  width: 13%;
+  width: 11%;
 }
 
 /* Wide enough that the icon + label never get squeezed inside the button,
    even at the table's min-width (see .teams-table above). */
 .teams-col-actions {
-  width: 28%;
+  width: 35%;
 }
 
 .teams-table thead th {
@@ -1001,6 +1081,31 @@ function toggleTeamRow(id: string) {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* The "Desafiame!" switch sits where the row's challenge button would, same slot width. */
+.teams-accept-switch {
+  flex: 0 0 10.5rem;
+  width: 10.5rem;
+}
+
+.teams-mobile-actions .teams-accept-switch {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 36px;
+  font-size: 0.875rem;
+}
+
+/* Every row action (Acepto desafios / Desafiar / Ver detalles) shares one
+   type size and one width, whichever of them a row shows. */
+.teams-actions .v-btn {
+  flex: 0 0 10.5rem;
+  width: 10.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .teams-mobile-actions {
@@ -1173,6 +1278,10 @@ function toggleTeamRow(id: string) {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .teams-filterbar--open .teams-open-filter {
+    width: 100%;
   }
 
   .teams-filterbar--open .teams-search,

@@ -10,7 +10,8 @@ public sealed record TeamFilter(
     FootballType? Type = null,
     Division? Division = null,
     AgeCategory? Category = null,
-    bool? Active = null) : IQueryFilter<Team>
+    bool? Active = null,
+    bool? AcceptsChallenges = null) : IQueryFilter<Team>
 {
     public IQueryable<Team> Apply(IQueryable<Team> source)
     {
@@ -54,6 +55,11 @@ public sealed record TeamFilter(
         if (Active is not null)
         {
             query = query.Where(team => team.Active == Active);
+        }
+
+        if (AcceptsChallenges is not null)
+        {
+            query = query.Where(team => team.AcceptsChallenges == AcceptsChallenges);
         }
 
         return query;
