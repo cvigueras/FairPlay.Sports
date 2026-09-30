@@ -266,17 +266,17 @@ const {
               />
             </div>
 
-            <v-btn
-              v-if="canChallenge(team)"
-              color="red"
-              variant="flat"
-              size="large"
-              :prepend-icon="mdiSwordCross"
-              class="team-hero-challenge"
-              @click="challengeTeam(team)"
-            >
-              {{ t('profile.team.challenge') }}
-            </v-btn>
+            <div v-if="canChallenge(team)" class="team-hero-accept">
+              <TeamFlagSwitch
+                plain
+                large
+                :label="t('profile.team.challenge')"
+                :icon="mdiSwordCross"
+                color="#F44336"
+                text-color="#B71C1C"
+                @toggle="challengeTeam(team)"
+              />
+            </div>
           </div>
         </v-card>
 
@@ -562,22 +562,8 @@ const {
   margin-inline-start: auto;
 }
 
-.team-hero-challenge {
-  flex-shrink: 0;
-  min-width: 12.5rem;
-  margin-inline-start: auto;
-}
-
 /* Desktop: a more compact action than the mobile full-width button. */
 @media (min-width: 600px) {
-  .team-hero-challenge {
-    --v-btn-height: 36px;
-    --v-btn-size: 0.875rem;
-
-    min-width: 9.5rem;
-    padding: 0 16px;
-  }
-
   .team-hero-accept {
     min-width: 11rem;
   }
@@ -591,11 +577,6 @@ const {
 /* Not enough room for crest, name and button on one line - stack the
    button below instead of squeezing the club name. */
 @media (max-width: 599px) {
-  .team-hero-challenge {
-    width: 100%;
-    margin-inline-start: 0;
-  }
-
   .team-hero-accept {
     width: 100%;
     margin-inline-start: 0;

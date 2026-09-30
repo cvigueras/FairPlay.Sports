@@ -5,10 +5,14 @@ import { computed } from 'vue'
  * A team on/off flag ("Desafiame!", "Campo disponible") as one button: icon, a
  * label that never changes, and a small on/off track on the right. Sized to sit
  * next to the row's buttons; the parent decides the width.
+ *
+ * `plain` drops the switch: it keeps the accent-coloured border and tinted background
+ * of the "on" state (an icon and a label), for actions that are not a flag - it just
+ * emits `toggle` on click.
  */
 const props = withDefaults(
   defineProps<{
-    modelValue: boolean
+    modelValue?: boolean
     label: string
     icon: string
     /** Accent colour: the icon, the label and (when on) the border and the track. */
@@ -17,8 +21,16 @@ const props = withDefaults(
     textColor?: string
     busy?: boolean
     large?: boolean
+    plain?: boolean
   }>(),
-  { color: 'rgb(var(--v-theme-success))', textColor: '#166534', busy: false, large: false },
+  {
+    modelValue: false,
+    color: 'rgb(var(--v-theme-success))',
+    textColor: '#166534',
+    busy: false,
+    large: false,
+    plain: false,
+  },
 )
 
 defineEmits<{ (e: 'toggle'): void }>()
@@ -29,17 +41,17 @@ const toneStyle = computed(() => ({ '--flag-color': props.color, '--flag-text': 
 <template>
   <button
     type="button"
-    role="switch"
-    :aria-checked="modelValue"
+    :role="plain ? undefined : 'switch'"
+    :aria-checked="plain ? undefined : modelValue"
     :disabled="busy"
     class="flag-switch"
-    :class="{ 'flag-switch--on': modelValue, 'flag-switch--large': large }"
+    :class="{ 'flag-switch--on': modelValue || plain, 'flag-switch--large': large }"
     :style="toneStyle"
     @click="$emit('toggle')"
   >
     <v-icon :icon="icon" :size="large ? 20 : 16" />
     <span class="flag-switch__label">{{ label }}</span>
-    <span class="flag-switch__track" aria-hidden="true">
+    <span v-if="!plain" class="flag-switch__track" aria-hidden="true">
       <span class="flag-switch__thumb" />
     </span>
   </button>
