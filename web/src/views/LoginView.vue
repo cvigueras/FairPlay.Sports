@@ -850,8 +850,14 @@ async function handleRegisterSubmit() {
        which is what was making the form's left/right margins uneven. */
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    padding: 0 22px 56px;
+    /* Top-anchored with the form pushed down via margin-top: auto (below)
+       rather than justify-content: flex-end: with flex-end, content taller
+       than the panel (short iPhone viewport with Safari's toolbars) overflows
+       upward where it can't be scrolled to, and the footer's "Regístrate"
+       button is lost. This way the overflow runs downward and scrolls. */
+    justify-content: flex-start;
+    /* Clear the iPhone home indicator / Safari bottom bar. */
+    padding: 0 22px calc(32px + env(safe-area-inset-bottom, 0px));
     background: none;
     color: #ffffff;
     /* Confirmed both login and register fit with zero overflow (measured),
@@ -883,13 +889,12 @@ async function handleRegisterSubmit() {
   /* The register form can grow with its error messages: keep it below the
      hero's brand row and let the panel scroll, instead of anchoring it to the
      bottom and letting it climb over the logo. */
-  .login-panel--register {
-    justify-content: flex-start;
-    padding-top: 136px;
+  .login-panel > .login-panel__form {
+    margin-top: auto;
   }
 
-  .login-panel--register .login-panel__form {
-    margin-top: auto;
+  .login-panel--register {
+    padding-top: 136px;
   }
 
   .login-panel--register .login-panel__field {
@@ -938,6 +943,13 @@ async function handleRegisterSubmit() {
      the group captions - a desktop nicety - go and the row gap tightens. */
   .login-panel__footer {
     position: static;
+    margin-top: 16px;
+    flex-shrink: 0;
+  }
+
+  .login-panel__switch {
+    min-height: 44px;
+    padding: 0 4px;
   }
 
   .login-panel__group {
