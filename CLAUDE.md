@@ -160,6 +160,24 @@ on a successful create). Inbound request DTOs are separate records in
 - Frontend: `cd web && npm run dev` (Vite, pinned to
   `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks.
 
+## Shortcut MCP (stories)
+
+`.mcp.json` registers the `shortcut` MCP server (`@shortcut/mcp`) so Claude can
+read a Shortcut story and work on it. The token is **never** in the repo; each
+person sets their own:
+
+1. In Shortcut: *Settings → Your account → API Tokens*, create one per person and
+   machine (e.g. `claude-code-fairplay-sports-<machine>`). It inherits your user's
+   permissions, so treat it like a password.
+2. Store it in the `SHORTCUT_API_TOKEN` environment variable and restart Claude Code.
+   PowerShell: `[Environment]::SetEnvironmentVariable("SHORTCUT_API_TOKEN", "<token>", "User")`;
+   macOS/Linux: `export SHORTCUT_API_TOKEN=<token>` in the shell profile.
+3. Approve the `shortcut` server when prompted and check it with `/mcp`.
+
+Usage: give Claude the story id/link; it reads the story, implements it following
+this file, and verifies with build/tests. Keep Shortcut write tools (create, update,
+comment) on "ask every time". The no-commit rule below still applies.
+
 ## Commits & PRs
 
 Conventional Commits. Use the `/commit` and `/pr` commands. **Never `git commit`,
