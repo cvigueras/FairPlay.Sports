@@ -67,10 +67,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Development always migrates; elsewhere it is opt-in (Database__MigrateOnStartup=true) for hosts
+// without a pre-deploy step, e.g. Render's free plan. Safe with a single instance only.
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     await app.Services.MigrateAsync();
+}
 
+if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {

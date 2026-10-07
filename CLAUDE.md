@@ -178,6 +178,14 @@ Usage: give Claude the story id/link; it reads the story, implements it followin
 this file, and verifies with build/tests. Keep Shortcut write tools (create, update,
 comment) on "ask every time". The no-commit rule below still applies.
 
+When asked to work on a story that is in "To Do", move it to "In Progress" with
+`stories-update` (workflow "Standard": To Do = 500000007, In Progress = 500000008).
+Only that one transition: never move it to In Review/Done unless explicitly asked.
+
+When a story or bug is solved, post a comment on it (`stories-create-comment`) listing
+the tests that **should be run** to verify it (manual and automated, derived from the
+acceptance criteria), regardless of which ones Claude already ran or skipped.
+
 ## Commits & PRs
 
 Conventional Commits. Use the `/commit` and `/pr` commands. **Never `git commit`,
