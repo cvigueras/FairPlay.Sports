@@ -14,12 +14,14 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
-const { mobile, width } = useDisplay()
+const { width } = useDisplay()
 
-// Vuetify's `mobile` flips at its `lg` threshold (1145px) while every mobile
-// rule in the stylesheet below is `max-width: 899px`. Anything that has to move
-// together with that CSS (hidden caption/eyebrow, red role pills) keys off this
-// instead, so between 900 and 1144px the markup and the stylesheet agree.
+// The one "mobile" flag of this screen. Vuetify's own `mobile` flips at its `lg`
+// threshold (1145px), but every mobile rule in the stylesheet below is
+// `max-width: 899px`, so using it left a half-mobile state between 900 and
+// 1144px. Everything that has to follow that CSS keys off this instead; keep
+// the 900 in step with the media query (899px) if either ever changes.
+// (Not set globally via `mobileBreakpoint`: AppShell's drawer reads `mobile` too.)
 const narrow = computed(() => width.value < 900)
 
 // Mobile redesigns the panel as a translucent "glass" card over the hero
@@ -28,7 +30,7 @@ const narrow = computed(() => width.value < 900)
 // exactly this, just unused until now. Applying it through v-theme-provider
 // recolors every Vuetify control inside (inputs, buttons, alerts) for free;
 // on desktop this resolves to the app's own default theme, a no-op.
-const panelTheme = computed(() => (mobile.value ? 'fairplayDark' : 'fairplay'))
+const panelTheme = computed(() => (narrow.value ? 'fairplayDark' : 'fairplay'))
 
 // Login and register share this one screen (hero + panel); switching between
 // them is a local state flip, not a route change, so the hero never remounts.
@@ -220,7 +222,7 @@ async function handleRegisterSubmit() {
           <!-- Mobile only: the language switcher moves up next to the brand
                name, over the photo - desktop keeps its own instance where it
                already was, top-right of the light panel below. -->
-          <v-menu v-if="mobile">
+          <v-menu v-if="narrow">
             <template #activator="{ props }">
               <v-btn
                 class="login-hero__lang"
@@ -250,11 +252,11 @@ async function handleRegisterSubmit() {
           <span v-if="!narrow || mode === 'login'" class="login-hero__eyebrow">
             {{ t('login.heroEyebrow') }}
           </span>
-          <h1 v-if="!mobile" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
-          <p v-if="!mobile" class="login-hero__description">{{ t('login.heroDescription') }}</p>
+          <h1 v-if="!narrow" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
+          <p v-if="!narrow" class="login-hero__description">{{ t('login.heroDescription') }}</p>
         </div>
 
-        <ul v-if="!mobile || mode === 'login'" class="login-hero__features">
+        <ul v-if="!narrow || mode === 'login'" class="login-hero__features">
           <li v-for="feature in heroFeatures" :key="feature.titleKey">
             <span class="login-hero__feature-icon">
               <v-icon :icon="feature.icon" size="22" color="#4ade80" />
@@ -269,7 +271,7 @@ async function handleRegisterSubmit() {
 
       <section class="login-panel" :class="{ 'login-panel--register': mode === 'register' }">
         <v-theme-provider :theme="panelTheme">
-        <v-menu v-if="!mobile">
+        <v-menu v-if="!narrow">
           <template #activator="{ props }">
             <v-btn
               class="login-panel__lang"
