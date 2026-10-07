@@ -15,6 +15,11 @@ Usage: give Claude the story id/link; it reads the story, implements it followin
 this file, and verifies with build/tests. Keep Shortcut write tools (create, update,
 comment) on "ask every time". The no-commit rule in `CLAUDE.md` (Commits & PRs) still applies.
 
+Before developing a story, check the current branch (`git branch --show-current`). If it
+belongs to a different story, or has uncommitted work from one, stop and suggest running
+`/next-branch` first (back to an updated `main`, then the next numbered branch). Never
+create or switch branches on your own, and never mix two stories in one branch.
+
 When asked to work on a story that is in "To Do", move it to "In Progress" with
 `stories-update` (workflow "Standard": To Do = 500000007, In Progress = 500000008).
 Only that one transition: never move it to In Review/Done unless explicitly asked.

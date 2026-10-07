@@ -14,7 +14,13 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const { t, locale } = useI18n()
-const { mobile } = useDisplay()
+const { mobile, width } = useDisplay()
+
+// Vuetify's `mobile` flips at its `lg` threshold (1145px) while every mobile
+// rule in the stylesheet below is `max-width: 899px`. Anything that has to move
+// together with that CSS (hidden caption/eyebrow, red role pills) keys off this
+// instead, so between 900 and 1144px the markup and the stylesheet agree.
+const narrow = computed(() => width.value < 900)
 
 // Mobile redesigns the panel as a translucent "glass" card over the hero
 // photo (see .login-panel below) instead of desktop's solid light panel
@@ -241,7 +247,7 @@ async function handleRegisterSubmit() {
         </div>
 
         <div class="login-hero__pitch">
-          <span v-if="!mobile || mode === 'login'" class="login-hero__eyebrow">
+          <span v-if="!narrow || mode === 'login'" class="login-hero__eyebrow">
             {{ t('login.heroEyebrow') }}
           </span>
           <h1 v-if="!mobile" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
@@ -354,7 +360,7 @@ async function handleRegisterSubmit() {
                   :class="{
                     'login-panel__pill--selected': registerForm.primaryRole === role.value,
                     'login-panel__pill--error':
-                      mobile && !!registerErrors.primaryRole && !registerForm.primaryRole,
+                      narrow && !!registerErrors.primaryRole && !registerForm.primaryRole,
                   }"
                   :aria-pressed="registerForm.primaryRole === role.value"
                   @click="registerForm.primaryRole = role.value"
@@ -362,7 +368,12 @@ async function handleRegisterSubmit() {
                   {{ role.title }}
                 </button>
               </div>
-              <span v-if="registerErrors.primaryRole && !mobile" class="fp-error">
+              <span
+                v-if="registerErrors.primaryRole"
+                class="fp-error"
+                :class="{ 'login-panel__sr-only': narrow }"
+                role="alert"
+              >
                 {{ registerErrors.primaryRole }}
               </span>
             </div>
@@ -754,6 +765,20 @@ async function handleRegisterSubmit() {
   cursor: pointer;
 }
 
+/* Visually hidden but still announced by screen readers: the role error on
+   narrow screens, where the pills turn red instead of showing the message. */
+.login-panel__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .login-panel__pill--selected {
   background: rgb(var(--v-theme-primary));
   border-color: rgb(var(--v-theme-primary));
@@ -1016,14 +1041,6 @@ async function handleRegisterSubmit() {
     border: 0;
   }
 
-  /* No role picked on submit: every pill turns red instead of showing a
-     message (the message is desktop-only, see the template). */
-  .login-panel__pill--error {
-    border-color: #f87171;
-    background: rgba(248, 113, 113, 0.14);
-    color: #fecaca;
-  }
-
   .login-panel__pill {
     height: 40px;
     border-color: rgba(255, 255, 255, 0.28);
@@ -1036,6 +1053,15 @@ async function handleRegisterSubmit() {
     border-color: #818cf8;
     color: #1e1b4b;
     font-weight: 700;
+  }
+
+  /* No role picked on submit: every pill turns red instead of showing a
+     message (the message is desktop-only, see the template). Declared after
+     the base pill rule on purpose: same specificity, so the later one wins. */
+  .login-panel__pill--error {
+    border-color: #f87171;
+    background: rgba(248, 113, 113, 0.14);
+    color: #fecaca;
   }
 
   .login-panel__field {
