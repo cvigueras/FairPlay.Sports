@@ -162,17 +162,16 @@ on a successful create). Inbound request DTOs are separate records in
 
 ## Shortcut MCP (stories)
 
-`.mcp.json` registers the `shortcut` MCP server (`@shortcut/mcp`) so Claude can
-read a Shortcut story and work on it. The token is **never** in the repo; each
-person sets their own:
+`.mcp.json` registers the official hosted `shortcut` MCP server
+(`https://mcp.shortcut.com/mcp`, HTTP transport) so Claude can read a Shortcut story
+and work on it. It authenticates with OAuth, so there is no token in the repo or in
+an environment variable; each person authorizes their own Shortcut account:
 
-1. In Shortcut: *Settings → Your account → API Tokens*, create one per person and
-   machine (e.g. `claude-code-fairplay-sports-<machine>`). It inherits your user's
-   permissions, so treat it like a password.
-2. Store it in the `SHORTCUT_API_TOKEN` environment variable and restart Claude Code.
-   PowerShell: `[Environment]::SetEnvironmentVariable("SHORTCUT_API_TOKEN", "<token>", "User")`;
-   macOS/Linux: `export SHORTCUT_API_TOKEN=<token>` in the shell profile.
-3. Approve the `shortcut` server when prompted and check it with `/mcp`.
+1. Start Claude Code and approve the `shortcut` server when prompted.
+2. Run `/mcp`, pick `shortcut` and choose *Authenticate*; sign in to Shortcut in the
+   browser tab that opens.
+3. Check it with `/mcp` (status should be connected). The old self-hosted
+   `@shortcut/mcp` package is deprecated and must not be used.
 
 Usage: give Claude the story id/link; it reads the story, implements it following
 this file, and verifies with build/tests. Keep Shortcut write tools (create, update,
@@ -181,6 +180,10 @@ comment) on "ask every time". The no-commit rule below still applies.
 When asked to work on a story that is in "To Do", move it to "In Progress" with
 `stories-update` (workflow "Standard": To Do = 500000007, In Progress = 500000008).
 Only that one transition: never move it to In Review/Done unless explicitly asked.
+
+When a PR is created for a story (`/pr`), link the PR URL to that story as an external
+link (`stories-add-external-link`). The story id comes from the work in progress, never
+from the branch number; skip it if the story is unknown.
 
 When a story or bug is solved, post a comment on it (`stories-create-comment`) listing
 the tests that **should be run** to verify it (manual and automated, derived from the

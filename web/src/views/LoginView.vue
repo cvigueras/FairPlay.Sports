@@ -241,7 +241,9 @@ async function handleRegisterSubmit() {
         </div>
 
         <div class="login-hero__pitch">
-          <span class="login-hero__eyebrow">{{ t('login.heroEyebrow') }}</span>
+          <span v-if="!mobile || mode === 'login'" class="login-hero__eyebrow">
+            {{ t('login.heroEyebrow') }}
+          </span>
           <h1 v-if="!mobile" class="login-hero__title">{{ t('login.heroTitle') }}</h1>
           <p v-if="!mobile" class="login-hero__description">{{ t('login.heroDescription') }}</p>
         </div>
@@ -412,31 +414,33 @@ async function handleRegisterSubmit() {
               class="login-panel__field"
             />
 
-            <v-text-field
-              v-model="registerForm.password"
-              :label="t('register.password')"
-              type="password"
-              autocomplete="new-password"
-              :placeholder="t('common.passwordPlaceholder')"
-              :error="!!registerErrors.password"
-              :error-messages="shown(registerErrors.password)"
-              density="compact"
-              hide-details="auto"
-              class="login-panel__field"
-            />
+            <div class="login-panel__passwords">
+              <v-text-field
+                v-model="registerForm.password"
+                :label="t('register.password')"
+                type="password"
+                autocomplete="new-password"
+                :placeholder="t('common.passwordPlaceholder')"
+                :error="!!registerErrors.password"
+                :error-messages="shown(registerErrors.password)"
+                density="compact"
+                hide-details="auto"
+                class="login-panel__field"
+              />
 
-            <v-text-field
-              v-model="registerForm.confirmPassword"
-              :label="t('register.confirmPassword')"
-              type="password"
-              autocomplete="new-password"
-              :placeholder="t('common.passwordPlaceholder')"
-              :error="!!registerErrors.confirmPassword"
-              :error-messages="shown(registerErrors.confirmPassword)"
-              density="compact"
-              hide-details="auto"
-              class="login-panel__field"
-            />
+              <v-text-field
+                v-model="registerForm.confirmPassword"
+                :label="t('register.confirmPassword')"
+                type="password"
+                autocomplete="new-password"
+                :placeholder="t('common.passwordPlaceholder')"
+                :error="!!registerErrors.confirmPassword"
+                :error-messages="shown(registerErrors.confirmPassword)"
+                density="compact"
+                hide-details="auto"
+                class="login-panel__field"
+              />
+            </div>
 
             <v-checkbox
               v-model="registerForm.confirmedAge"
@@ -900,8 +904,17 @@ async function handleRegisterSubmit() {
     margin-top: auto;
   }
 
+  /* The eyebrow is hidden on register (see the template), so the form can start
+     right under the brand row instead of below the eyebrow as well. */
   .login-panel--register {
-    padding-top: 136px;
+    padding-top: 96px;
+  }
+
+  /* Password and confirmation share a row on mobile; stacked elsewhere. */
+  .login-panel__passwords {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
   }
 
   .login-panel--register .login-panel__field {
