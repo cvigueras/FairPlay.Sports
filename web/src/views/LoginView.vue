@@ -867,8 +867,11 @@ async function handleRegisterSubmit() {
        upward where it can't be scrolled to, and the footer's "Regístrate"
        button is lost. This way the overflow runs downward and scrolls. */
     justify-content: flex-start;
-    /* Clear the iPhone home indicator / Safari bottom bar. */
-    padding: 0 22px calc(32px + env(safe-area-inset-bottom, 0px));
+    /* The bottom space (home indicator / Safari bottom bar) is the ::after
+       spacer below, not padding-bottom: Safari drops a scroll container's
+       bottom padding once the content overflows, which left the last line
+       flush with the edge and cut off. */
+    padding: 0 22px;
     background: none;
     color: #ffffff;
     /* Confirmed both login and register fit with zero overflow (measured),
@@ -895,6 +898,13 @@ async function handleRegisterSubmit() {
 
   .login-panel > * {
     pointer-events: auto;
+  }
+
+  /* Clears the iPhone home indicator / Safari bottom bar, and stays part of the
+     scrollable area when the content overflows. */
+  .login-panel::after {
+    content: '';
+    flex: 0 0 calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
   /* The register form can grow with its error messages: keep it below the
@@ -965,6 +975,13 @@ async function handleRegisterSubmit() {
     position: static;
     margin-top: 16px;
     flex-shrink: 0;
+  }
+
+  /* On register every pixel counts on a short screen (iPhone 13), so the
+     "already have an account" line sits right under the form: the 16px above
+     is dropped and only the form's own 12px gap separates them. */
+  .login-panel--register .login-panel__footer {
+    margin-top: 0;
   }
 
   .login-panel__switch {
