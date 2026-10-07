@@ -351,14 +351,18 @@ async function handleRegisterSubmit() {
                   :key="role.value"
                   type="button"
                   class="login-panel__pill"
-                  :class="{ 'login-panel__pill--selected': registerForm.primaryRole === role.value }"
+                  :class="{
+                    'login-panel__pill--selected': registerForm.primaryRole === role.value,
+                    'login-panel__pill--error':
+                      mobile && !!registerErrors.primaryRole && !registerForm.primaryRole,
+                  }"
                   :aria-pressed="registerForm.primaryRole === role.value"
                   @click="registerForm.primaryRole = role.value"
                 >
                   {{ role.title }}
                 </button>
               </div>
-              <span v-if="registerErrors.primaryRole" class="fp-error">
+              <span v-if="registerErrors.primaryRole && !mobile" class="fp-error">
                 {{ registerErrors.primaryRole }}
               </span>
             </div>
@@ -997,8 +1001,27 @@ async function handleRegisterSubmit() {
     margin-bottom: 14px;
   }
 
+  /* The "Your main role" caption is dropped on mobile to save a row, but stays
+     in the DOM (visually hidden) because the pill group is labelled by it. With
+     it out of the flow, the role block's 8px gap goes too. */
   .login-panel__role-label {
-    color: rgba(255, 255, 255, 0.85);
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* No role picked on submit: every pill turns red instead of showing a
+     message (the message is desktop-only, see the template). */
+  .login-panel__pill--error {
+    border-color: #f87171;
+    background: rgba(248, 113, 113, 0.14);
+    color: #fecaca;
   }
 
   .login-panel__pill {
