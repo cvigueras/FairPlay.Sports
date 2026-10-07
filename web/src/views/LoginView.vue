@@ -791,6 +791,13 @@ async function handleRegisterSubmit() {
 @media (max-width: 899px) {
   .login-shell {
     display: grid;
+    /* Without an explicit, shrinkable track the implicit row is auto-sized to
+       the tallest item: a taller register form grows the row past 100dvh,
+       .login-panel's height: 100% then follows it, so it never overflows (and
+       never scrolls) and the clipped bottom - the Register button - is
+       unreachable. minmax(0, 1fr) pins the row to the viewport instead. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     height: 100dvh;
     overflow: hidden;
   }
