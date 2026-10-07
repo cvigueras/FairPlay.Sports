@@ -85,6 +85,13 @@ EOF
 
 ### Después de crear
 
+- **Link the PR to its Shortcut story.** The story is the one being worked on in
+  this session (an id or link the user gave, or one named in `$ARGUMENTS`); the
+  branch number is not the story id, so never derive it from the branch name. Add the
+  PR URL as an external link on the story with the Shortcut MCP
+  (`stories-add-external-link`, or the equivalent tool of the hosted server). If
+  no story is known, skip this and say so in one line instead of guessing. The
+  Shortcut write tool stays on "ask every time".
 - Muéstrame la URL de la PR.
 - **No hagas merge** (lo haré yo desde GitHub).
 - Recuérdame que, cuando termine con esta rama, `/next-branch` me deja en
