@@ -10,17 +10,20 @@ mirror its files across the four layers. **Teams** and **Auth** are the other
 two slices; Teams follows the same shape (plus binary crest upload/download),
 Auth is the one deliberate outlier (see the Api row below).
 
-Frontend (`web/`) is out of scope for these notes
-unless the task explicitly targets it. When it does: Vue 3 + Vuetify 4
-(mdi-svg icons — pass icon paths, no runtime font), Pinia, vue-i18n
-(switch/persist the locale via `setLocale` in `src/plugins/i18n.ts`; it is
-global, so a change on any screen shows everywhere). All HTTP goes through
-`src/lib/http.ts` (`get/post/put/postForm`); the access token lives in
-memory in the `auth` store, the refresh token in an `HttpOnly` cookie.
-`npm run build` runs the type-check (`vue-tsc`) and the build; there are no
-frontend tests. In `handleSubmit`-style flows keep `router.push` **outside**
-the try/catch that wraps the API call, so a navigation rejection is not
-surfaced as an API error.
+## Rules by topic
+
+The detailed rules live in `.claude/rules/` and are loaded automatically. Files with
+`paths` load only when Claude works on matching files; the others load every session.
+
+| File | Covers | Loads when working on |
+|---|---|---|
+| `domain-application.md` | Domain and Application conventions, `Result`, MediatR pipeline | `src/…Domain/**`, `src/…Application/**` |
+| `infrastructure.md` | EF Core adapters, persistence, migrations | `src/…Infrastructure/**`, `src/…Domain/**` |
+| `api.md` | Controllers, the Auth cookie exception | `src/…Api/**` |
+| `tests.md` | NUnit, Object Mother, Testcontainers | `tests/**` |
+| `frontend.md` | Vue 3, Vuetify, Pinia, `http.ts` | `web/**` |
+| `shortcut-mcp.md` | Shortcut story workflow | always |
+| `github-mcp.md` | PR review with the GitHub MCP | always |
 
 ## Layers
 
@@ -33,115 +36,6 @@ Api composes everything; nothing depends on Api or Infrastructure.
 | `Application` | CQRS use cases via MediatR. Defines the driven ports. Returns `Result`. | `Application/Users/Register/*`, `Application/Common/*` |
 | `Infrastructure` | `internal sealed` driven adapters: EF Core repository, DbContext, configs, migrations. | `Infrastructure/Users/EfUserRepository.cs`, `Infrastructure/Persistence/*` |
 | `Api` | Thin controllers: dispatch via `ISender`, translate `Result` to `IActionResult`. | `Api/Users/UsersController.cs`, `Api/Common/ResultExtensions.cs` |
-
-`Api/Auth/AuthController.cs` does not use `ResultExtensions.ToActionResult` — login/refresh
-also have to set/clear the `fps_refresh_token` `HttpOnly` cookie, so it maps `Result` to
-`IActionResult` by hand. Its cookie is `SameSite=None` in Development only (the Vite dev
-server and the API are on different origins/schemes there) and `SameSite=Strict` otherwise;
-don't "fix" this into a single constant.
-
-## Conventions (follow the Users slice)
-
-**Domain** — `sealed` class, private ctor, static `Create(...)` factory that
-validates every invariant, `private set` properties. Invariant violations throw
-`ArgumentException`. **YAGNI on behaviour**: an aggregate gets a mutator *only*
-when a use case you were explicitly asked to build calls it (e.g. `Activate()`
-backs an activate command). Never add speculative `RenameX` / `ChangeY` /
-`Deactivate` methods "just in case" — if nothing calls it, it must not exist.
-Everything else an aggregate does is invariant validation, not public API.
-No `<summary>` / XML doc comments on aggregates, entities or handlers — the
-type, member names and factory speak for themselves.
-`User.Create` lower-cases (and trims) the email; the user repository normalises
-email lookups the same way, so sign-in is case-insensitive.
-
-**Binary image on an aggregate** (Team crest, User photo — mirror one when
-adding another): `byte[]? X` + `string? XContentType` + `bool HasX` +
-`void SetX(byte[], string)` on the aggregate (validates non-empty, a byte cap,
-an allowed-content-type list); an `<Slice>/XPayload`-style record (`TeamCrest`,
-`UserPhoto`); a repo `GetXAsync` projecting straight to that record;
-`POST /api/<slice>/{id}/x` (`multipart/form-data`, `IFormFile file`,
-`[RequestSizeLimit]`) and an `[AllowAnonymous]` `GET .../{id}/x` returning
-`File(bytes, contentType)`. The list DTO carries `HasX`, not the bytes.
-
-**Application** — one folder per use case: `Users/<UseCase>/`.
-- `<UseCase>Command` / `<UseCase>Query` — `record`, implements `IRequest<Result<T>>`.
-  Writes end in `Command`, reads end in `Query` (the pipeline keys off that).
-- `<UseCase>Handler` — `IRequestHandler<,>`, primary constructor, `private readonly`
-  field aliases. Talks only to ports. Returns `Result<T>` — never throws for
-  business flow (`Result<T>.Failure(...)`, `Result<T>.NotFound(...)`).
-- `<UseCase>Validator` — `AbstractValidator<TCommand>` (FluentValidation),
-  auto-discovered. Structural validation lives here, not in the handler.
-- DTOs: `record` with a static `FromDomain(...)`; never expose `PasswordHash`.
-- Ports live here (`Application/Users/IUserRepository.cs`,
-  `Application/Common/IUnitOfWork.cs`). `Application/Common/IClock.cs` is
-  injected into any handler that needs "now" (registration/activation
-  timestamps, refresh-token expiry) instead of calling `DateTime.UtcNow`
-  directly, so handler tests can control time.
-- Cross-slice application services (not tied to one use case) live at the
-  slice root, e.g. `Application/Auth/IAuthTokenIssuer.cs` — shared by the
-  login and refresh handlers to mint the access/refresh token pair.
-
-**Infrastructure** — adapters are `internal sealed`. EF mapping via
-`IEntityTypeConfiguration<T>` in `Persistence/Configurations/`. Repositories
-issue reads with `AsNoTracking()` and **never call `SaveChanges`**. Every
-repository exposes both a plain `GetByIdAsync` (no-tracking, for queries) and a
-`GetByIdForUpdateAsync` (tracked, for command handlers that mutate the
-aggregate and rely on `UnitOfWorkBehavior` to commit) — pick the tracked one
-whenever the handler calls a mutator on the aggregate.
-
-**Api** — controller is `sealed`, `[ApiController]`, `[Route("api/[controller]")]`,
-primary ctor `(ISender sender)`. Actions build the command/query, `await
-_sender.Send(...)`, then `result.ToActionResult(this)` (or `CreatedAtAction`
-on a successful create). Inbound request DTOs are separate records in
-`Api/Users/` (e.g. `RegisterUserRequest`), mapped to the command in the action.
-
-## Result & MediatR pipeline
-
-- `Result` / `Result<T>` (`Application/Common/Result.cs`), error types
-  `None | Validation | NotFound`. Both implement `IResult` so behaviors can
-  inspect the outcome generically.
-- Pipeline order (`Application/DependencyInjection.cs`): `ValidationBehavior`
-  then `UnitOfWorkBehavior`.
-- `ValidationBehavior` runs all validators and short-circuits with a failed
-  `Result` via `ResultFactory` — it does not throw.
-- `UnitOfWorkBehavior` calls `IUnitOfWork.SaveChangesAsync` once, only when the
-  request type name ends in `Command` **and** the response is not a failed
-  `IResult`. Handlers stay free of persistence calls.
-
-## Persistence
-
-- All slices (Users, Teams, Auth's `RefreshToken`) share one EF Core
-  `FairPlaySportsDbContext` against PostgreSQL (Npgsql provider). Local dev DB is
-  a PostgreSQL server, connection string `FairPlaySports` in `appsettings.json`.
-  Keep entity configs provider-agnostic — no `HasColumnType("varbinary(max)")`
-  and the like; let Npgsql map (`byte[]` → `bytea`, `DateTime` → `timestamptz`).
-- Migrations:
-  `dotnet ef migrations add <Name> -p src/FairPlay.Sports.Infrastructure -s src/FairPlay.Sports.Api -o Persistence/Migrations`.
-  Auto-applied on startup only in Development (`app.Services.MigrateAsync()` in
-  `Program.cs`); production applies them as an explicit deploy step.
-- **Add the migration before you run or test after a model change.** EF 10's
-  `MigrateAsync()` throws `PendingModelChangesWarning` (so the
-  `PostgreSqlContainerFixture` `[SetUpFixture]` fails for the whole assembly)
-  when the model no longer matches the last migration's snapshot.
-
-## Tests (NUnit 4 + NSubstitute + Object Mother)
-
-- Test data **always** comes from an `XMother` in `FairPlay.Sports.TestSupport`
-  (`Users/UserMother.cs`: consts + `DomainUser(...)`, `Command()`, `Dto(...)`).
-  Api-only request factories stay in `Api.Tests` (`UserRequestMother`) so the
-  Api reference is not dragged into `Application.Tests`.
-- `Application.Tests/Users/<UseCase>/<Name>HandlerTests.cs` — unit; ports mocked
-  with `Substitute.For<...>`. Assert `Result` shape, error type, and port calls.
-- `Api.Tests/Users/UsersControllerTests.cs` — `ISender` mocked; assert the right
-  request is dispatched and the `Result` maps to the right `IActionResult`.
-- `Infrastructure.Tests` — integration against real PostgreSQL via
-  **Testcontainers.PostgreSql**. `PostgreSqlContainerFixture` (`[SetUpFixture]`)
-  starts one container per assembly and runs `MigrateAsync()` once;
-  `RepositoryTestBase` gives fresh `DbContext`s and empties the table between
-  tests; `[assembly: NonParallelizable]`. Container reuse is on locally, off on
-  CI (`CI` env var). Requires a running Docker daemon.
-- Frameworks: `[TestFixture]`, `Assert.That` / `Assert.Multiple`. Prefer the
-  behaviour-named test style already in the suite.
 
 ## Build / run
 
@@ -159,56 +53,6 @@ on a successful create). Inbound request DTOs are separate records in
   via env var / user-secrets or startup throws.
 - Frontend: `cd web && npm run dev` (Vite, pinned to
   `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks.
-
-## Shortcut MCP (stories)
-
-`.mcp.json` registers the official hosted `shortcut` MCP server
-(`https://mcp.shortcut.com/mcp`, HTTP transport) so Claude can read a Shortcut story
-and work on it. It authenticates with OAuth, so there is no token in the repo or in
-an environment variable; each person authorizes their own Shortcut account:
-
-1. Start Claude Code and approve the `shortcut` server when prompted.
-2. Run `/mcp`, pick `shortcut` and choose *Authenticate*; sign in to Shortcut in the
-   browser tab that opens.
-3. Check it with `/mcp` (status should be connected). The old self-hosted
-   `@shortcut/mcp` package is deprecated and must not be used.
-
-Usage: give Claude the story id/link; it reads the story, implements it following
-this file, and verifies with build/tests. Keep Shortcut write tools (create, update,
-comment) on "ask every time". The no-commit rule below still applies.
-
-When asked to work on a story that is in "To Do", move it to "In Progress" with
-`stories-update` (workflow "Standard": To Do = 500000007, In Progress = 500000008).
-Only that one transition: never move it to In Review/Done unless explicitly asked.
-
-When a PR is created for a story (`/pr`), link the PR URL to that story as an external
-link (`stories-add-external-link`). The story id comes from the work in progress, never
-from the branch number; skip it if the story is unknown.
-
-When a story or bug is solved, post a comment on it (`stories-create-comment`) listing
-the tests that **should be run** to verify it (manual and automated, derived from the
-acceptance criteria), regardless of which ones Claude already ran or skipped.
-
-## GitHub MCP (PR review)
-
-`.mcp.json` also registers the official `github` MCP server
-(`https://api.githubcopilot.com/mcp/`, HTTP transport), limited to the `context` and
-`pull_requests` toolsets, so Claude can read a PR (details, diff, files, comments) and
-review it. The token is **never** in the repo; each person sets their own:
-
-1. In GitHub: *Settings → Developer settings → Fine-grained tokens*, create
-   `claude-code-fairplay-sports` (30-90 days), repository access **only
-   `FairPlay.Sports`**, permissions *Pull requests: Read and write*,
-   *Contents: Read-only* (never write: that is what stops it from merging).
-2. Store it in the `GITHUB_PERSONAL_ACCESS_TOKEN` environment variable and restart
-   Claude Code. PowerShell:
-   `[Environment]::SetEnvironmentVariable("GITHUB_PERSONAL_ACCESS_TOKEN", "<token>", "User")`.
-3. Approve the `github` server when prompted and check it with `/mcp`.
-
-Usage: give Claude the PR number/link; it reads the PR and reports the review in the
-chat. Posting review comments is a write: keep it on "ask every time" and only do it
-when asked. Merging is denied in `.claude/settings.json` (`merge_pull_request`) and the
-no-merge rule below still applies.
 
 ## Commits & PRs
 
