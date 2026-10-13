@@ -1,0 +1,14 @@
+// TSConfig for the Playwright tests in e2e/. They run in Node, but the callbacks
+// passed to page.evaluate() run in the browser, so the DOM types are needed.
+{
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "include": ["e2e/**/*"],
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.e2e.tsbuildinfo"
+  }
+}

@@ -52,7 +52,8 @@ Api composes everything; nothing depends on Api or Infrastructure.
   `appsettings.Development.json` (dev only); running outside Development needs it set
   via env var / user-secrets or startup throws.
 - Frontend: `cd web && npm run dev` (Vite, pinned to
-  `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks.
+  `http://localhost:5173` for the API's CORS allow-list); `npm run build` type-checks;
+  `npm run test:e2e` runs the Playwright tests (see `.claude/rules/frontend.md`).
 
 ## Commits & PRs
 
