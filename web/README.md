@@ -1,42 +1,34 @@
 # fairplay-sports-web
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + TypeScript + Vite frontend of FairPlay Sports, with Vuetify 4, Pinia and vue-i18n
+(English and Spanish). It is also packaged for iOS and Android with Capacitor. See the
+[root README](../README.md) for the architecture and how to run the API it talks to.
 
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Setup
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Served at `http://localhost:5173`. The API base URL comes from `VITE_API_BASE_URL`
+(default `https://localhost:7090`); override it in a git-ignored `.env.local`
+(see `.env.example`).
 
-```sh
-npm run build
-```
+## Scripts
+
+| Script | What it does |
+|---|---|
+| `npm run dev` | Vite dev server with hot reload |
+| `npm run build` | Type-check (`vue-tsc`) and production build |
+| `npm run preview` | Serve the production build locally |
+| `npm run test:e2e` | Playwright tests in `e2e/` (first time: `npx playwright install chromium`) |
+| `npm run cap:sync` | Build and sync the web bundle into the native projects |
+| `npm run cap:open:ios` / `cap:open:android` | Open the native project in Xcode / Android Studio |
+
+The e2e tests mock every `/api` call, so they need neither the API nor a database.
+
+## Editor
+
+[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+(disable Vetur). Volar makes TypeScript aware of `.vue` imports; the CLI uses `vue-tsc`.
